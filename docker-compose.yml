@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    command: ["redis-server", "--bind", "0.0.0.0", "--requirepass", "mipass", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpass
+      - DOCKER_INFLUXDB_INIT_ORG=robotica
+      - DOCKER_INFLUXDB_INIT_BUCKET=robot_datos
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=token123
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+
+  modbus_master:
+    build: ./modbus_master
+    env_file:
+      - ./modbus_master/.env  
+    depends_on:
+      - redis
+      - influxdb
+
+  opc_client:
+  build: ./opc_client
+  env_file:
+    - ./opc_client/.env
+  depends_on:
+    - redis
+
+  backend:
+    build: ./web
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./web/.env
+    depends_on:
+      - redis
+      - influxdb
+
+volumes:
+  redis_data:
+  influxdb_data:
