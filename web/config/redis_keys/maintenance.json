@@ -1,0 +1,11 @@
+{
+  "maintenance_schedule": {
+    "template": "maintenance:{asset_id}:next_check",
+    "description": "Próximo mantenimiento"
+  },
+  "maintenance_alert": {
+    "template": "maintenance:{asset_id}:alert",
+    "description": "Alerta activa",
+    "ttl": 86400
+  }
+}

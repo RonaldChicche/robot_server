@@ -1,0 +1,11 @@
+{
+  "system_status": {
+    "template": "system:status",
+    "description": "Estado general del sistema"
+  },
+  "log_event": {
+    "template": "log:event:{uuid}",
+    "description": "Evento del sistema",
+    "ttl": 86400
+  }
+}

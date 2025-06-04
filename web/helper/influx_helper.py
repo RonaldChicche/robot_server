@@ -1,4 +1,4 @@
-import os
+from services.config import Config
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
 
@@ -9,14 +9,14 @@ class InfluxHelper:
         if cls._instance is None:
             cls._instance = super(InfluxHelper, cls).__new__(cls)
             cls._instance.client = InfluxDBClient(
-                url=os.getenv("INFLUX_URL"),
-                token=os.getenv("INFLUX_TOKEN"),
-                org=os.getenv("INFLUX_ORG")
+                url=Config.INFLUX_URL,
+                token=Config.INFLUX_TOKEN,
+                org=Config.INFLUX_ORG
             )
             cls._instance.write_api = cls._instance.client.write_api()
             cls._instance.query_api = cls._instance.client.query_api()
-            cls._instance.bucket = os.getenv("INFLUX_BUCKET")
-            cls._instance.org = os.getenv("INFLUX_ORG")
+            cls._instance.bucket = Config.INFLUX_BUCKET
+            cls._instance.org = Config.INFLUX_ORG
         return cls._instance
 
     def write_variable(self, nombre, valor, tags=None):

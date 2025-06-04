@@ -1,0 +1,11 @@
+{
+  "modbus_device_status": {
+    "template": "modbus:{device_id}:status",
+    "description": "Estado del dispositivo Modbus",
+    "ttl": 30
+  },
+  "modbus_register": {
+    "template": "modbus:{device_id}:register:{address}",
+    "description": "Registro Modbus leído"
+  }
+}

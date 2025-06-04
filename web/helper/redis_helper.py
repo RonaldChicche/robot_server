@@ -16,14 +16,11 @@ class RedisHelper:
         return cls._instance
 
     def get(self, key):
-        try:
-            return self.client.get(key)
-        except redis.RedisError as e:
-            print(f"Redis GET error: {e}")
-            return None
+        return self.client.get(key)
 
-    def set(self, key, value):
+    def set_value(self, key, value):
         return self.client.set(key, value)
+        
 
     def publish(self, channel, msg):
         return self.client.publish(channel, msg)

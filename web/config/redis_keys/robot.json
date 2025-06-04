@@ -1,0 +1,34 @@
+{
+  "robot_status": {
+    "template": "robot:{robot_id}:status",
+    "description": "Estado actual del robot BORUNTE (online, busy, error)",
+    "ttl": 60
+  },
+  "robot_position": {
+    "template": "robot:{robot_id}:position",
+    "description": "Última posición del robot (coordenadas XYZ)"
+  },
+  "robot_error": {
+    "template": "robot:{robot_id}:error",
+    "description": "Mensaje de error activo del robot",
+    "ttl": 300
+  },
+  "robot_program_loaded": {
+    "template": "robot:{robot_id}:program:{program_id}:loaded",
+    "description": "Programa cargado actualmente en el robot"
+  },
+  "robot_program_execution": {
+    "template": "robot:{robot_id}:program:{program_id}:executing",
+    "description": "Estado de ejecución de un programa (running, paused, stopped)"
+  },
+  "robot_alarm_history": {
+    "template": "robot:{robot_id}:alarms",
+    "description": "Historial de alarmas del robot",
+    "ttl": 86400
+  },
+  "robot_teach_mode": {
+    "template": "robot:{robot_id}:mode:teach",
+    "description": "Modo enseñanza activo (on/off)",
+    "ttl": 60
+  }
+}
