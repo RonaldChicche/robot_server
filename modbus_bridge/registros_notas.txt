@@ -1,0 +1,7 @@
+Si la dirección usa 0x01 o 0x05, es un coil (ON/OFF).
+
+Si la dirección usa 0x03, 0x06 o 0x10, es un registro (valor numérico o posición).
+
+Coils → Direcciones cortas (Y010, M010).
+
+Registros → Direcciones más largas (30007, 7534, 2332).

@@ -1,14 +1,37 @@
-version: '3.8'
+networks:
+  app-tier:
+    driver: bridge
 
 services:
-  redis:
-    image: redis:7
-    container_name: redis
-    command: ["redis-server", "--bind", "0.0.0.0", "--requirepass", "mipass", "--appendonly", "yes"]
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    networks:
+      - app-tier
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+      - "9092:9092"
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,INTERNAL://kafka:29092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - ALLOW_PLAINTEXT_LISTENER=yes
+  
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    networks:
+      - app-tier
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=kraft-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
+    depends_on:
+      - kafka
 
   influxdb:
     image: influxdb:2.7
@@ -25,20 +48,24 @@ services:
     volumes:
       - influxdb_data:/var/lib/influxdb2
 
-  # modbus_master:
-  #   build: ./modbus_master
-  #   env_file:
-  #     - ./modbus_master/.env  
-  #   depends_on:
-  #     - redis
-  #     - influxdb
-
-  # opc_client:
-  #   build: ./opc_client
-  #   env_file:
-  #     - ./opc_client/.env
-  #   depends_on:
-  #     - redis
+  modbus-bridge:
+    build: ./modbus_bridge
+    container_name: modbus_bridge
+    #restart: always
+    environment:
+      - KAFKA_BROKER=kafka:29092
+      - BORUNTE_IP=host.docker.internal         # Puedes moverlo a un .env si deseas
+      - ROBOT_ID=borunte_test_01
+      - KAFKA_TOPIC=robot.commands
+      - KAFKA_STATUS_TOPIC=robot.status
+      - KAFKA_RESP_TOPIC=robot.responses
+      - KAFKA_GROUP_ID=modbus_bridge_group
+    volumes:
+      - ./modbus_bridge/config:/app/config
+    depends_on:
+      - kafka
+    networks:
+      - app-tier
 
   backend:
     build: ./web
@@ -49,10 +76,8 @@ services:
     env_file:
       - ./web/.env
     depends_on:
-      - redis
       - influxdb
     command: flask run --host=0.0.0.0 --port=5000 --debug
 
 volumes:
-  redis_data:
   influxdb_data:
