@@ -33,51 +33,90 @@ services:
     depends_on:
       - kafka
 
-  influxdb:
-    image: influxdb:2.7
-    container_name: influxdb
-    ports:
-      - "8086:8086"
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpass
-      - DOCKER_INFLUXDB_INIT_ORG=robotica
-      - DOCKER_INFLUXDB_INIT_BUCKET=robot_datos
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=token123
-    volumes:
-      - influxdb_data:/var/lib/influxdb2
-
-  modbus-bridge:
+  borunte_bridge_to_kafka_01:
     build: ./modbus_bridge
-    container_name: modbus_bridge
+    container_name: borunte_bridge_to_kafka_01
+    network_mode: "host"
     #restart: always
     environment:
-      - KAFKA_BROKER=kafka:29092
-      - BORUNTE_IP=host.docker.internal         # Puedes moverlo a un .env si deseas
-      - ROBOT_ID=borunte_test_01
-      - KAFKA_TOPIC=robot.commands
-      - KAFKA_STATUS_TOPIC=robot.status
-      - KAFKA_RESP_TOPIC=robot.responses
+      #- KAFKA_BROKER=kafka:29092
+      #- BORUNTE_IP=127.0.0.1:502         # Puedes moverlo a un .env si deseas
+      - MODE=modbus_to_kafka
+      - PROCESS_ID=borunte_bridge_to_kafka_01
+      - KAFKA_BROKER=127.0.0.1:9092
+      - BORUNTE_IP=192.168.18.89
+      - TARGET_ID=borunte_test_01
+      - KAFKA_TOPIC_COMMANDS=robot.commands
+      - KAFKA_TOPIC_STATUS=robot.status
+      - KAFKA_TOPIC_RESPONSES=robot.responses
       - KAFKA_GROUP_ID=modbus_bridge_group
+      - KAFKA_RETRY=20
     volumes:
       - ./modbus_bridge/config:/app/config
-    depends_on:
-      - kafka
-    networks:
-      - app-tier
 
-  backend:
-    build: ./web
+  borunte_bridge_to_modbus_01:
+    build: ./modbus_bridge
+    container_name: borunte_bridge_to_modbus_01
+    network_mode: "host"
+    #restart: always
+    environment:
+      #- KAFKA_BROKER=kafka:29092
+      #- BORUNTE_IP=127.0.0.1:502         # Puedes moverlo a un .env si deseas
+      - MODE=kafka_to_modbus
+      - PROCESS_ID=borunte_bridge_to_modbus_01
+      - KAFKA_BROKER=127.0.0.1:9092
+      - BORUNTE_IP=192.168.18.89
+      - TARGET_ID=borunte_test_01
+      - KAFKA_TOPIC_COMMANDS=robot.commands
+      - KAFKA_TOPIC_STATUS=robot.status
+      - KAFKA_TOPIC_RESPONSES=robot.responses
+      - KAFKA_GROUP_ID=modbus_bridge_group
+      - KAFKA_RETRY=20
     volumes:
-      - ./web:/app
-    ports:
-      - "5000:5000"
-    env_file:
-      - ./web/.env
-    depends_on:
-      - influxdb
-    command: flask run --host=0.0.0.0 --port=5000 --debug
+      - ./modbus_bridge/config:/app/config
 
-volumes:
-  influxdb_data:
+  opc-gateway:
+    build: ./opc_gateway
+    container_name: opc_gateway
+    network_mode: "host"
+    #restart: always
+    environment:
+      - MODE=opc_to_kafka
+      - OPC_ENDPOINT=opc.tcp://192.168.18.89:62640/IntegrationObjects/ServerSimulator
+      - KAFKA_BROKER=127.0.0.1:9092
+      - KAFKA_TOPIC_COMMANDS=robot.commands
+      - KAFKA_TOPIC_STATUS=robot.status
+      - KAFKA_GROUP_ID=opc_gateway_group
+      - KAFKA_RETRY=20
+    volumes:
+      - ./opc_gateway/config:/app/config
+
+  # influxdb:
+  #   image: influxdb:2.7
+  #   container_name: influxdb
+  #   ports:
+  #     - "8086:8086"
+  #   environment:
+  #     - DOCKER_INFLUXDB_INIT_MODE=setup
+  #     - DOCKER_INFLUXDB_INIT_USERNAME=admin
+  #     - DOCKER_INFLUXDB_INIT_PASSWORD=adminpass
+  #     - DOCKER_INFLUXDB_INIT_ORG=robotica
+  #     - DOCKER_INFLUXDB_INIT_BUCKET=robot_datos
+  #     - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=token123
+  #   volumes:
+  #     - influxdb_data:/var/lib/influxdb2
+
+  # backend:
+  #   build: ./web
+  #   volumes:
+  #     - ./web:/app
+  #   ports:
+  #     - "5000:5000"
+  #   env_file:
+  #     - ./web/.env
+  #   depends_on:
+  #     - influxdb
+  #   command: flask run --host=0.0.0.0 --port=5000 --debug
+
+# volumes:
+#   influxdb_data:

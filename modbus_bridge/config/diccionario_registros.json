@@ -40,70 +40,123 @@
     "movement_status": {
       "access" : "R",
       "address" : 2470,
-      "double_bit": false,
       "length" : 1,
+      "data_type" : "int16",
+      "scale_factor" : 1,
+      "register_per_value": 1,
       "description" : "0 -> No se mueve, 1 -> Se mueve"
     },
     "home_status": {
       "access" : "R",
       "address" : 2471,
-      "double_bit": false,
       "length" : 1,
+      "data_type" : "int16",
+      "scale_factor" : 1,
+      "register_per_value": 1,
       "description" : "1 -> Homed, 0 -> No homed"
+    },
+    "alarm_code": {
+      "access" : "R",
+      "address" : 2396,
+      "length" : 1,
+      "data_type" : "int16",
+      "scale_factor" : 1,
+      "register_per_value": 1,
+      "description" : "Código de alarma: 7 -> Parada de emergencia"
     },
     "global_velocity": {
       "access" : "RW",
       "address" : 20200,
-      "double_bit": false,
       "length" : 1,
+      "data_type" : "int16",
+      "scale_factor" : 1,
+      "register_per_value": 1,
       "description" : "Velocidad global de la secuencia de ejecución 0 -> 1000 : 1000 = 100% / default 100"
+    },
+    "current_cycle_time": {
+      "access" : "R",
+      "address" : 2397,
+      "length" : 4,
+      "data_type" : "uint64",
+      "scale_factor" : 0.001,
+      "register_per_value": 4,
+      "description" : "Tiempo de ciclo actual (curCycle), en segundos. Tipo Float64."
+    },
+    "last_cycle_time": {
+      "access" : "R",
+      "address" : 2401,
+      "length" : 4,
+      "data_type" : "uint64",
+      "scale_factor" : 0.001,
+      "register_per_value": 4,
+      "description" : "Tiempo del último ciclo completado (lastCycle), en segundos. Tipo Float64."
     },
     "axis_temperature": {
       "access" : "R",
       "address" : 2568,
-      "double_bit": false,
       "length" : 8,
+      "data_type" : "int16",
+      "scale_factor" : 1,
+      "register_per_value": 1,
       "description" : "Temperatura del robot J1 J2 J3 J4 J5 J6 J7 J8 Units ????"
     },
     "axis_position": {
       "access" : "R",
       "address" : 2600,
-      "double_bit": true,
       "length" : 16,
+      "data_type" : "float32",
+      "scale_factor" : 1,
+      "register_per_value": 2,
       "description" : "Posicion del robot J1 J2 J3 J4 J5 J6 J7 J8 sexagesimal degrees"
     },
     "world_position": {
       "access" : "R",
       "address" : 2664,
-      "double_bit": true,
       "length" : 16,
+      "data_type" : "float32",
+      "scale_factor" : 1,
+      "register_per_value": 2,
       "description" : "Posicion del robot en el mundo, X Y Z U V W M7 M8 mm"
     },
     "axis_velocity": {
       "access" : "R",
       "address" : 2438,
-      "double_bit": false,
       "length" : 8,
+      "data_type" : "int16",
+      "scale_factor" : 1,
+      "register_per_value": 1,
       "description" : "Velocidad actual del robot J1 J2 J3 J4 J5 J6 J7 J8 mm/s"
     },
     "axis_torque": {
       "access" : "R",
       "address" : 2406,
-      "double_bit": false,
       "length" : 8,
+      "data_type" : "int16",
+      "scale_factor" : 1,
+      "register_per_value": 1,
       "description" : "Torque del robot J1 J2 J3 J4 J5 J6 J7 J8 Nm"
+    },
+    "axis_voltage": {
+      "access" : "R",
+      "address" : 2504,
+      "length" : 8,
+      "data_type" : "int16",
+      "scale_factor" : 1,
+      "register_per_value": 1,
+      "description" : "Voltaje del robot J1 J2 J3 J4 J5 J6 J7 J8 V"
+    },
+    "load_rate": {
+      "access" : "R",
+      "address" : 2536,
+      "length" : 8,
+      "data_type" : "int16",
+      "scale_factor" : 1,
+      "register_per_value": 1,
+      "description" : "Carga del robot J1 J2 J3 J4 J5 J6 J7 J8 % 120 -> sobrecarga"
     }
   },
   "address": {
     "800": 21900,
-    "810": 21920,
-    "820": 21940,
-    "830": 21960,
-    "840": 21980,
-    "850": 22000,
-    "860": 22020,
-    "870": 22040,
-    "880": 22060,
     "_comentario":  "'890': 22080  -> Descartado por estar relacionado a alarmas cosa que es un comportamiento imprevisto"
   } 
 }

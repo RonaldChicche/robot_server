@@ -1,0 +1,87 @@
+opc_nodes:
+  read:
+    start_button:
+      node_id: "ns=2;s=StartBit"
+      type: "method"
+      name: "start_button"
+    pause_button: 
+      node_id: "ns=2;s=PauseBit"
+      type: "method"
+      name: "pause_button"
+    stop_button: 
+      node_id: "ns=2;s=StopBit"
+      type: "method"
+      name: "stop_button"
+    clean_alarm_button: 
+      node_id: "ns=2;s=CleanAlarm"
+      type: "method"
+      name: "clear_alarm_button"
+    process: 
+      node_id: "ns=2;s=SelectProcess"
+      type: "data"
+      val: 0
+    no_robot: 
+      node_id: "ns=2;s=NoRobots"
+      type: "data"
+      val: 0
+    cantidad: 
+      node_id: "ns=2;s=Cantidad"
+      type: "data"
+      val: 0
+    dx1: 
+      node_id: "ns=2;s=dX1"
+      type: "data"
+      val: 0
+    dy1: 
+      node_id: "ns=2;s=dY1"
+      type: "data"
+      val: 0
+    dx2: 
+      node_id: "ns=2;s=dX2"
+      type: "data"
+      val: 0
+    dy2: 
+      node_id: "ns=2;s=dY2"
+      type: "data"
+      val: 0
+    espesor: 
+      node_id: "ns=2;s=Espesor"
+      type: "data"
+      val: 0
+    velocidad: 
+      node_id: "ns=2;s=Velocidad"
+      type: "data"
+      val: 0
+  write:
+    robot1:
+      running: "ns=2;s=01_Running"
+      stack_count: "ns=2;s=01_StackCount"
+      alarm_code: "ns=2;s=01_AlarmCode"
+      pos_x: "ns=2;s=01_PosX"
+      pos_y: "ns=2;s=01_PosY"
+      pos_z: "ns=2;s=01_PosZ"
+      ang_u: "ns=2;s=01_AngU"
+      ang_v: "ns=2;s=01_AngV"
+      ang_w: "ns=2;s=01_AngW"
+      j1: "ns=2;s=01_J1"
+      j2: "ns=2;s=01_J2"
+      j3: "ns=2;s=01_J3"
+      j4: "ns=2;s=01_J4"
+      j5: "ns=2;s=01_J5"
+      j6: "ns=2;s=01_J6"
+    robot2:
+      running: "ns=2;s=02_Running"
+      stack_count: "ns=2;s=02_StackCount"
+      alarm_code: "ns=2;s=02_AlarmCode"
+      pos_x: "ns=2;s=02_PosX"
+      pos_y: "ns=2;s=02_PosY"
+      pos_z: "ns=2;s=02_PosZ"
+      ang_u: "ns=2;s=02_AngU"
+      ang_v: "ns=2;s=02_AngV"
+      ang_w: "ns=2;s=02_AngW"
+      j1: "ns=2;s=02_J1"
+      j2: "ns=2;s=02_J2"
+      j3: "ns=2;s=02_J3"
+      j4: "ns=2;s=02_J4"
+      j5: "ns=2;s=02_J5"
+      j6: "ns=2;s=02_J6"

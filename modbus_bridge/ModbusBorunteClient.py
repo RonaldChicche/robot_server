@@ -1,4 +1,5 @@
 from pymodbus.client import ModbusTcpClient
+from datetime import datetime
 
 import re
 import json
@@ -10,9 +11,22 @@ logger = logging.getLogger("ModbusBorunteClient")
 class ModbusBorunteError(Exception): pass
 
 class ModbusBorunteClient(ModbusTcpClient):
-    def __init__(self, host='127.0.0.1', port=502, name="1", **kwargs):
-        super().__init__(host, port=port, name=name, **kwargs)
+    def __init__(self, host='127.0.0.1', port=502, name="1", name_id="robot_01"):
+        super().__init__(host, port=port, name=name)
         self.load_config()
+        self.counters_id = []
+        self.order_id = f"DIS_{datetime.now().strftime('%Y%m%d%H%M%S')}_{name_id}"
+        self.type_data = {
+            "int16": self.DATATYPE.INT16,
+            "uint16": self.DATATYPE.UINT16,
+            "int32": self.DATATYPE.INT32,
+            "uint32": self.DATATYPE.UINT32,
+            "int64": self.DATATYPE.INT64,
+            "uint64": self.DATATYPE.UINT64,
+            "float32": self.DATATYPE.FLOAT32,
+            "float64": self.DATATYPE.FLOAT64
+        }
+        self.name_id = name_id
 
     def load_config(self):
         json_coils = "config/diccionario_coils.json"
@@ -33,10 +47,38 @@ class ModbusBorunteClient(ModbusTcpClient):
     def health_check(self):
         try:
             rr = self.read_coils(0, 1)
-            return rr.isError() is False
+            return not rr.isError()
         except Exception as e:
             return False
         
+    def update_order_id(self):
+        if self.connected:
+            self.order_id = f"CON_{datetime.now().strftime('%Y%m%d%H%M%S')}_{self.name_id}"
+        else:
+            self.order_id = f"DIS_{datetime.now().strftime('%Y%m%d%H%M%S')}_{self.name_id}"
+
+    def read_machine_status(self, start_address: int, length: int, type_data: str="int16", scale: int=1, registers_per_value: int=1):
+        # verificar si type_data es una llave de self.type_data
+        if type_data not in self.type_data:
+            raise ModbusBorunteError(f"Tipo de dato no reconocido: {type_data}")
+        
+        # verifica que lenght sea multiplo de number_of_bytes
+        if length % registers_per_value != 0:
+            raise ModbusBorunteError(f"La cantidad de registros no es multiplo de {registers_per_value}")
+
+        rr = self.read_holding_registers(address=start_address, count=length)
+        if rr.isError():
+            raise ModbusBorunteError("Lectura Modbus fallida o respuesta inválida")
+        
+        values = []
+        chunks = [rr.registers[i:i+registers_per_value] for i in range(0, len(rr.registers), registers_per_value)]
+    
+        for chunk in chunks:
+            val = self.convert_from_registers(chunk, self.type_data[type_data])
+            values.append(val * scale)
+
+        return values        
+    
     def read_modbus_values(self, start_address, length, double_bit=False):
         """
         Lee valores Modbus desde una dirección y los interpreta como int16 o float32.
@@ -109,7 +151,7 @@ class ModbusBorunteClient(ModbusTcpClient):
             raise ModbusBorunteError(f"Coil no encontrado: {e}")
         return self.read_coils(address=address, count=1)
     
-    def read_all_outputs(self):
+    def read_outputs_all(self):
         """
         Lee todos los valores booleanos de los coils.
         Returns:
@@ -129,7 +171,61 @@ class ModbusBorunteClient(ModbusTcpClient):
         
         return result
     
+    def read_counters_all(self):  
+        """
+        Lee todos los contadores Modbus.
+        Returns:
+            dict: Diccionario con los nombres de los counters como claves y valores: target, current y mode.
+        """
+        # contadores definidos
+        rr = self.read_holding_registers(address=130, count=1)
+        counter_count = rr.registers[0]
+
+        # funcion temporal para limitar la cantidad de contadores +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        if counter_count > 5:
+            counter_count = 5
+        if counter_count < 1:
+            return {}
+        # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        id_regs = self.read_machine_status(131, counter_count * 2, 'int32', 1, 2)  
+        self.counters_id = id_regs
+        counters = {}
+        for i in id_regs:
+            counter_id = i
+            self.write_registers(2179, [counter_id >> 16, counter_id & 0xFFFF])
+            rr = self.read_holding_registers(address=2181, count=5)
+            target = (rr.registers[0] << 16) | rr.registers[1]
+            current = (rr.registers[2] << 16) | rr.registers[3]
+            mode = rr.registers[4]
+            counter_name = f"counter_{counter_id}"
+            counters[counter_name] = {
+                "target": target,
+                "current": current,
+                "mode": mode
+            }
+
+        return counters
+
     def read_status(self, register_name):
+        """
+        Lee un registro Modbus y lo interpreta como int16 o float32.
+        Args:
+            register_name (str): Nombre del registro a leer (ej: "global_velocity").
+        Returns:
+            list of float or int, o None si hay error.
+        """
+        try:
+            address = self.registers["machine_status"][register_name]["address"]
+            length = self.registers["machine_status"][register_name]["length"]
+            data_type = self.registers["machine_status"][register_name]["data_type"]
+            scale_factor = self.registers["machine_status"][register_name]["scale_factor"]
+            register_per_value = self.registers["machine_status"][register_name]["register_per_value"]
+        except KeyError as e:
+            raise ModbusBorunteError(f"Registro no encontrado: {e}")
+        return self.read_machine_status(address, length, data_type, scale_factor, register_per_value)
+
+    def read_status_old(self, register_name):
         """
         Lee un registro Modbus y lo interpreta como int16 o float32.
         Args:
@@ -145,7 +241,7 @@ class ModbusBorunteClient(ModbusTcpClient):
             raise ModbusBorunteError(f"Registro no encontrado: {e}")
         return self.read_modbus_values(address, length, double_bit)
 
-    def read_all_status(self):
+    def read_status_all(self):
         """
         Lee todos los registros Modbus y los interpreta como int16 o float32.
         Returns:
@@ -174,12 +270,34 @@ class ModbusBorunteClient(ModbusTcpClient):
             raise ModbusBorunteError("⚠️ Direccion fuera de rango (tiene que estar entre 800 y 890) o la cantidad de addresses es menor a 1")
         
         start_address = base_modbus + (address_number - 800) * 2
+        values = self.read_machine_status(start_address, number_of_addresses*2, 'int32', 1, 2)
+        # creacion de diccionario
+        logical_keys = [str(800 + i) for i in range(number_of_addresses)]
+        return dict(zip(logical_keys, values))
+    
+    def read_memory_address_old(self, address_number: int, number_of_addresses: int):
+        """
+        Lee múltiples valores int32 desde Modbus y los escala (útil para milésimas).
+        
+        Args:
+            address_number (int): dirección inicial Modbus (800 - 890)
+            count (int): cantidad de enteros a leer
+
+        Returns:
+            Diccionario con los addresses y sus valores {'801': value, ...}
+        """
+        base_modbus = self.registers["address"]["800"]
+        # verifica que address_number este entre 800 y 890 y que el ultimo address tambien lo este
+        if address_number < 800 or address_number > 890 or address_number + number_of_addresses - 1 > 890 or number_of_addresses < 1:
+            raise ModbusBorunteError("⚠️ Direccion fuera de rango (tiene que estar entre 800 y 890) o la cantidad de addresses es menor a 1")
+        
+        start_address = base_modbus + (address_number - 800) * 2
         values = self.read_modbus_scaled_ints(start_address, number_of_addresses)
         # creacion de diccionario
         logical_keys = [str(800 + i) for i in range(number_of_addresses)]
         return dict(zip(logical_keys, values))
     
-    def read_all_memory_address(self):
+    def read_memory_address_all(self):
         """
         Lee todos los registros Modbus (800 - 890) y los interpreta como int32.
         Returns:
@@ -190,16 +308,18 @@ class ModbusBorunteClient(ModbusTcpClient):
         batch2 = self.read_memory_address(840, 50)
         return {**batch1, **batch2}
     
-    def read_all_borunte_data(self):
+    def read_borunte_data_all(self):
         """
-        Lee todos los registros Modbus, colis y addresses.
+        Lee todos los registros order ID, Modbus, colis y addresses.
         Returns:
             dict: Diccionario con los nombres de los registros como claves y los valores como valores.
         """
         return {
-            "addresses": self.read_all_memory_address(),
-            "coils": self.read_all_outputs(),
-            "status": self.read_all_status()
+            "order_id": self.order_id,
+            "addresses": self.read_memory_address_all(),
+            "outputs": self.read_outputs_all(),
+            "status": self.read_status_all(),
+            "counters": self.read_counters_all()
         }
     
     def write_output(self, coil_name: str, value: bool):
@@ -220,7 +340,7 @@ class ModbusBorunteClient(ModbusTcpClient):
         
         response = self.write_coil(address=address, value=value)
 
-        return {"status": not response.isError(), "function_code": response.function_code, "address": address, "value": value} 
+        return {"status": not response.isError(), "function_code": "write_output", "address": address, "value": value} 
     
     def write_memory_address(self, address_number: int, value: list[int]):
         """
@@ -246,7 +366,21 @@ class ModbusBorunteClient(ModbusTcpClient):
 
         response = self.write_registers(address=start_address, values=registros_modbus)
     
-        return {"status": not response.isError(), "function_code": response.function_code, "address": start_address, "values": value}
+        return {"status": not response.isError(), "function_code": "write_memory", "address": start_address, "values": value}
+
+    def write_counter(self, counter_id: int, target: int, current: int):
+        counter_id_response = self.write_registers(20050, [counter_id >> 16, counter_id & 0xFFFF]) 
+        target_response = self.write_registers(20052, [target >> 16, target & 0xFFFF])
+        current_response = self.write_registers(20054, [current >> 16, current & 0xFFFF])
+
+        if counter_id_response.isError():
+            raise ModbusBorunteError(f"Error al escribir el ID del counter: {counter_id_response}")
+        if target_response.isError():
+            raise ModbusBorunteError(f"Error al escribir el target del counter: {target_response}")
+        if current_response.isError():
+            raise ModbusBorunteError(f"Error al escribir el current del counter: {current_response}")
+        
+        return {"status": True, "function_code": "write_counter", "address": counter_id_response.address, "value": [counter_id, target, current]}
 
     def send_command(self, register_name, value):
         """
@@ -264,7 +398,7 @@ class ModbusBorunteClient(ModbusTcpClient):
         
         response = self.write_register(address=address, value=value)
         
-        return {"status": not response.isError(), "function_code": response.function_code, "address": address, "value": value}
+        return {"status": not response.isError(), "function_code": "send_command", "address": address, "value": value}
     
     def start_button(self):
         return self.send_command("start_button", 1)
@@ -302,7 +436,7 @@ class ModbusBorunteClient(ModbusTcpClient):
         address = self.registers["machine_status"]["global_velocity"]["address"]
         response = self.write_register(address=address, value=value)
 
-        return {"status": not response.isError(), "function_code": response.function_code, "address": address, "value": value}
+        return {"status": not response.isError(), "function_code": "modify_global_velocity", "address": address, "value": value}
 
     def proceso_01(self, data: dict):
         """
@@ -323,21 +457,21 @@ class ModbusBorunteClient(ModbusTcpClient):
         required_keys = ["pick", "put", "cantidad", "x", "y", "altura", "velocidad"]
         for key in required_keys:
             if key not in data:
-                raise ValueError(f"Falta el parámetro requerido: {key}")
+                raise ModbusBorunteError(f"Falta el parámetro requerido: {key}")
             
         if not isinstance(data["pick"], list) or len(data["pick"]) != 6:
-            raise ValueError("`pick` debe ser una lista de 6 floats.")
+            raise ModbusBorunteError("`pick` debe ser una lista de 6 floats.")
         
         if not isinstance(data["put"], list) or len(data["put"]) != 6:
-            raise ValueError("`put` debe ser una lista de 6 floats.")
+            raise ModbusBorunteError("`put` debe ser una lista de 6 floats.")
         
         for float_key in ["x", "y", "altura"]:
             if not isinstance(data[float_key], (float, int)):
-                raise ValueError(f"{float_key} debe ser un número.")
+                raise ModbusBorunteError(f"{float_key} debe ser un número.")
 
         for int_key in ["cantidad", "velocidad"]:
             if not isinstance(data[int_key], int):
-                raise ValueError(f"{int_key} debe ser un entero.")
+                raise ModbusBorunteError(f"{int_key} debe ser un entero.")
 
         pick_scaled = [int(i * 1000) for i in data["pick"]]
         put_scaled = [int(i * 1000) for i in data["put"]]
@@ -354,7 +488,6 @@ class ModbusBorunteClient(ModbusTcpClient):
 
         self.modify_global_velocity(data["velocidad"])
 
-        # Posible start
         # self.start_button()
         
         return {"status": True}

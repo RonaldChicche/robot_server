@@ -1,0 +1,7 @@
+kafka-python==2.2.13
+lxml==5.4.0
+opcua==0.98.13
+python-dateutil==2.9.0.post0
+pytz==2025.2
+PyYAML==6.0.2
+six==1.17.0

@@ -14,10 +14,11 @@ producer = KafkaProducer(
 
 # Mensaje de comando
 mensaje = {
-    "robot_id": "borunte_test_01",
+    "order_id": "ORD_20230626123456_borunte__test_01",
+    "target_id": "borunte_test_01",
     "type": "method",
-    "name": "write_output",
-    "args": ["y13", 0],
+    "name": "start_button",
+    "params": ["y13", 0],
     "kwargs": {},
     "timestamp": datetime.now().isoformat() + "Z"
 }
@@ -26,7 +27,7 @@ mensaje = {
 future = producer.send(
     TOPIC,
     value=mensaje,
-    key=mensaje["robot_id"]
+    key=mensaje["target_id"].encode("utf-8")
 )
 
 # Espera confirmación de envío
