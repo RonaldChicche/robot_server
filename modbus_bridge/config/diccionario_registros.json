@@ -1,16 +1,16 @@
 {
   "command": {
-    "force_stop" : {
+    "force_stop_button" : {
       "access" : "W",
       "address" : 20000,
       "description" : "Detiene la secuencia de ejecución inmediatamente y sale del programa por lo que start reinicia la secuencia"
     },
-    "pause": {
+    "pause_button": {
       "access" : "W",
       "address" : 20001,
       "description" : "Pausa la secuencia de ejecución, con start se vuelve a la secuencia de ejecución"
     },
-    "single_loop": {
+    "single_loop_button": {
       "access" : "W",
       "address" : 20002,
       "description" : "Modo single loop, inicia secuencia y se detiene al llegar al final del programa"
@@ -25,12 +25,12 @@
       "address" : 20004,
       "description" : "Detiene la secuencia de ejecución, en la primera ejecuión se pasa a modo single loop osea que se detiene al llegar al final del programa, si se ejecuta 2 veces se detiene de inmediato"
     },
-    "clear_alarm": {
+    "clear_alarm_button": {
       "access" : "W",
       "address" : 20005,
       "description" : "Limpia las alarmas"
     },
-    "clear_alarm_and_resume": {
+    "clear_alarm_and_resume_button": {
       "access" : "W",
       "address" : 20006,
       "description" : "Limpia las alarmas y vuelve a la secuencia de ejecución"

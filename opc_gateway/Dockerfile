@@ -3,7 +3,7 @@ FROM python:3.10-slim
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
-COPY . .
+COPY config.yml kafka_to_opc.py opc_to_kafka.py entreypoint.sh requirements.txt ./
 
 RUN pip install --no-cache-dir -r requirements.txt
 

@@ -1,5 +1,5 @@
 opc_nodes:
-  read:
+  read:                                 # importante manteenr el orden de estos elementos ya que asi empieza la suscripcion de nodos
     start_button:
       node_id: "ns=2;s=StartBit"
       type: "method"
@@ -12,40 +12,40 @@ opc_nodes:
       node_id: "ns=2;s=StopBit"
       type: "method"
       name: "stop_button"
-    clean_alarm_button: 
+    clear_alarm_button: 
       node_id: "ns=2;s=CleanAlarm"
       type: "method"
       name: "clear_alarm_button"
-    process: 
-      node_id: "ns=2;s=SelectProcess"
+    send_data: 
+      node_id: "ns=2;s=SendData"
+      type: "proceso"
+      val: 0
+    ancho_caja: 
+      node_id: "ns=2;s=AnchoCaja"
       type: "data"
       val: 0
-    no_robot: 
-      node_id: "ns=2;s=NoRobots"
+    long_barra:
+      node_id: "ns=2;s=LongBarra"
+      type: "data"
+      val: 0
+    ancho_barra: 
+      node_id: "ns=2;s=AnchoBarra"
+      type: "data"
+      val: 0
+    espesor: 
+      node_id: "ns=2;s=Espesor"
+      type: "data"
+      val: 0
+    peso:
+      node_id: "ns=2;s=Peso"
       type: "data"
       val: 0
     cantidad: 
       node_id: "ns=2;s=Cantidad"
       type: "data"
       val: 0
-    dx1: 
-      node_id: "ns=2;s=dX1"
-      type: "data"
-      val: 0
-    dy1: 
-      node_id: "ns=2;s=dY1"
-      type: "data"
-      val: 0
-    dx2: 
-      node_id: "ns=2;s=dX2"
-      type: "data"
-      val: 0
-    dy2: 
-      node_id: "ns=2;s=dY2"
-      type: "data"
-      val: 0
-    espesor: 
-      node_id: "ns=2;s=Espesor"
+    no_carro:
+      node_id: "ns=2;s=NoCarro"
       type: "data"
       val: 0
     velocidad: 

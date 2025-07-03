@@ -55,8 +55,10 @@ def wait_for_kafka(broker="localhost:9092", retries=30, timeout=2):
     raise RuntimeError("❌ Kafka no se conectó tras múltiples intentos")
 
 
-def main(robot=None, producer=None):
+def main():
     logger.info("🟢 Lectura de status iniciado.")
+    robot = crear_modbus_robot()
+    producer = crear_kafka_producer()
     error_count = 0
     while error_count < 3:
         try:
@@ -74,7 +76,7 @@ def main(robot=None, producer=None):
         except ModbusBorunteError as e:
             logger.error(f"🔴 Error de lectura de status: {e}")
         except Exception as e:
-            logger.error(f"🔴 Error en hilo de status: {e}") 
+            logger.error(f"🔴 Error en hilo de status: {e}", exc_info=True) 
             error_count += 1
         
     logger.info("🔴 Lectura de status detenido.")
@@ -82,14 +84,4 @@ def main(robot=None, producer=None):
 if __name__ == "__main__": 
     wait_for_kafka(broker=KAFKA_BROKER, retries=KAFKA_RETRY)
 
-    while True:
-        try:
-            robot = crear_modbus_robot()
-            if robot is None:
-                logger.warning(f"❌ Robot en {BORUNTE_IP}: {TARGET_ID} no disponible RECONECTANDO...")
-                time.sleep(5)
-                continue
-            producer = crear_kafka_producer()
-            main(robot, producer)
-        except Exception as e:
-            logger.error(f"🔴 Error en el bucle principal: {e}")
+    main()

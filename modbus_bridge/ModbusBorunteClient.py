@@ -407,19 +407,19 @@ class ModbusBorunteClient(ModbusTcpClient):
         return self.send_command("pause_button", 1)
     
     def single_loop_button(self):
-        return self.send_command("single_loop", 1)
+        return self.send_command("single_loop_button", 1)
     
     def stop_button(self):
         return self.send_command("stop_button", 1)
     
     def force_stop_button(self):
-        return self.send_command("force_stop", 1)
+        return self.send_command("force_stop_button", 1)
     
     def clear_alarm_button(self):
-        return self.send_command("clear_alarm", 1)
+        return self.send_command("clear_alarm_button", 1)
     
     def clear_alarm_and_resume_button(self):
-        return self.send_command("clear_alarm_and_resume", 1)
+        return self.send_command("clear_alarm_and_resume_button", 1)
     
     def modify_global_velocity(self, value: int):
         """
@@ -446,15 +446,15 @@ class ModbusBorunteClient(ModbusTcpClient):
                 "pick": [x, y, z, rx, ry, rz],
                 "put": [x, y, z, rx, ry, rz],
                 "cantidad": int,
-                "x": float,
-                "y": float,
+                "dx": float,
+                "dy": float,
                 "altura": float,
                 "velocidad": int
             }
         Returns:
             dict: Resultados de verificación
         """
-        required_keys = ["pick", "put", "cantidad", "x", "y", "altura", "velocidad"]
+        required_keys = ["pick", "put", "cantidad", "dx", "dy", "altura", "velocidad"]
         for key in required_keys:
             if key not in data:
                 raise ModbusBorunteError(f"Falta el parámetro requerido: {key}")
@@ -465,7 +465,7 @@ class ModbusBorunteClient(ModbusTcpClient):
         if not isinstance(data["put"], list) or len(data["put"]) != 6:
             raise ModbusBorunteError("`put` debe ser una lista de 6 floats.")
         
-        for float_key in ["x", "y", "altura"]:
+        for float_key in ["dx", "dy", "altura"]:
             if not isinstance(data[float_key], (float, int)):
                 raise ModbusBorunteError(f"{float_key} debe ser un número.")
 
@@ -481,7 +481,7 @@ class ModbusBorunteClient(ModbusTcpClient):
 
         compe = (data["cantidad"] - 1) * data["altura"]
         self.write_memory_address(820, [
-            int(data["x"]*1000), int(data["y"]*1000),
+            int(data["dx"]*1000), int(data["dy"]*1000),
             int(compe*1000), data["altura"]*1000,
             data["cantidad"], data["velocidad"]
         ])

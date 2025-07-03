@@ -1,11 +1,17 @@
 networks:
   app-tier:
     driver: bridge
+  
 
 services:
   kafka:
     image: bitnami/kafka:latest
     container_name: kafka
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 60
     networks:
       - app-tier
     ports:
@@ -31,65 +37,61 @@ services:
       - KAFKA_CLUSTERS_0_NAME=kraft-cluster
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
-  borunte_bridge_to_kafka_01:
-    build: ./modbus_bridge
-    container_name: borunte_bridge_to_kafka_01
-    network_mode: "host"
-    #restart: always
-    environment:
-      #- KAFKA_BROKER=kafka:29092
-      #- BORUNTE_IP=127.0.0.1:502         # Puedes moverlo a un .env si deseas
-      - MODE=modbus_to_kafka
-      - PROCESS_ID=borunte_bridge_to_kafka_01
-      - KAFKA_BROKER=127.0.0.1:9092
-      - BORUNTE_IP=192.168.18.89
-      - TARGET_ID=borunte_test_01
-      - KAFKA_TOPIC_COMMANDS=robot.commands
-      - KAFKA_TOPIC_STATUS=robot.status
-      - KAFKA_TOPIC_RESPONSES=robot.responses
-      - KAFKA_GROUP_ID=modbus_bridge_group
-      - KAFKA_RETRY=20
-    volumes:
-      - ./modbus_bridge/config:/app/config
+  # borunte_modbus_01:
+  #   build: ./modbus_bridge
+  #   container_name: borunte_modbus_01
+  #   network_mode: "host"
+  #   #restart: always
+  #   environment:
+  #     - MODE=modbus_to_kafka
+  #     - PROCESS_ID=borunte_bridge_to_kafka_01
+  #     - KAFKA_IP=${KAFKA_IP}
+  #     - KAFKA_PORT=${KAFKA_PORT}
+  #     - BORUNTE_IP=${BORUNTE_01_IP}        
+  #     - TARGET_ID=${BORUNTE_01_TARGET_ID}
+  #     - KAFKA_TOPIC_COMMANDS=${KAFKA_TOPIC_COMMANDS}
+  #     - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
+  #     - KAFKA_TOPIC_RESPONSES=${KAFKA_TOPIC_RESPONSES}
+  #     - KAFKA_GROUP_ID=modbus_bridge_group
+  #     - KAFKA_RETRY=20
+  #   volumes:
+  #     - ./modbus_bridge/config:/app/config
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
 
-  borunte_bridge_to_modbus_01:
-    build: ./modbus_bridge
-    container_name: borunte_bridge_to_modbus_01
-    network_mode: "host"
-    #restart: always
-    environment:
-      #- KAFKA_BROKER=kafka:29092
-      #- BORUNTE_IP=127.0.0.1:502         # Puedes moverlo a un .env si deseas
-      - MODE=kafka_to_modbus
-      - PROCESS_ID=borunte_bridge_to_modbus_01
-      - KAFKA_BROKER=127.0.0.1:9092
-      - BORUNTE_IP=192.168.18.89
-      - TARGET_ID=borunte_test_01
-      - KAFKA_TOPIC_COMMANDS=robot.commands
-      - KAFKA_TOPIC_STATUS=robot.status
-      - KAFKA_TOPIC_RESPONSES=robot.responses
-      - KAFKA_GROUP_ID=modbus_bridge_group
-      - KAFKA_RETRY=20
-    volumes:
-      - ./modbus_bridge/config:/app/config
-
-  opc-gateway:
+  opc-to-kafka:
     build: ./opc_gateway
-    container_name: opc_gateway
+    container_name: opc_to_kafka
     network_mode: "host"
     #restart: always
     environment:
       - MODE=opc_to_kafka
-      - OPC_ENDPOINT=opc.tcp://192.168.18.89:62640/IntegrationObjects/ServerSimulator
+      - OPC_ENDPOINT=${OPC_ENDPOINT}
       - KAFKA_BROKER=127.0.0.1:9092
-      - KAFKA_TOPIC_COMMANDS=robot.commands
-      - KAFKA_TOPIC_STATUS=robot.status
-      - KAFKA_GROUP_ID=opc_gateway_group
-      - KAFKA_RETRY=20
+      - KAFKA_TOPIC_COMMANDS=${KAFKA_TOPIC_COMMANDS}
+      - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
+      - KAFKA_GROUP_ID=${OPC_KAFKA_GROUP_ID}
     volumes:
       - ./opc_gateway/config:/app/config
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   # influxdb:
   #   image: influxdb:2.7
@@ -118,5 +120,6 @@ services:
   #     - influxdb
   #   command: flask run --host=0.0.0.0 --port=5000 --debug
 
-# volumes:
-#   influxdb_data:
+volumes:
+  redis_data:
+  #influxdb_data:
