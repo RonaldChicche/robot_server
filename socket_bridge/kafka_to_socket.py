@@ -35,18 +35,6 @@ def crear_kafka_consumer():
     )
     return consumer
 
-def wait_for_kafka(broker="localhost:9092", retries=30, timeout=90):
-    host, port = broker.split(":")
-    print(f"🔍 Esperando que Kafka esté disponible en {host}:{port}...")
-    for attempt in range(retries):
-        try:
-            with socket.create_connection((host, port), timeout=timeout):
-                print("✅ Puerto Kafka activo, iniciando productor")
-                return
-        except (socket.timeout, ConnectionRefusedError):
-            print(f"⏳ Kafka no responde (intento {attempt+1}/{retries})...")
-            time.sleep(3)
-    raise RuntimeError("❌ Kafka no se conectó tras múltiples intentos")
 
 def crear_robots():
     robot_01 = JSONBorunteClient(host=BORUNTE_IP_01, target_id="borunte_test_01")
@@ -69,12 +57,7 @@ def main():
 
     logger.info("🟢 Lectura de comandos iniciada.")
     for msg in consumer:
-        #key = msg.key.decode() if msg.key else None
         data = msg.value
-
-        # if key != TARGET_ID:
-        #     continue
-        #print(f"📦 Orden recibida: {data}")
         order_id = data["order_id"]
         method_name = data["name"]
         params = data.get("params", [])
@@ -107,5 +90,4 @@ def main():
 
 
 if __name__ == "__main__":
-    wait_for_kafka(broker=KAFKA_BROKER, retries=KAFKA_RETRY)
     main()

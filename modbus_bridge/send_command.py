@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 # Configura los parámetros
-KAFKA_BROKER = "localhost:9092"  # Cambia si estás usando docker o red externa
+KAFKA_BROKER = "192.168.2.85:9092"  # Cambia si estás usando docker o red externa
 TOPIC = "robot.commands"
 
 # Crea el productor

@@ -1,0 +1,38 @@
+# Config Local ******************************
+BORUNTE_01_IP="192.168.18.89"
+BORUNTE_02_IP="192.168.18.89"
+# Config Real Bertek Iot ********************
+# BORUNTE_01_IP="192.168.101.21"
+# BORUNTE_02_IP="1192.168.101.22"
+
+BORUNTE_01_SOCKET_PORT="9760"
+BORUNTE_01_TARGET_ID="borunte_01"
+
+BORUNTE_02_SOCKET_PORT="9760"
+
+
+# Kafka section ----------------------
+KAFKA_IP="127.0.0.1"
+KAFKA_PORT="9092"
+KAFKA_TOPIC_COMMANDS="robot.commands"
+KAFKA_TOPIC_STATUS="robot.status"
+KAFKA_TOPIC_RESPONSES="robot.responses"
+
+KAFKA_NODE_ID="BROKER_001"
+KAFKA_PROCESS_ROLES="controller,broker"
+KAFKA_LISTENERS="PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:29092"
+KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://192.168.2.85,INTERNAL://kafka:29092"
+KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
+KAFKA_CONTROLLER_LISTENER_NAMES="CONTROLLER"
+KAFKA_CONTROLLER_QUORUM_VOTERS="0@kafka:9093"
+ALLOW_PLAINTEXT_LISTENER="yes"
+
+# OPC section -------------------------
+# Local **************************************
+OPC_ENDPOINT="opc.tcp://192.168.2.81:62640/IntegrationObjects/ServerSimulator"
+# REAL ***************************************
+#OPC_ENDPOINT="opc.tcp://192.168.101.10:62640/IntegrationObjects/ServerSimulator"
+OPC_KAFKA_GROUP_ID="opc_gateway_group"
+
+# REDIS section
+REDIS_PORT="6379"

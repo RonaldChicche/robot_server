@@ -1,7 +1,7 @@
 from JsonBorunteClient import JSONBorunteClient
 import socket, json, time
 
-client = JSONBorunteClient("192.168.100.20", "default")
+client = JSONBorunteClient("192.168.2.85", "default")
 
 # client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect()
