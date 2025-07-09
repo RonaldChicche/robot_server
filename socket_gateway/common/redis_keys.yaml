@@ -1,0 +1,69 @@
+# ===========================
+# REDIS KEY DEFINITIONS
+# ===========================
+
+gateway_template:
+  status: "robot:{id}:status"
+  # para inicio, comandos y errores
+  log: "robot:{id}:log"
+  connected: "robot:{id}:connected"
+  robot_enabled: "robot:{id}:robot_enabled"
+  cmd_buffer: "robot:{id}:cmd_buffer"
+  last_cmd_result: "robot:{id}:cmd_last_result"
+  raw_response: "robot:{id}:raw_response"
+  error: "robot:{id}:error"
+  # parametros de process
+  # pickup: "robot:{id}:pickup"
+  # place: "robot:{id}:place"
+  # amount: "robot:{id}:amount"
+  # dx: "robot:{id}:dx"
+  # dy: "robot:{id}:dy"
+  # height: "robot:{id}:height"
+  # velocity: "robot:{id}:velocity"
+
+command_listener:
+  status: "command:status"
+  log: "command:log"
+  kafka_topic: "kafka:robot_commands"      
+  # Cmd
+  robot_cmd_template: "robot:{id}:cmd_buffer"
+  last_cmd_result_template: "robot:{id}:last_result"
+  # Cmd Content
+  cmd_order_id: "robot:{id}:order_id"
+  cmd_name: "robot:{id}:name"
+  cmd_params: "robot:{id}:params"
+  # Process
+  robot_process_template: "process:buffer" 
+  process_state: "process:state"
+  process_log: "process:log"
+  # Process content
+  process_order_id: "process:order_id"
+  process_name: "process:name"
+  process_params: "process:params"
+
+status_listener:
+  log: "status_listener:log"
+  kafka_status_topic: "kafka:robot_status"
+  process_status: "process:status"
+  redis_status_template: "robot:{id}:status"
+  redis_joint_pos_template: "robot:{id}:joint_pos"
+  redis_io_template: "robot:{id}:io"
+
+process_coordinator:
+  status: "process:status"
+  log: "process:log"
+  process_template: "process:buffer" 
+  process_state: "process:state"
+  # Process content
+  process_order_id: "process:order_id"
+  process_name: "process:name"
+  process_params: "process:params"
+  robot_status: "process:{id}:status"
+
+  robot_enabled: "robot:{id}:robot_enabled"
+  last_cmd_result_template: "robot:{id}:last_result"
+  process_state_template: "process:{id}:state"
+  process_log_template: "process:{id}:log"
+  next_action_template: "process:{id}:next_action"
+  assigned_robot_template: "process:{id}:assigned_robot"
+  manual_override_template: "process:{id}:override"

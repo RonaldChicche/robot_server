@@ -1,13 +1,15 @@
 
 import socket
 import json
+from datetime import datetime
+
 
 class JSONBorunteClient:
-    def __init__(self, host='127.0.0.1', target_id="borunte_test_01", port=9760, timeout=5):
+    def __init__(self, host='127.0.0.1', robot_id="01", port=9760, timeout=5):
         self.host = host
         self.port = port
         self.timeout = timeout
-        self.target_id = target_id
+        self.robot_id = robot_id
         self.sock = None
 
     def connect(self):
@@ -19,20 +21,19 @@ class JSONBorunteClient:
             self.sock = None
 
     def send_json(self, data):
-        if not self.sock:
-            self.connect()
-        message = json.dumps(data)
-        self.sock.sendall(message.encode('utf-8'))
-
-
-        response = b""
-        while not response.endswith(b'}'):
-            chunk = self.sock.recv(2048)
-            if not chunk:
-                break
-            response += chunk
-
-        return json.loads(response.decode('utf-8').strip())
+        # requiere conexion -----------
+        # if not self.sock:
+        #     self.connect()
+        # message = json.dumps(data)
+        # self.sock.sendall(message.encode('utf-8'))
+        # response = self.sock.recv(4096)
+        # no requiere conexion --------
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            message = json.dumps(data)
+            s.connect((self.host, int(self.port)))
+            s.sendall(message.encode())
+            response = s.recv(2048)
+        return json.loads(response.decode())
 
     def read_query(self, keys, pack_id="1"):
         request = {
@@ -41,7 +42,7 @@ class JSONBorunteClient:
             "packID": pack_id,
             "queryAddr": [keys]
         }
-        print(f"Sending request: {request}")
+        #print(f"Sending request: {request}")
         return self.send_json(request)
 
     def send_command(self, cmd_array, pack_id="1"):
@@ -52,7 +53,7 @@ class JSONBorunteClient:
             "packID": pack_id,
             "cmdData": cmd_array
         }
-        print(f"Sending request: {request}")
+        #print(f"Sending request: {request}")
         return self.send_json(request)
 
     def modify_counter(self, counter_id, current, target):
@@ -64,7 +65,7 @@ class JSONBorunteClient:
         return self.send_command(cmd_array, "1")
     
     def modify_global_velocity(self, velocity):
-        cmd_array = ["modifyGSPD", velocity*10]
+        cmd_array = ["modifyGSPD", velocity]
         return self.send_command(cmd_array, "1")
 
     def write_data_single(self, addres: int, value: int, permanent: int=0):
@@ -116,9 +117,11 @@ class JSONBorunteClient:
         
         pick_scaled = [int(i * 1000) for i in data["pick"]]
         put_scaled = [int(i * 1000) for i in data["put"]]
+        #checkpoint_scaled = [int(i * 1000) for i in data["checkpoint"]]
 
         self.write_data_block(800, pick_scaled)
         self.write_data_block(810, put_scaled)
+        #self.write_data_block(830, checkpoint_scaled)
 
         compe = (data["cantidad"] - 1) * data["altura"]
         self.write_data_block(820, [
@@ -133,7 +136,7 @@ class JSONBorunteClient:
     def query_all_borunte_data(self):
         """
         {
-            "target_id": "borunte_test_02",
+            "robot_id": "01",
             "ip": "192.168.101.22",
             "online": true,
             "status": {
@@ -166,8 +169,86 @@ class JSONBorunteClient:
             "timestamp": "2025-06-26T22:43:14.512284Z"
         }
         """
+        # 1. Datos en bloques (por límite de longitud del mensaje)
+        querys = [
+            ['isMoving','curAlarm','curMode','curCycle','lastCycle','curAccount','origin','RemoteCmdLen'],
+            [f"axis-{i}" for i in range(8)],
+            [f"world-{i}" for i in range(8)],
+            [f"curTorque-{i}" for i in range(8)],
+            [f"curSpeed-{i}" for i in range(8)],
+            [f"Addr-{i}" for i in range(800, 850)],
+            [f"Addr-{i}" for i in range(851, 890)]
+        ]
 
-        pass
+        responses = []
+        for i, query in enumerate(querys):
+            msg = {
+                "dsID": "www.hc-system.com.RemoteMonitor",
+                "reqType": "query",
+                "packID": str(1000 + i),
+                "queryAddr": query
+            }
+            resp = self.send_json(msg)
+            responses.append(resp.get("queryData", []))
+
+        # 2. Entradas digitales
+        x_bits = format(int(self.read_query("input-0")["queryData"][0]), '032b')[::-1]
+        x_keys = [f"x{r}{c}" for r in range(1, 5) for c in range(8)]
+        x_dict = {k: int(b) for k, b in zip(x_keys, x_bits)}
+
+        # 3. Salidas digitales
+        y_bits = format(int(self.read_query("output-0")["queryData"][0]), '032b')[::-1]
+        y_keys = [f"y{r}{c}" for r in range(1, 5) for c in range(8)]
+        y_dict = {k: int(b) for k, b in zip(y_keys, y_bits)}
+
+        # 4. Memoria M
+        m_bits = format(int(self.read_query("M-0")["queryData"][0]), '032b')[::-1]
+        m_keys = [f"m{r}{c}" for r in [1,2,3,4,11,12,13,14] for c in range(8)]
+        m_dict = {k: int(b) for k, b in zip(m_keys, m_bits)}
+
+        # 5. Contadores
+        counter_ids = self.read_query("counterList")["queryData"][0]
+        counters = {}
+        for cid in counter_ids:
+            cdata = self.read_query(f"counter-{cid}")["queryData"][0]
+            counters[f"counter-{cid}"] = {
+                "id": cdata[0], "target": cdata[1], "current": cdata[2], "mode": 2
+            }
+
+        # 6. Ensamblar
+        return {
+            "robot_id": self.robot_id,
+            "ip": self.host,
+            "online": True,
+            "status": {
+                "order_id": None,
+                "addresses": {
+                    str(i + 800 if i < 50 else i + 801): int(v) for i, v in enumerate(responses[5] + responses[6])
+                },
+                "outputs": {
+                    "x": x_dict,
+                    "y": y_dict,
+                    "m": m_dict,
+                    "euy": {}  # si tienes otro bloque, agrégalo aquí
+                },
+                "status": {
+                    "movement_status": [int(responses[0][0])],
+                    "alarm_code": [int(responses[0][1])],
+                    "cur_mode": [int(responses[0][2])],
+                    "current_cycle_time": [float(responses[0][3])],
+                    "last_cycle_time": [float(responses[0][4])],
+                    "cur_account": [int(responses[0][5])],
+                    "homed": [int(responses[0][6])],
+                    # "cmd_lenght": [int(responses[0][7])],
+                    "axis_position": [float(v) for v in responses[1]],
+                    "world_position": [float(v) for v in responses[2]],
+                    "axis_torque": [float(v) for v in responses[3]],
+                    "axis_velocity": [float(v) for v in responses[4]]
+                },
+                "counters": counters
+            },
+            "timestamp": datetime.now().isoformat() + "Z"
+        }
 
     def generar_request_status_completo(self, pack_id="1"):
         return {

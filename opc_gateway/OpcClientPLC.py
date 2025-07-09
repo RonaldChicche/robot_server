@@ -108,7 +108,7 @@ class OpcClient:
 
             enriched = {
                 "order_id": f"ORD_{timestamp}_borunte",
-                "type": "method",
+                "type": type_str,
                 "name": name,
                 "params": params,
                 "timestamp": timestamp

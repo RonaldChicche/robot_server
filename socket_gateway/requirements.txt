@@ -1,0 +1,4 @@
+async-timeout==5.0.1
+kafka-python==2.2.15
+PyYAML==6.0.2
+redis==6.2.0

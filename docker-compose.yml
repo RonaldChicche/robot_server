@@ -20,7 +20,7 @@ services:
       - KAFKA_CFG_NODE_ID=0
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
       - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://192.168.2.85:9092,INTERNAL://kafka:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://192.168.101.10:9092,INTERNAL://kafka:29092
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
@@ -71,10 +71,11 @@ services:
     environment:
       - MODE=opc_to_kafka
       - OPC_ENDPOINT=${OPC_ENDPOINT}
-      - KAFKA_BROKER=127.0.0.1:9092
+      - KAFKA_IP=${KAFKA_IP}
+      - KAFKA_PORT=${KAFKA_PORT}
       - KAFKA_TOPIC_COMMANDS=${KAFKA_TOPIC_COMMANDS}
       - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
-      - KAFKA_GROUP_ID=${OPC_KAFKA_GROUP_ID}
+      - KAFKA_GROUP_ID=${KAFKA_GROUP_ID_OPC}
     # volumes:
     #   - ./opc_gateway/config:/app/config
     depends_on:
@@ -93,8 +94,115 @@ services:
       timeout: 3s
       retries: 5
 
-  
+  socket_command_listener:
+    build: ./socket_gateway
+    container_name: socket_command_listener
+    network_mode: "host"
+    #restart: always
+    environment:
+      - MODE=command_listener
+      - KAFKA_BROKER=${KAFKA_BROKER}
+      - KAFKA_TOPIC_COMMANDS=${KAFKA_TOPIC_COMMANDS}
+      - KAFKA_GROUP_ID=${KAFKA_GROUP_ID_SOCKET}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    volumes:
+      - ./socket_gateway:/app
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
+  socket_status:
+    build: ./socket_gateway
+    container_name: socket_status
+    network_mode: "host"
+    #restart: always
+    environment:
+      - MODE=status
+      - KAFKA_BROKER=${KAFKA_BROKER}
+      - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - STATUS_INTERVAL=${STATUS_INTERVAL}
+    volumes:
+      - ./socket_gateway:/app
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  
+  socket_gateway_01:
+    build: ./socket_gateway
+    container_name: socket_gateway_01
+    network_mode: "host"
+    #restart: always
+    environment:
+      - MODE=gateway_robot
+      - ROBOT_ID=${BORUNTE_01_ID}
+      - BORUNTE_IP=${BORUNTE_01_IP}
+      - BORUNTE_PORT=${BORUNTE_01_SOCKET_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    volumes:
+      - ./socket_gateway:/app
+    # Desarrollo
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  socket_gateway_02:
+    build: ./socket_gateway
+    container_name: socket_gateway_02
+    network_mode: "host"
+    #restart: always
+    environment:
+      - MODE=gateway_robot
+      - ROBOT_ID=${BORUNTE_02_ID}
+      - BORUNTE_IP=${BORUNTE_02_IP}
+      - BORUNTE_PORT=${BORUNTE_02_SOCKET_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    volumes:
+      - ./socket_gateway:/app
+    # Desarrollo
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # socket_gateway_coordinator:
+  #   container_name: socket_gateway_coordinator
+  #   network_mode: "host"
+  #   image: python:3.10-slim
+
+  #   #restart: always
+  #   environment:
+  #     - MODE=socket_to_kafka
+  #     - KAFKA_BROKER=127.0.0.1:9092
+  #     - KAFKA_TOPIC_COMMANDS=${KAFKA_TOPIC_COMMANDS}
+  #     - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
+  #     - KAFKA_GROUP_ID=${SOCKET_KAFKA_GROUP_ID}
+  #     - BORUNTE_01_IP=${BORUNTE_01_IP}
+  #     - BORUNTE_02_IP=${BORUNTE_02_IP}
+  #     - BORUNTE_01_SOCKET_PORT=${BORUNTE_01_SOCKET_PORT}
+  #     - BORUNTE_02_SOCKET_PORT=${BORUNTE_02_SOCKET_PORT}
+  #   volumes:
+  #     - ./socket_bridge:/app
+  #   # Desarrollo
+  #   working_dir: /app
+  #   command: tail -f /dev/null
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+        
   # influxdb:
   #   image: influxdb:2.7
   #   container_name: influxdb
