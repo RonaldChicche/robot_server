@@ -4,6 +4,49 @@ Arquitectura de servidor para lineas con varios protocolos de comunicacion. El o
 ## Diagrama
 ![Diagrama](docs/images/robot_server.png)
 
+## 🔧 Componentes Principales
+
+- **Coordinador**: Administra instrucciones leídas de Redis y envía nuevas órdenes.
+- **Command Listener**: Consume comandos desde Kafka y los publica en Redis.
+- **Status Listener**: Lee estados desde Redis y los publica en Kafka.
+- **Robot Gateway**: Interfaz socket con los robots Borunte (lectura de estado + ejecución de comandos).
+
+Todo el sistema está dockerizado para facilitar el despliegue y mantenimiento.
+
+
+## 📤 Kafka
+
+Kafka es el núcleo del sistema de mensajería. Permite la comunicación desacoplada entre módulos como `command-listener`, `status-listener` y `robot-gateway`.
+
+#### Topics utilizados:
+
+- `robot.commands`: Recibe órdenes para los dispositivos.
+- `robot.status`: Publica el estado actual de los robots o PLCs.
+- `robot.responses`: Envía respuestas a comandos ejecutados.
+
+Cada mensaje es un JSON estructurado que puede incluir datos como `order_id`, `target_id`, parámetros del proceso, y marcas de tiempo.
+
+## 📈 InfluxDB
+
+Todos los datos de estado y métricas de los robots se pueden almacenar en **InfluxDB** para análisis histórico o visualización en dashboards (por ejemplo, Grafana).
+
+
+
+
+<!-- ---
+
+## 🔁 Comunicación con PLC
+
+### 📥 Datos recibidos del PLC
+```json
+{
+  "device_id": "robot1",
+  "position": {"x": 123.4, "y": 456.7, "z": 789.0},
+  "running": true,
+  "alarm_code": 104,
+  "timestamp": "2025-06-24T12:34:56Z"
+}
+```
 
 ## Para PLC 
 - Recibe
@@ -29,12 +72,6 @@ Arquitectura de servidor para lineas con varios protocolos de comunicacion. El o
     "speed": 1200
   }
 }
-
-## Modbus kafka bridge
-
-# [ borunte_01 → producer ]         \
-# [ borunte_02 → producer ]  ----->  kafka topic: "robot_status"
-# [ borunte_03 → producer ]         /
 
 # Estructura del mensaje:
 # robot.commands
@@ -67,4 +104,4 @@ Arquitectura de servidor para lineas con varios protocolos de comunicacion. El o
 #     "result": {"status": True, ...},
 #     "error": None,
 #     "timestamp": "2023-06-26T12:34:56.789Z"
-# }
+# } -->
