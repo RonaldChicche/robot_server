@@ -102,7 +102,8 @@ class OpcClient:
                     "ancho_barra": self.outer.values["ancho_barra"],
                     "espesor": self.outer.values["espesor"],
                     "peso": self.outer.values["peso"],
-                    "cantidad": self.outer.values["cantidad"],
+                    "cantidad_x": self.outer.values["cantidad_x"],
+                    "cantidad_z": self.outer.values["cantidad_z"],
                     "no_carro": self.outer.values["no_carro"]
                 }                
 

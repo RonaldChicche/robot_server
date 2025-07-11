@@ -96,8 +96,6 @@ if __name__ == "__main__":
 ##     - cantidad_x
 ##     - cantidad_z
 ##     - no_carro
-##     - espesor de la caja lateral???
-##     - ancho de caja ???
 
 ## calibracion pick (X_0 y Y_0 representan la esquina de los topes -| )
 ##      tope X_0         _________________
@@ -138,7 +136,7 @@ if __name__ == "__main__":
 
 
 ## Calculo inicial de Put 
-## X : (if no_carro == 1,2) X_1_1, X_1_2 + ancho de caja/2 - (ancho de barra/2 x cantidad_x)
+## X : (if no_carro == 1,2) X_1_1, X_1_2 + ancho de caja/2 - (ancho de barra/2 x (cantidad_x - 1))
 ## Y : irrelevante (la trayectoria va a ser recta)
 ## Z : Z_1 + espesor
 ## U, V, W : U_0, V_0, W_0

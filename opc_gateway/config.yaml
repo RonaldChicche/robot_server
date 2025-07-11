@@ -40,8 +40,12 @@ opc_nodes:
       node_id: "ns=2;s=Peso"
       type: "data"
       val: 0
-    cantidad: 
-      node_id: "ns=2;s=Cantidad"
+    cantidad_x: 
+      node_id: "ns=2;s=CantidadX"
+      type: "data"
+      val: 0
+    cantidad_z: 
+      node_id: "ns=2;s=CantidadZ"
       type: "data"
       val: 0
     no_carro:

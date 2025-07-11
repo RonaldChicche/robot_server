@@ -24,11 +24,16 @@ data_msg = {
     "params": {
         "pick": [1591.237, 1033.584, 429.415, -179.725, -0.057, -148.847],
         "put": [2686.084, 1033.584, 306.190, 179.728, -0.093, -148.850],
-        "cantidad": 5,
+        "cantidad_z": 5,
+        "cantidad_x": 1,
         "dx": 0,
         "dy": 0,
-        "altura": 5,
-        "velocidad": 1000
+        "espesor": 5,
+        "ancho": 100,
+        "velocidad": 1000,
+        "bit_coordinador": 0,
+        "compensacion_x": 1*100,
+        "selector": 1
     },
     "timestamp": timestamp + "Z"
 }

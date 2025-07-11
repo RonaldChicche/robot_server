@@ -104,11 +104,16 @@ class JSONBorunteClient:
             data (dict): {
                 "pick": [x, y, z, rx, ry, rz],
                 "put": [x, y, z, rx, ry, rz],
-                "cantidad": int,
+                "cantidad_z": int,
+                "cantidad_x": int,
                 "dx": float,
                 "dy": float,
-                "altura": float,
-                "velocidad": int
+                "espesor": float,
+                "ancho" : float,
+                "velocidad": int,
+                "bit_coordinador": int,
+                "compensacion_x": float,
+                "selector": int
             }
         Returns:
             dict: Resultados de verificación
@@ -123,11 +128,17 @@ class JSONBorunteClient:
         self.write_data_block(810, put_scaled)
         #self.write_data_block(830, checkpoint_scaled)
 
-        compe = (data["cantidad"] - 1) * data["altura"]
+        # compe = (data["cantidad"] - 1) * data["altura"]
         self.write_data_block(820, [
+            int(data["cantidad_z"]),
+            int(data["cantidad_x"]),
             int(data["dx"]*1000), int(data["dy"]*1000),
-            int(compe*1000), data["altura"]*1000,
-            data["cantidad"], data["velocidad"]
+            float(data["espesor"]*1000), float(data["ancho"]*1000),
+            int(data["velocidad"]), 
+            int(data["bit_coordinador"]),
+            float(data["compensacion_x"],
+            int(data["selector"])
+            )
         ])
 
         self.modify_global_velocity(data["velocidad"])
