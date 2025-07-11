@@ -144,6 +144,14 @@ class JSONBorunteClient:
         self.modify_global_velocity(data["velocidad"])
         return True
 
+    def proceso_02(self, data: dict):
+        response = self.write_data_single(829, int(data["selector"]))
+        return response
+
+    def proceso_03(self, data: dict):
+        response = self.write_data_single(829, int(data["selector"]))
+        return response
+
     def query_all_borunte_data(self):
         """
         {

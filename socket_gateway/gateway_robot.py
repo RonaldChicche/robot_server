@@ -66,7 +66,9 @@ def main():
         "modify_global_velocity": robot.modify_global_velocity,
         "write_data_single": robot.write_data_single,
         "write_data_block": robot.write_data_block,
-        "proceso_01": robot.proceso_01
+        "proceso_01": robot.proceso_01,
+        "proceso_02": robot.proceso_02,
+        "proceso_03": robot.proceso_03
     }
 
     logger.info("🔄 Iniciando bucle principal...")

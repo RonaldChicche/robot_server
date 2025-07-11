@@ -153,6 +153,8 @@ if __name__ == "__main__":
 ##     - velocidad: int               || 826
 ##     - bit_coordinator: int         || 827
 ##     - compensacion_x: float        || 828
+##     - selector                     || 829
+
 
 
 ## Salidas:
