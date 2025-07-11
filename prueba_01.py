@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 # Configura los parámetros
-KAFKA_BROKER = "192.168.101.10:9092"  # Cambia si estás usando docker o red externa
+KAFKA_BROKER = "192.168.101.20:9092"  # Cambia si estás usando docker o red externa
 TOPIC = "robot.commands"
 CMD = "send_data"
 #CMD = "start"
@@ -32,11 +32,29 @@ data_msg = {
         "ancho": 100,
         "velocidad": 1000,
         "bit_coordinador": 0,
-        "compensacion_x": 1*100,
-        "selector": 1
+        "compensacion_x": 1*100
     },
     "timestamp": timestamp + "Z"
 }
+
+data_msg_2 = {
+    "order_id": f"ORD_{timestamp}_borunte_test_01",
+    "robot_id" : "01",
+    "type": "method",
+    "name": "proceso_02",
+    "params": {},
+    "timestamp": timestamp + "Z"
+}
+
+data_msg_3 = {
+    "order_id": f"ORD_{timestamp}_borunte_test_01",
+    "robot_id" : "01",
+    "type": "method",
+    "name": "proceso_03",
+    "params": {},
+    "timestamp": timestamp + "Z"
+}
+
 
 start_msg = {
     "order_id": f"ORD_{timestamp}_borunte_test_01",

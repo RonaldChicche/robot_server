@@ -112,23 +112,21 @@ class JSONBorunteClient:
                 "ancho" : float,
                 "velocidad": int,
                 "bit_coordinador": int,
-                "compensacion_x": float,
-                "selector": int
+                "compensacion_x": float
             }
         Returns:
             dict: Resultados de verificación
         """
+        # Establecimiento de selector de funcion
+        self.write_data_single(850, 1)
         required_keys = ["pick", "put", "cantidad", "dx", "dy", "altura", "velocidad"]
         
         pick_scaled = [int(i * 1000) for i in data["pick"]]
         put_scaled = [int(i * 1000) for i in data["put"]]
-        #checkpoint_scaled = [int(i * 1000) for i in data["checkpoint"]]
 
         self.write_data_block(800, pick_scaled)
         self.write_data_block(810, put_scaled)
-        #self.write_data_block(830, checkpoint_scaled)
 
-        # compe = (data["cantidad"] - 1) * data["altura"]
         self.write_data_block(820, [
             int(data["cantidad_z"]),
             int(data["cantidad_x"]),
@@ -136,20 +134,19 @@ class JSONBorunteClient:
             float(data["espesor"]*1000), float(data["ancho"]*1000),
             int(data["velocidad"]), 
             int(data["bit_coordinador"]),
-            float(data["compensacion_x"],
-            int(data["selector"])
+            float(data["compensacion_x"]
             )
         ])
 
         self.modify_global_velocity(data["velocidad"])
         return True
 
-    def proceso_02(self, data: dict):
-        response = self.write_data_single(829, int(data["selector"]))
+    def proceso_02(self):
+        response = self.write_data_single(850, 2)
         return response
 
-    def proceso_03(self, data: dict):
-        response = self.write_data_single(829, int(data["selector"]))
+    def proceso_03(self):
+        response = self.write_data_single(850, 3)
         return response
 
     def query_all_borunte_data(self):

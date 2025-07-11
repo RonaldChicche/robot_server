@@ -153,7 +153,9 @@ if __name__ == "__main__":
 ##     - velocidad: int               || 826
 ##     - bit_coordinator: int         || 827
 ##     - compensacion_x: float        || 828
-##     - selector                     || 829
+
+##     No es parametro es algo que la misma funcion hara como parte de su logica
+##     - selector                     || 850
 
 
 
