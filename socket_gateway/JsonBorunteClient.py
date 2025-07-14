@@ -131,10 +131,10 @@ class JSONBorunteClient:
             int(data["cantidad_z"]),
             int(data["cantidad_x"]),
             int(data["dx"]*1000), int(data["dy"]*1000),
-            float(data["espesor"]*1000), float(data["ancho"]*1000),
+            int(data["espesor"]*1000), int(data["ancho"]*1000),
             int(data["velocidad"]), 
             int(data["bit_coordinador"]),
-            float(data["compensacion_x"]
+            int(data["compensacion_x"]
             )
         ])
 

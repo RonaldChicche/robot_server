@@ -17,14 +17,15 @@ services:
     ports:
       - "9092:9092"
     environment:
-      - KAFKA_CFG_NODE_ID=0
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://192.168.5.10:9092,INTERNAL://kafka:29092
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=${KAFKA_CFG_NODE_ID}
+      - KAFKA_CFG_PROCESS_ROLES=${KAFKA_CFG_PROCESS_ROLES}
+      - KAFKA_CFG_LISTENERS=${KAFKA_CFG_LISTENERS}
+      - KAFKA_CFG_ADVERTISED_LISTENERS=${KAFKA_CFG_ADVERTISED_LISTENERS}
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=${KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP}
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${KAFKA_CFG_CONTROLLER_QUORUM_VOTERS}
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=${KAFKA_CFG_CONTROLLER_LISTENER_NAMES}
+      - ALLOW_PLAINTEXT_LISTENER=${ALLOW_PLAINTEXT_LISTENER}
+      - KAFKA_KRAFT_CLUSTER_ID=${KAFKA_KRAFT_CLUSTER_ID}
   
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -34,50 +35,26 @@ services:
     networks:
       - app-tier
     environment:
-      - KAFKA_CLUSTERS_0_NAME=kraft-cluster
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
+      - KAFKA_CLUSTERS_0_NAME=${KAFKA_CLUSTERS_0_NAME}
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS}
     depends_on:
       kafka:
         condition: service_healthy
 
-  # borunte_modbus_01:
-  #   build: ./modbus_bridge
-  #   container_name: borunte_modbus_01
-  #   network_mode: "host"
-  #   #restart: always
-  #   environment:
-  #     - MODE=modbus_to_kafka
-  #     - PROCESS_ID=borunte_bridge_to_kafka_01
-  #     - KAFKA_IP=${KAFKA_IP}
-  #     - KAFKA_PORT=${KAFKA_PORT}
-  #     - BORUNTE_IP=${BORUNTE_01_IP}        
-  #     - TARGET_ID=${BORUNTE_01_TARGET_ID}
-  #     - KAFKA_TOPIC_COMMANDS=${KAFKA_TOPIC_COMMANDS}
-  #     - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
-  #     - KAFKA_TOPIC_RESPONSES=${KAFKA_TOPIC_RESPONSES}
-  #     - KAFKA_GROUP_ID=modbus_bridge_group
-  #     - KAFKA_RETRY=20
-  #   volumes:
-  #     - ./modbus_bridge/config:/app/config
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-
-  opc-to-kafka:
+  opc-gateway:
     build: ./opc_gateway
-    container_name: opc_to_kafka
+    container_name: opc_gateway
     network_mode: "host"
     #restart: always
     environment:
-      - MODE=opc_to_kafka
+      - MODE=${MODE_OPC_GATEWAY}
       - OPC_ENDPOINT=${OPC_ENDPOINT}
-      - KAFKA_IP=${KAFKA_IP}
-      - KAFKA_PORT=${KAFKA_PORT}
+      - KAFKA_GROUP_ID=${KAFKA_GROUP_ID_OPC}
+      - KAFKA_BROKER=${KAFKA_BROKER}
       - KAFKA_TOPIC_COMMANDS=${KAFKA_TOPIC_COMMANDS}
       - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
-      - KAFKA_GROUP_ID=${KAFKA_GROUP_ID_OPC}
-    # volumes:
-    #   - ./opc_gateway/config:/app/config
+    volumes:
+      - ./opc_gateway:/app
     depends_on:
       kafka:
         condition: service_healthy
@@ -94,9 +71,9 @@ services:
       timeout: 3s
       retries: 5
 
-  socket_command_listener:
+  socket_command:
     build: ./socket_gateway
-    container_name: socket_command_listener
+    container_name: socket_command
     network_mode: "host"
     #restart: always
     environment:
@@ -148,7 +125,6 @@ services:
       - REDIS_PORT=${REDIS_PORT}
     volumes:
       - ./socket_gateway:/app
-    # Desarrollo
     depends_on:
       kafka:
         condition: service_healthy
@@ -169,12 +145,36 @@ services:
       - REDIS_PORT=${REDIS_PORT}
     volumes:
       - ./socket_gateway:/app
-    # Desarrollo
     depends_on:
       kafka:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  postgres-db:
+    image: postgres:15
+    container_name: robot_config_db
+    environment:
+      POSTGRES_USER: robotadmin
+      POSTGRES_PASSWORD: secretpass
+      POSTGRES_DB: robot_config
+    volumes:
+      - db_robot_data:/var/lib/postgresql/data
+    networks:
+      - app-tier
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@robotica.io
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres-db
+    networks:
+      - app-tier
 
   # socket_gateway_coordinator:
   #   container_name: socket_gateway_coordinator
@@ -232,4 +232,5 @@ services:
 
 volumes:
   redis_data:
-  #influxdb_data:
+  db_robot_data:
+  # influxdb_data:

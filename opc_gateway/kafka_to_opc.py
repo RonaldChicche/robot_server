@@ -3,7 +3,7 @@ import time
 import json
 import signal
 from kafka import KafkaProducer
-from OpcClientPLC import OpcClient  # Tu clase ya con SubHandler y lógica
+from OpcClientPLC import OpcClient  
 
 
 OPC_ENDPOINT = os.getenv("OPC_ENDPOINT", "opc.tcp://192.168.18.89:62640/IntegrationObjects/ServerSimulator")
