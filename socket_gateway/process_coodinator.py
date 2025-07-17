@@ -161,12 +161,15 @@ if __name__ == "__main__":
 
 ## Salidas:
 ##     - y20 : Actuador neumatico
+##     ------ Bits de estado
 ##     - y30 : Posicion para paletizar
-##     - y31 : coodinador de robots (espera que ambos enciendan y30)
-##     - y32 : Bit de confirmacion de barra lista
-##     - y33 : Posicion de deposicion de barra
-##     - y33 : Capa terminada (barras en un mismo nivel de paletizado)
-
+##     - y31 : Posicion de deposicion de barra
+##     - y32 : Confirmaacion de paletizado (despues de soltar la barra)
+##     - y33 : Posicion de reposo (Proceso terminado)
+##     ------ Estos vienen de fuera de la logica del progrma interno del robot
+##     - y40 : Bit de confirmacion de barra lista para voltear (viene de OPC)
+##     - y41 : Bit de confirmacion de coordinacion (viene de Coordinador - DESHABILITADO)
+##     - y42 : Bit de confirmacion de barra lista para depositar (viene de OPC)
 
 ## Programa Borunte:  Parte de un reposo al que vuelve al final
 ## set target_counter_x = cantidad_x  (821)

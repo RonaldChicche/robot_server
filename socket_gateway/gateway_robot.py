@@ -66,6 +66,7 @@ def main():
         "modify_global_velocity": robot.modify_global_velocity,
         "write_data_single": robot.write_data_single,
         "write_data_block": robot.write_data_block,
+        "modify_output_y": robot.modify_output_y,
         "proceso_01": robot.proceso_01,
         "proceso_02": robot.proceso_02,
         "proceso_03": robot.proceso_03
@@ -81,18 +82,31 @@ def main():
             if cmd_raw:
                 command = json.loads(cmd_raw)
                 logger.info(f"📥 Recibido para ejecutar: {command}")
+                cmd_type = command.get("type")
                 cmd_name = command.get("name")
                 params = command.get("params", {})
 
                 if cmd_name in method_map:
                     method = method_map[cmd_name]
-                    result = method(params) if params else method()
+
+                    if not isinstance(params, dict):
+                        raise ValueError(f"⚠️ Los parámetros deben ser un dict válido: {params}")
+
+                    if cmd_type == "bridge":
+                        if "output_id" not in params or "value" not in params:
+                            raise ValueError(f"⚠️ Parámetros incompletos para comando bridge: {params}")
+                    
+                    logger.info(f"🚀 Ejecutando '{cmd_type}' → {cmd_name} con parámetros: {params}")
+                    result = method(**params)
+
                 else:
-                    logger.warning(f"Método no permitido: {cmd_name}")
+                    logger.warning(f"⛔ Método no permitido: {cmd_name}")
+                    result = None
 
                 redis.set(gateway_keys["last_cmd_result"], json.dumps({
                     "status": "ok",
                     "order_id": command.get("order_id"),
+                    "type": cmd_type,
                     "name": cmd_name,
                     "result": result,
                     "timestamp": time.time()

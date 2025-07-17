@@ -1,7 +1,11 @@
 networks:
   app-tier:
     driver: bridge
-  
+
+volumes:
+  redis_data:
+  db_data:
+  # influxdb_data:
 
 services:
   kafka:
@@ -58,6 +62,79 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+
+  postgres-db:
+    image: postgres:17.5
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASS}
+    ports:
+      - "${PGADMIN_PORT}:80"
+    depends_on:
+      - postgres-db
+    networks:
+      - app-tier
+
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
+    ports:
+      - "${BACKEND_PORT}:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - PORT=5000
+      - KAFKA_BROKER=${KAFKA_BROKER}
+      - KAFKA_TOPIC_COMMANDS=${KAFKA_TOPIC_COMMANDS}
+      - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
+      - KAFKA_GROUP_ID=${KAFKA_GROUP_ID_BACKEND}
+      - KAFKAJS_NO_PARTITIONER_WARNING=${KAFKAJS_NO_PARTITIONER_WARNING}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DB_USER=${POSTGRES_USER}
+      - DB_HOST=${POSTGRES_HOST}
+      - DB_DATABASE=${POSTGRES_DB}
+      - DB_PASSWORD=${POSTGRES_PASS}
+      - DB_PORT=${POSTGRES_PORT}
+    command: ["npm", "run", "dev"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend/robot-app
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "${FRONTEND_PORT}:5173"
+    volumes:
+      - ./frontend/robot-app:/app
+      - /app/node_modules
+    environment:
+      - VITE_PORT=5173
+      - CHOKIDAR_USEPOLLING=true
+    command: sh -c "npm install && npm run dev -- --host"
 
   redis:
     image: redis:alpine
@@ -150,87 +227,3 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-
-  postgres-db:
-    image: postgres:15
-    container_name: robot_config_db
-    environment:
-      POSTGRES_USER: robotadmin
-      POSTGRES_PASSWORD: secretpass
-      POSTGRES_DB: robot_config
-    volumes:
-      - db_robot_data:/var/lib/postgresql/data
-    networks:
-      - app-tier
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@robotica.io
-      PGADMIN_DEFAULT_PASSWORD: admin123
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres-db
-    networks:
-      - app-tier
-
-  # socket_gateway_coordinator:
-  #   container_name: socket_gateway_coordinator
-  #   network_mode: "host"
-  #   image: python:3.10-slim
-
-  #   #restart: always
-  #   environment:
-  #     - MODE=socket_to_kafka
-  #     - KAFKA_BROKER=127.0.0.1:9092
-  #     - KAFKA_TOPIC_COMMANDS=${KAFKA_TOPIC_COMMANDS}
-  #     - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
-  #     - KAFKA_GROUP_ID=${SOCKET_KAFKA_GROUP_ID}
-  #     - BORUNTE_01_IP=${BORUNTE_01_IP}
-  #     - BORUNTE_02_IP=${BORUNTE_02_IP}
-  #     - BORUNTE_01_SOCKET_PORT=${BORUNTE_01_SOCKET_PORT}
-  #     - BORUNTE_02_SOCKET_PORT=${BORUNTE_02_SOCKET_PORT}
-  #   volumes:
-  #     - ./socket_bridge:/app
-  #   # Desarrollo
-  #   working_dir: /app
-  #   command: tail -f /dev/null
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-        
-  # influxdb:
-  #   image: influxdb:2.7
-  #   container_name: influxdb
-  #   ports:
-  #     - "8086:8086"
-  #   environment:
-  #     - DOCKER_INFLUXDB_INIT_MODE=setup
-  #     - DOCKER_INFLUXDB_INIT_USERNAME=admin
-  #     - DOCKER_INFLUXDB_INIT_PASSWORD=adminpass
-  #     - DOCKER_INFLUXDB_INIT_ORG=robotica
-  #     - DOCKER_INFLUXDB_INIT_BUCKET=robot_datos
-  #     - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=token123
-  #   volumes:
-  #     - influxdb_data:/var/lib/influxdb2
-
-  # backend:
-  #   build: ./web
-  #   volumes:
-  #     - ./web:/app
-  #   ports:
-  #     - "5000:5000"
-  #   env_file:
-  #     - ./web/.env
-  #   depends_on:
-  #     - influxdb
-  #   command: flask run --host=0.0.0.0 --port=5000 --debug
-
-volumes:
-  redis_data:
-  db_robot_data:
-  # influxdb_data:

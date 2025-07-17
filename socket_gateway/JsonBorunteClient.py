@@ -76,6 +76,20 @@ class JSONBorunteClient:
         cmd_array = ["rewriteDataList", start_address, len(data), permanent, *data]
         return self.send_command(cmd_array, "1")
 
+    def modify_output_y(self, output_id: int, value: bool=True):
+        output_id = int(output_id)
+        if 10 <= output_id <= 17:
+            index = output_id - 10
+        elif 20 <= output_id <= 27:
+            index = output_id - 12
+        elif 30 <= output_id <= 37:
+            index = output_id - 14
+        elif 40 <= output_id <= 47:
+            index = output_id - 16
+        else: return {"error": "indice invalido"}
+        cmd_array = ["modifyOutput", 0, index, int(value)]
+        return self.send_command(cmd_array, "1")
+
     def start_button(self):
         return self.send_command(["startButton"], "0")
     
@@ -120,6 +134,8 @@ class JSONBorunteClient:
         # Establecimiento de selector de funcion
         self.write_data_single(850, 1)
         required_keys = ["pick", "put", "cantidad", "dx", "dy", "altura", "velocidad"]
+
+        data["compensacion_x"] = float(data["cantidad_x"]) * float(data["ancho"])
         
         pick_scaled = [int(i * 1000) for i in data["pick"]]
         put_scaled = [int(i * 1000) for i in data["put"]]
@@ -134,8 +150,7 @@ class JSONBorunteClient:
             int(data["espesor"]*1000), int(data["ancho"]*1000),
             int(data["velocidad"]), 
             int(data["bit_coordinador"]),
-            int(data["compensacion_x"]
-            )
+            int(data["compensacion_x"]*1000)
         ])
 
         self.modify_global_velocity(data["velocidad"])

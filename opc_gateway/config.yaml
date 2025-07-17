@@ -41,11 +41,11 @@ opc_nodes:
       type: "data"
       val: 0
     cantidad_x: 
-      node_id: "ns=2;s=CantidadX"
+      node_id: "ns=2;s=Cantidad_x"
       type: "data"
       val: 0
     cantidad_z: 
-      node_id: "ns=2;s=CantidadZ"
+      node_id: "ns=2;s=Cantidad_z"
       type: "data"
       val: 0
     no_carro:
@@ -56,6 +56,23 @@ opc_nodes:
       node_id: "ns=2;s=Velocidad"
       type: "data"
       val: 0
+    bit_voltear:
+      node_id: "ns=2;s=bit_voltear"
+      type: "bridge"
+      name: "modify_output_y"
+      param: "40"
+    bit_stack:
+      node_id: "ns=2;s=bit_stack"
+      type: "bridge"
+      name: "modify_output_y"
+      param: "42"
+    bit_libre:
+      node_id: "ns=2;s=bit_libre"
+      type: "bridge"
+      name: "modify_output_y"
+      param: 
+        output_id: "43"
+        value: false
   write:
     robot1:
       running: "ns=2;s=01_Running"
