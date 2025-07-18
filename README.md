@@ -1,107 +1,70 @@
 # robot_server
-Arquitectura de servidor para lineas con varios protocolos de comunicacion. El objetivo es conseguir que estos recursos puedan ser manejados y consultados mediante una API para mayor flexibilidad, ademas de proporcionar una puerta a integrar mas servicios y caracteristicas como una visualizacion
 
-## Diagrama
+Arquitectura de servidor para líneas industriales con múltiples protocolos de comunicación. El sistema permite que los recursos como robots, PLCs y sensores puedan ser controlados y monitorizados mediante una API centralizada, con soporte para integración de servicios adicionales como dashboards, almacenamiento de métricas o analítica.
+
+## 📊 Diagrama General
+
 ![Diagrama](docs/images/robot_server.png)
 
-## 🔧 Componentes Principales
+## 🧩 Componentes Principales
 
-- **Coordinador**: Administra instrucciones leídas de Redis y envía nuevas órdenes.
-- **Command Listener**: Consume comandos desde Kafka y los publica en Redis.
-- **Status Listener**: Lee estados desde Redis y los publica en Kafka.
-- **Robot Gateway**: Interfaz socket con los robots Borunte (lectura de estado + ejecución de comandos).
+- **Cliente OPC**: Extrae datos desde el PLC mediante protocolo OPC-UA.
+- **Backend API**: Expone servicios para control externo y almacenamiento (Express.js + PostgreSQL).
+- **Frontend**: Visualización e interacción con los recursos conectados (React).
+- **Kafka**: Núcleo de mensajería del sistema para desacoplar el flujo de datos.
+- **InfluxDB**: Base de datos temporal para registrar el historial de estado y métricas de robots.
+- **Módulos Dockerizados**:
+  - `Coordinator`: Orquesta las acciones internas del sistema leyendo comandos desde Redis.
+  - `Command Listener`: Escucha órdenes desde Kafka (`robot.commands`) y las envía a Redis.
+  - `Status Listener`: Publica en Kafka el estado leído desde Redis (`robot.status`).
+  - `Robot Gateway (01, 02)`: Conectores socket que comunican con los robots Borunte (envían y reciben comandos/estado).
 
-Todo el sistema está dockerizado para facilitar el despliegue y mantenimiento.
+Todo el sistema está containerizado usando **Docker** para facilitar despliegue, portabilidad y mantenimiento.
 
+## 📤 Kafka – Sistema de Mensajería
 
-## 📤 Kafka
+Kafka permite la comunicación asíncrona entre módulos desacoplados del sistema.
 
-Kafka es el núcleo del sistema de mensajería. Permite la comunicación desacoplada entre módulos como `command-listener`, `status-listener` y `robot-gateway`.
+### Topics utilizados:
 
-#### Topics utilizados:
+- **`robot.commands`**: Envía órdenes de ejecución a robots o PLCs.
+- **`robot.status`**: Reporta el estado actualizado de los dispositivos.
+- **`robot.responses`**: Respuestas a comandos, incluyendo resultado y errores.
 
-- `robot.commands`: Recibe órdenes para los dispositivos.
-- `robot.status`: Publica el estado actual de los robots o PLCs.
-- `robot.responses`: Envía respuestas a comandos ejecutados.
-
-Cada mensaje es un JSON estructurado que puede incluir datos como `order_id`, `target_id`, parámetros del proceso, y marcas de tiempo.
-
-## 📈 InfluxDB
-
-Todos los datos de estado y métricas de los robots se pueden almacenar en **InfluxDB** para análisis histórico o visualización en dashboards (por ejemplo, Grafana).
-
-
-
-
-<!-- ---
-
-## 🔁 Comunicación con PLC
-
-### 📥 Datos recibidos del PLC
+### Ejemplo de mensaje – `robot.commands`:
 ```json
 {
-  "device_id": "robot1",
-  "position": {"x": 123.4, "y": 456.7, "z": 789.0},
-  "running": true,
-  "alarm_code": 104,
-  "timestamp": "2025-06-24T12:34:56Z"
+  "order_id": "ORD_1001",
+  "target_id": "robot_01",
+  "type": "method",
+  "name": "set_output",
+  "params": ["y13", 1],
+  "timestamp": "2025-07-18T14:00:00Z"
 }
 ```
 
-## Para PLC 
-- Recibe
+## 📈 InfluxDB – Historización y Métricas
+
+Todos los datos periódicos o eventos de estado se pueden registrar en **InfluxDB** para posterior análisis histórico o visualización en tiempo real (por ejemplo, mediante Grafana).
+
+## 🔌 Comunicación con PLC (OPC-UA)
+
+El **Cliente OPC**, en contenedor Python, se conecta a un PLC vía OPC-UA para intercambiar datos de producción.
+
+### Datos de entrada:
+```json
 {
-  "device_id": "robot1",
-  "position": {"x": 123.4, "y": 456.7, "z": 789.0},
+  "device_id": "plc_01",
+  "position": {"x": 125.0, "y": 38.0, "z": 2.5},
   "running": true,
-  "alarm_code": 104,
-  "timestamp": "2025-06-24T12:34:56Z"
+  "alarm_code": 103,
+  "timestamp": "2025-07-18T14:05:00Z"
 }
+```
 
--manda
-{
-  "order_id": "ORD_1001",
-  "target_device": "robot1",
-  "type": "method",
-  "name": "process_01",
-  "params": {
-    "quantity": 5,
-    "dx": 1.2,
-    "dy": -0.3,
-    "dz": 0.0,
-    "speed": 1200
-  }
-}
+## 🤖 Comunicación con Robots (vía Socket)
 
-# Estructura del mensaje:
-# robot.commands
-# {
-#     "order_id": "ORD_20230626123456_borunte_01",
-#     "target_id": "borunte_01",
-#     "type": "method",
-#     "name": "set_output",
-#     "params": ["y13", 1]
-# }
-
-# robot.status
-# {
-#     "target_id": "borunte_01",
-#     "ip": "127.0.0.1",
-#     "online": true,
-#     "status": {
-          "order_id": "...",
-#         "y13": 1
-#     },
-#     "timestamp": "2023-06-26T12:34:56.789Z"
-# }
-
-# robot.responses
-# {
-#     "target_id": "borunte_01",
-#     "type": "method",
-#     "online": True,
-#     "command": method_name,
-#     "result": {"status": True, ...},
-#     "error": None,
-#     "timestamp": "2023-06-26T12:34:56.789Z"
-# } -->
+Cada `Robot Gateway` conecta con un robot Borunte mediante un socket TCP:
+- Recibe comandos estructurados.
+- Devuelve estado y confirmaciones.
+- Cada robot se identifica por un `target_id`.
