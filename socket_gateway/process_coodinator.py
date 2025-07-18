@@ -49,7 +49,7 @@ def handle_process(redis_client, keys, process_id, params):
 def main():
     keys = load_keys()
     redis_client = create_redis_client(REDIS_HOST, REDIS_PORT)
-    kafka_producer = create_kafka_producer(KAFKA_BROKER)
+    #kafka_producer = create_kafka_producer(KAFKA_BROKER)
     print("🧠 Process coordinator started")
 
     while True:

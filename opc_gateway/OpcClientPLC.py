@@ -1,7 +1,9 @@
 from opcua import Client
 from datetime import datetime
 
-import yaml
+import yaml, logging
+
+logger = logging.getLogger(__name__)
 
 
 class OpcClient:
@@ -30,20 +32,20 @@ class OpcClient:
                 node_id = node_info['node_id']
                 nodes[name] = self.client.get_node(node_id)
         except Exception as e:
-            print(f"Error al inicializar los nodos: {e}")
+            logger.error(f"⚠️ Error al inicializar los nodos: {e}", exc_info=True)
         return nodes
 
     def subscribe_bits(self):
         self.sub = self.client.create_subscription(500, self.sub_handler)
         monitored_nodes = []
         self.name_map = {}  # Mapea NodeId -> nombre lógico
-        self.type_map = {}  # Mapea NodeId -> tipo
+        self.config_map = {}  # Mapea NodeId -> tipo
 
         for name, config in self.config['read'].items():
             node = self.client.get_node(config['node_id'])
             monitored_nodes.append(node)
             self.name_map[node.nodeid] = name
-            self.type_map[node.nodeid] = config
+            self.config_map[node.nodeid] = config
 
         self.handle_data_change = self.sub.subscribe_data_change(monitored_nodes)
 
@@ -64,15 +66,17 @@ class OpcClient:
             self.outer = outer
 
         def datachange_notification(self, node, val, data):
-            config = self.outer.type_map.get(node.nodeid)
+            config = self.outer.config_map.get(node.nodeid)
             if not config:
                 return
+            
             name = self.outer.name_map.get(node.nodeid)
-            type_str = self.outer.type_map.get(node.nodeid)    
+            type_str = config['type']
 
             if type_str == 'data':
                 self.outer.values[name] = val 
-                print(f"📥 Dato actualizado: {name} - {self.outer.values}")
+                logger.info(f"📥 Dato actualizado: {name} - {self.outer.values}")
+                return
 
             if type_str in ['method', 'proceso']:
                 if name not in self.outer.first_trigger_skipped:
@@ -82,10 +86,10 @@ class OpcClient:
                     return
             
             payload = self.generate_payload(name, config, val)
-            print(f"📦 Payload generado: {payload}")
+            logger.info(f"📦 Payload generado: {payload}")
             if self.outer.kafka_producer:
                 response = self.outer.kafka_producer.send(self.outer.kafka_topic, value=payload)
-                print(f"📦 Enviado a Kafka [{self.outer.kafka_topic}]: {response}")
+                logger.info(f"📦 Enviado a Kafka [{self.outer.kafka_topic}]: {response}")
 
         def generate_payload(self, name, config, val):
             #     pick = [1654.937, -125.636, 1100, 180, 0, -151]
@@ -102,9 +106,9 @@ class OpcClient:
                     ]
                 }
             elif type_str == "bridge":
-                params = dict(config.get("param", {}))
-                if "value" not in params:
-                    params["value"] = val  
+                params = config.get("param", {})
+                type_str = "method"
+                params["value"] = val  
             else:
                 params = {}
 

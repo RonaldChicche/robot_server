@@ -13,8 +13,10 @@ logger = logging.getLogger("StatusListener")
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
+STATUS_INTERVAL=os.getenv("STATUS_INTERVAL", 5)\
+
 KAFKA_TOPIC_STATUS = os.getenv("KAFKA_TOPIC_STATUS", "robot.status")
-STATUS_INTERVAL=os.getenv("STATUS_INTERVAL", 5)
+KAFKA_TOPIC_RESPONSE = os.getenv("KAFKA_TOPIC_RESPONSE", "robot.responses")
 
 ROBOT_IDS = ["01", "02"]
 
@@ -48,7 +50,7 @@ def main():
     signal.signal(signal.SIGTERM, graceful_shutdown)
     
     try:
-        load_keys('common/redis_keys.yaml')  # puedes usarlo luego si deseas aplicar filtros
+        keys = load_keys(path="common/redis_keys.yaml")  # puedes usarlo luego si deseas aplicar filtros
         redis_client = create_redis_client(REDIS_HOST, REDIS_PORT)
         kafka_producer = create_kafka_producer(KAFKA_BROKER)
     except Exception as e:
@@ -56,27 +58,46 @@ def main():
         graceful_shutdown()
 
     logger.info("📡 Iniciando status_listener...")
+    # variables para comparar
+    last_status_time = {
+        "01": 0,
+        "02": 0
+    }
+    last_raw_statuses = {}
+    last_raw_results = {}
     time.sleep(5)
 
     while True:
+        current_time = time.time()
         for robot_id in ROBOT_IDS:
-            key = f"robot:{robot_id}:raw_response"
             try:
-                raw_data = redis_client.get(key)
+                # result data
+                result_key = keys["status_listener"]["redis_result_template"].format(id=robot_id)
+                raw_data = redis_client.get(result_key)
                 if raw_data:
-                    raw_status = json.loads(raw_data)
-                    kafka_producer.send(KAFKA_TOPIC_STATUS, value=raw_status)
-                    #print(f"✅ Enviado status de robot {robot_id} a Kafka")
-                else:
-                    logger.warning(f"⚠️ No se encontró status para robot {robot_id}")
+                    raw_result = json.loads(raw_data)
+                    if last_raw_results.get(robot_id) != raw_result:
+                        kafka_producer.send(KAFKA_TOPIC_RESPONSE, value=raw_result)
+                        last_raw_results[robot_id] = raw_result  
+                
+                 # status data
+                if current_time - last_status_time[robot_id] >= float(STATUS_INTERVAL):
+                    sensor_key = keys["status_listener"]["redis_sensor_template"].format(id=robot_id)
+                    raw_data = redis_client.get(sensor_key)
+                    #redis_client.delete(sensor_key)
+                    last_status_time[robot_id] = current_time
+                    if raw_data:
+                        raw_status = json.loads(raw_data)
+                        kafka_producer.send(KAFKA_TOPIC_STATUS, value=raw_status)
+                    else:
+                        logger.warning(f"⚠️ No se encontró status para robot {robot_id}")
             
             except (json.JSONDecodeError, KeyError, TypeError) as known_error:
-                logger.error(f"⚠️ Status mal formado para {robot_id}: {known_error}")
+                logger.error(f"⚠️ Datos mal formados para {robot_id}: {known_error}", exc_info=True)
             except Exception as fatal_error:
                 logger.error(f"❌ Error inesperado con {robot_id}: {fatal_error}", exc_info=True)
                 graceful_shutdown()
 
-        time.sleep(int(STATUS_INTERVAL))
 
 
 if __name__ == "__main__":

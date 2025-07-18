@@ -15,10 +15,10 @@ exports.getMethodParameters = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, name, type, required, default_value, group_name, group_order
-       FROM parameters
-       WHERE method_id = $1
-       ORDER BY group_name NULLS FIRST, group_order NULLS LAST`,
+      `SELECT id, name, type, required, default_value, group_name, param_order
+      FROM parameters
+      WHERE method_id = $1
+      ORDER BY id, COALESCE(param_order, 0)`,
       [methodId]
     );
 

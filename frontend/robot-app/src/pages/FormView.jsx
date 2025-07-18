@@ -47,24 +47,45 @@ export default function FormView() {
     const ids = robotId.split(",").map((id) => id.trim())
 
     for (const id of ids) {
+      const pickKeys = ["pick_x", "pick_y", "pick_z", "pick_rx", "pick_ry", "pick_rz"]
+      const putKeys = ["put_x", "put_y", "put_z", "put_rx", "put_ry", "put_rz"]
+
+      const pick = []
+      const put = []
+      const rest = {}
+
+      Object.entries(params).forEach(([key, val]) => {
+        if (val.trim() !== "") {
+          let parsed
+          try {
+            parsed = JSON.parse(val)
+          } catch {
+            parsed = val
+          }
+
+          if (pickKeys.includes(key)) {
+            pick[pickKeys.indexOf(key)] = parsed
+          } else if (putKeys.includes(key)) {
+            put[putKeys.indexOf(key)] = parsed
+          } else {
+            rest[key] = parsed
+          }
+        }
+      })
+
+      const orderedParams = {}
+      if (pick.length) orderedParams.pick = pick
+      if (put.length) orderedParams.put = put
+      Object.assign(orderedParams, rest)
+
       const data_msg = {
         order_id: `ORD_${timestamp.replace(/[-:.TZ]/g, "")}_${selectedMethod.name}_${id}`,
         robot_id: id,
         type: selectedMethod.type,
         name: selectedMethod.name,
-        params: {},
+        params: orderedParams,
         timestamp,
       }
-
-      Object.entries(params).forEach(([key, val]) => {
-        if (val.trim() !== "") {
-          try {
-            data_msg.params[key] = JSON.parse(val)
-          } catch {
-            data_msg.params[key] = val
-          }
-        }
-      })
 
       try {
         const res = await fetch("http://localhost:5000/api/kafka/send", {
@@ -79,8 +100,10 @@ export default function FormView() {
         alert("❌ Fallo al enviar")
       }
     }
+
     alert("✅ Mensaje(s) enviado(s)")
   }
+
 
   return (
     <div className="p-6 max-w-xl mx-auto">

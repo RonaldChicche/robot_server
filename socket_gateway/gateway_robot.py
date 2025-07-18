@@ -91,10 +91,6 @@ def main():
 
                     if not isinstance(params, dict):
                         raise ValueError(f"⚠️ Los parámetros deben ser un dict válido: {params}")
-
-                    if cmd_type == "bridge":
-                        if "output_id" not in params or "value" not in params:
-                            raise ValueError(f"⚠️ Parámetros incompletos para comando bridge: {params}")
                     
                     logger.info(f"🚀 Ejecutando '{cmd_type}' → {cmd_name} con parámetros: {params}")
                     result = method(**params)
@@ -103,7 +99,7 @@ def main():
                     logger.warning(f"⛔ Método no permitido: {cmd_name}")
                     result = None
 
-                redis.set(gateway_keys["last_cmd_result"], json.dumps({
+                redis.set(gateway_keys["cmd_result"], json.dumps({
                     "status": "ok",
                     "order_id": command.get("order_id"),
                     "type": cmd_type,
@@ -115,20 +111,22 @@ def main():
                 logger.info(f"✅ Comando '{cmd_name}' ejecutado con éxito.")
             
             # Leer estado del robot siempre
-            redis.set(gateway_keys["connected"], 1, ex=10)
-            redis.set(gateway_keys["status"], "activo", ex=10)
+            redis.set(gateway_keys["connected"], 1, ex=5)
+            # redis.set(gateway_keys["status"], "activo", ex=5)
 
             if time.time() - last_query_time >= 0.2:
                 response = robot.query_all_borunte_data()
-                redis.set(gateway_keys["raw_response"], json.dumps(response), ex=10)
+                redis.set(gateway_keys["sensor_data"], json.dumps(response), ex=5)
                 last_query_time = time.time()   
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as known_error:
             logger.error(f"⚠️ Error procesando comando inválido: {known_error}", exc_info=True)
 
         except Exception as fatal_error:
-            logger.error(f"💥 Error inesperado. Apagando...: {fatal_error}", exc_info=True)
+            logger.error(f"💥 Error inesperado. Apagando...{BORUNTE_IP}: {fatal_error}", exc_info=True)
             graceful_shutdown()
+
+
 
 
 if __name__ == "__main__":

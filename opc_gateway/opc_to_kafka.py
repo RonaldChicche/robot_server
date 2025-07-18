@@ -62,7 +62,7 @@ def main():
     while error_count < 3:
         try:
             #response = opc.read_all_inputs()
-            print("Estado de las entradas ok")
+            logger.info(f"Estado de las entradas ok")
             time.sleep(30)
         except KeyboardInterrupt:
             logger.info("🔴 Lectura de comandos detenido.")

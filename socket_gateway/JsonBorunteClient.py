@@ -111,15 +111,15 @@ class JSONBorunteClient:
     def clear_alarm_and_continue(self):
         return self.send_command(["clearAlarmAndContinue"])
 
-    def proceso_01(self, data: dict):
+    def proceso_01(self, pick: list, put: list, cantidad_z: int, cantidad_x: int, dx: float, dy: float, espesor: float, ancho: float, velocidad: int, bit_coordinador: int):
         """
         Proceso 1: paletizado frontal con ajuste XY, cantidad, altura de stack y velocidad.
         Args:
             data (dict): {
                 "pick": [x, y, z, rx, ry, rz],
                 "put": [x, y, z, rx, ry, rz],
-                "cantidad_z": int,
                 "cantidad_x": int,
+                "cantidad_z": int,
                 "dx": float,
                 "dy": float,
                 "espesor": float,
@@ -133,27 +133,26 @@ class JSONBorunteClient:
         """
         # Establecimiento de selector de funcion
         self.write_data_single(850, 1)
-        required_keys = ["pick", "put", "cantidad", "dx", "dy", "altura", "velocidad"]
 
-        data["compensacion_x"] = float(data["cantidad_x"]) * float(data["ancho"])
+        compensacion_x = cantidad_x * ancho
         
-        pick_scaled = [int(i * 1000) for i in data["pick"]]
-        put_scaled = [int(i * 1000) for i in data["put"]]
+        pick_scaled = [int(i * 1000) for i in pick]
+        put_scaled = [int(i * 1000) for i in put]
 
         self.write_data_block(800, pick_scaled)
         self.write_data_block(810, put_scaled)
 
         self.write_data_block(820, [
-            int(data["cantidad_z"]),
-            int(data["cantidad_x"]),
-            int(data["dx"]*1000), int(data["dy"]*1000),
-            int(data["espesor"]*1000), int(data["ancho"]*1000),
-            int(data["velocidad"]), 
-            int(data["bit_coordinador"]),
-            int(data["compensacion_x"]*1000)
+            int(cantidad_z),
+            int(cantidad_x),
+            int(dx*1000), int(dy*1000),
+            int(espesor*1000), int(ancho*1000),
+            int(velocidad), 
+            int(bit_coordinador),
+            int(compensacion_x*1000)
         ])
 
-        self.modify_global_velocity(data["velocidad"])
+        self.modify_global_velocity(velocidad)
         return True
 
     def proceso_02(self):
@@ -281,22 +280,4 @@ class JSONBorunteClient:
             "timestamp": datetime.now().isoformat() + "Z"
         }
 
-    def generar_request_status_completo(self, pack_id="1"):
-        return {
-            "dsID": "www.hc-system.com.RemoteMonitor",
-            "reqType": "query",
-            "packID": pack_id,
-            "queryAddr": (
-                [str(i) for i in range(800, 850)] +
-                [
-                    "movement_status", "home_status", "alarm_code", "global_velocity",
-                    "current_cycle_time", "last_cycle_time", "axis_temperature",
-                    "axis_position", "world_position", "axis_velocity", "axis_torque",
-                    "axis_voltage", "load_rate", "counter_0", "counter_1", "counter_2"
-                ] +
-                [f"y{r}{c}" for r in range(1, 5) for c in range(0, 8)] +
-                [f"m{r}{c}" for r in [1,2,3,4,11,12,13,14] for c in range(0, 8)] +
-                [f"m1{r}" for r in range(10, 50)] +
-                [f"euy{r}{c}" for r in range(1, 5) for c in range(0, 8)]
-            )
-        }
+    

@@ -61,23 +61,23 @@ def main():
         # {'order_id': 'ORD_20250707T202743Z_borunte', 'type': 'proceso', 'name': 'send_data', 'params': {'ancho_caja': 150.0, 'long_barra': '3658', 'ancho_barra': 101.6, 'espesor': 6.35, 'peso': 21.0, 'cantidad': 4, 'no_carro': 1}, 'timestamp': '20250707T202743Z'}
         try:
             cmd_type = data.get("type")
-            if cmd_type in ["method", "bridge"]:
+            if cmd_type in ["method"]:
                 target_ids = [data.get("robot_id")] if data.get("robot_id") else DEFAULT_ROBOT_IDS
                 for robot_id in target_ids:
                     redis_key = keys["command_listener"]["robot_cmd_template"].format(id=robot_id)
-                    redis_client.set(redis_key, json.dumps(data))
+                    redis_client.set(redis_key, json.dumps(data), ex=2)
                     logger.info(f"📤 Comando '{cmd_type}' almacenado en Redis: {redis_key}")
 
             elif cmd_type == "proceso":
-                redis_key = keys["command_listener"]["process_buffer"]
-                redis_client.set(redis_key, json.dumps(data))
+                redis_key = keys["command_listener"]["robot_process_template"]
+                redis_client.set(redis_key, json.dumps(data))    # expira?
                 logger.info(f"📦 Proceso parameters stored in Redis: {redis_key}")
-
+                
             else:
                 logger.warning(f"⚠️ Invalid command type ... Skipping - {cmd_type}")
         
         except (json.JSONDecodeError, KeyError, ValueError, TypeError) as known_error:
-            logger.error(f"⚠️ Error procesando mensaje inválido: {known_error}")
+            logger.error(f"⚠️ Error procesando mensaje inválido: {known_error}", exc_info=True)
         except Exception as fatal_error:
             logger.error(f"💥 Error inesperado. Cerrando...: {fatal_error}", exc_info=True)
             graceful_shutdown()

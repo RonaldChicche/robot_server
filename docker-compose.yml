@@ -208,22 +208,22 @@ services:
       redis:
         condition: service_healthy
 
-  socket_gateway_02:
-    build: ./socket_gateway
-    container_name: socket_gateway_02
-    network_mode: "host"
-    #restart: always
-    environment:
-      - MODE=gateway_robot
-      - ROBOT_ID=${BORUNTE_02_ID}
-      - BORUNTE_IP=${BORUNTE_02_IP}
-      - BORUNTE_PORT=${BORUNTE_02_SOCKET_PORT}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-    volumes:
-      - ./socket_gateway:/app
-    depends_on:
-      kafka:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+  # socket_gateway_02:
+  #   build: ./socket_gateway
+  #   container_name: socket_gateway_02
+  #   network_mode: "host"
+  #   #restart: always
+  #   environment:
+  #     - MODE=gateway_robot
+  #     - ROBOT_ID=${BORUNTE_02_ID}
+  #     - BORUNTE_IP=${BORUNTE_02_IP}
+  #     - BORUNTE_PORT=${BORUNTE_02_SOCKET_PORT}
+  #     - REDIS_HOST=${REDIS_HOST}
+  #     - REDIS_PORT=${REDIS_PORT}
+  #   volumes:
+  #     - ./socket_gateway:/app
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy

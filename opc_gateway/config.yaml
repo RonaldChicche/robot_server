@@ -60,12 +60,16 @@ opc_nodes:
       node_id: "ns=2;s=bit_voltear"
       type: "bridge"
       name: "modify_output_y"
-      param: "40"
+      param: 
+        output_id: "40"
+        value: false
     bit_stack:
       node_id: "ns=2;s=bit_stack"
       type: "bridge"
       name: "modify_output_y"
-      param: "42"
+      param: 
+        output_id: "42"
+        value: false
     bit_libre:
       node_id: "ns=2;s=bit_libre"
       type: "bridge"
