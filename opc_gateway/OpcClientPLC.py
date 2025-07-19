@@ -101,7 +101,7 @@ class OpcClient:
                 params = {
                     key: self.outer.values[key]
                     for key in [
-                        "ancho_caja", "long_barra", "ancho_barra", "espesor",
+                        "long_caja", "ancho_caja", "long_barra", "ancho_barra", "espesor",
                         "peso", "cantidad_x", "cantidad_z", "no_carro"
                     ]
                 }

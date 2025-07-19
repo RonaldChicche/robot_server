@@ -27,8 +27,9 @@ def handle_process(redis_client, keys, process_trama):
         "type": "process",
         "name": "send_data",
         "params": {
+            "long_caja": 1100    #### interno de la caja
             "ancho_caja": 150.0,
-            "long_barra": 100.0,
+            "long_barra": 1000.0,
             "ancho_barra": 50.0,
             "espesor": 10.0,
             "peso": 10.0,
@@ -53,21 +54,21 @@ def handle_process(redis_client, keys, process_trama):
             }
     """
     parametros = process_trama["params"]
-    largo_gripper = 205.5
-    ancho_gripper = 12.1
+    largo_gripper = 2055
+    ancho_gripper = 121
 
     # esquina de barra solo para este caso
-    tope_x0 = 0
-    tope_y0 = 0
-    tope_z0 = 386.757
+    tope_x0 = 966.996
+    tope_y0 = -2189.924
+    tope_z0 = 349.647+10
 
     # calibracion pick
     x_0 = tope_x0 + ancho_gripper/2
     y_0 = tope_y0 - largo_gripper/2
-    z_0 = tope_z0 - float(parametros["espesor"]) + 200 # prueba y error
-    u_0 = 0
-    v_0 = 0
-    w_0 = 0
+    z_0 = tope_z0 + 300 # prueba y error
+    u_0 = 179.727
+    v_0 = -0.813
+    w_0 = -149.879
 
     # calculo de pick
     ## Calculo inicial de Pick 
@@ -84,10 +85,10 @@ def handle_process(redis_client, keys, process_trama):
     pick_w = w_0
 
     # esquina de caja
-    tope_x1_1 = 0
-    tope_x1_2 = 0
-    tope_y1 = 0   # irrelevante
-    tope_z1 = 180.757
+    tope_x1_1 = 1981.142
+    tope_x1_2 = 2652.369
+    tope_y1 = y_0   # irrelevante ya no tanto
+    tope_z1 = 181.987
 
     ## X_1_1 : (Ubicacion de Tope de guia en mesa 1 con gripper - Largo de gripper/2)
     ## X_1_2 : (Ubicacion de Tope de guia en mesa 2 con gripper - Largo de gripper/2)
@@ -95,10 +96,10 @@ def handle_process(redis_client, keys, process_trama):
     ## Z_1 : al nivel de una caja mas un juego (se tiene que estandarizar las medidas de estas en cuanto a altura)
     ## U_1, V_1, W_1 : U_0, V_0, W_0
 
-    x_1_1 = tope_x1_1 - ancho_gripper/2
+    x_1_1 = tope_x1_1 - ancho_gripper/2 + 2
     x_1_2 = tope_x1_2 - ancho_gripper/2
-    y_1 = tope_y1
-    z_1 = tope_z1 + 200 # prueba y error
+    y_1 = y_0
+    z_1 = tope_z1 + 300 # prueba y error
     u_1 = u_0
     v_1 = v_0
     w_1 = w_0
@@ -113,7 +114,7 @@ def handle_process(redis_client, keys, process_trama):
         put_x = x_1_1 + float(parametros["ancho_caja"])/2
     elif parametros["no_carro"] == 2:
         put_x = x_1_2 + float(parametros["ancho_caja"])/2
-    put_y = pick_y
+    put_y = y_1 + float(parametros["long_caja"])/2
     put_z = z_1 + float(parametros["espesor"])
     put_u = u_1
     put_v = v_1
@@ -131,8 +132,8 @@ def handle_process(redis_client, keys, process_trama):
         "espesor": parametros["espesor"],
         "ancho" : parametros["ancho_barra"],
         "velocidad": 200,
-        "bit_coordinador": False,
-        "compensacion_x": float(parametros["cantidad_x"]) * float(parametros["ancho_barra"])
+        "bit_coordinador": False
+        #"compensacion_x": float(parametros["cantidad_x"]) * float(parametros["ancho_barra"])
     }
 
     # trama method para proceso_01
@@ -208,6 +209,7 @@ if __name__ == "__main__":
 # ....DDDDDDD.....3
 
 ## Entradas PLC:
+##     - long_caja # medida interna
 ##     - ancho_caja  
 ##     - long_barra
 ##     - ancho_barra
@@ -257,13 +259,13 @@ if __name__ == "__main__":
 
 ## Calculo inicial de Put 
 ## X : (if no_carro == 1,2) X_1_1, X_1_2 + ancho de caja/2 - (ancho de barra/2 x (cantidad_x - 1))
-## Y : irrelevante (la trayectoria va a ser recta)
+## Y : es el tope Y_0 + longitud de caja / 2
 ## Z : Z_1 + espesor
 ## U, V, W : U_0, V_0, W_0
 
 ## Entradas:
 ##     - pick: [x, y, z, rx, ry, rz]  || 800, 801, 802, 803, 804, 805 (fijo)
-##     - put: [x, y, z, rx, ry, rz]   || 810, 811, 812, 813, 814, 815 (no sirve)
+##     - put: [x, y, z, rx, ry, rz]   || 810, 811, 812, 813, 814, 815 ()
 ##     - cantidad_z: int              || 820
 ##     - cantidad_x: int              || 821
 ##     - dx: float                    || 822

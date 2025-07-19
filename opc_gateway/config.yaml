@@ -20,6 +20,10 @@ opc_nodes:
       node_id: "ns=2;s=SendData"
       type: "proceso"
       val: 0
+    long_caja: 
+      node_id: "ns=2;s=LongCaja"
+      type: "data"
+      val: 0
     ancho_caja: 
       node_id: "ns=2;s=AnchoCaja"
       type: "data"
