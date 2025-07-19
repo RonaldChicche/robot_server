@@ -9,7 +9,7 @@ case "$MODE" in
     python -u gateway_robot.py
     ;;
   coordinator)
-    python -u coordinator.py
+    python -u process_coordinator.py
     ;;
   status)
     python -u status_listener.py

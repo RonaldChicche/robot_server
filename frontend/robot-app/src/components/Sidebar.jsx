@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button"
-import { BookText, Settings, Info, Atom } from "lucide-react"
+import { BookText, Settings, Info, Atom, Gamepad2 } from "lucide-react"
 
 const tabs = [
   { key: "table", label: "Tabla", icon: BookText },
   { key: "form", label: "Formulario", icon: Settings },
+  { key: "controller", label: "Controlador", icon: Gamepad2 },
   { key: "about", label: "Acerca de", icon: Info },
 ]
 

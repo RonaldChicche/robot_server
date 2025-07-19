@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Sidebar from '@/components/Sidebar'
 import TableView from '@/pages/TableView'
 import FormView from '@/pages/FormView'
+import ControllerView from '@/pages/ControllerView'
 import AboutView from '@/pages/AboutView'
 
 function App() {
@@ -13,6 +14,8 @@ function App() {
         return <TableView />
       case 'form':
         return <FormView />
+      case 'controller':
+        return <ControllerView />
       case 'about':
         return <AboutView />
       default:

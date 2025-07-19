@@ -3,18 +3,26 @@ const router = express.Router();
 
 const {
     getAllMethods, 
-    getMethodParameters,
-    getAllMethodAndParameters,
+    getAllMethodsAndParameters,
     createMethod,
     updateMethod,
-    deleteMethod
+    deleteMethod,
+    getMethodParameters,
+    createParameter,
+    updateParameter,
+    deleteParameter
 } = require("../controllers/methodsController");
 
-router.get("/", getAllMethods);
-router.get("/all-method-and-parameters", getAllMethodAndParameters);
-router.get("/:id/parameters", getMethodParameters);
-router.post("/", createMethod);
-router.put("/:id", updateMethod);
-router.delete("/:id", deleteMethod);
+
+router.get("/", getAllMethods); 
+router.get("/all", getAllMethodsAndParameters); 
+router.post("/", createMethod); 
+router.put("/:id", updateMethod); 
+router.delete("/:id", deleteMethod); 
+
+router.get("/:methodId/parameters", getMethodParameters); 
+router.post("/:methodId/parameters", createParameter); 
+router.put("/parameters/:paramId", updateParameter); 
+router.delete("/parameters/:paramId", deleteParameter); 
 
 module.exports = router;

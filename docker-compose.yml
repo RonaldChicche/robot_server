@@ -188,6 +188,26 @@ services:
       redis:
         condition: service_healthy
   
+  socket_coordinator:
+    build: ./socket_gateway
+    container_name: socket_coordinator
+    network_mode: "host"
+    #restart: always
+    environment:
+      - MODE=coordinator
+      - KAFKA_BROKER=${KAFKA_BROKER}
+      - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - STATUS_INTERVAL=${STATUS_INTERVAL}
+    volumes:
+      - ./socket_gateway:/app
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   socket_gateway_01:
     build: ./socket_gateway
     container_name: socket_gateway_01

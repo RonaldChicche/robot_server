@@ -47,11 +47,13 @@ process_coordinator:
   log: "process:log"
   process_template: "process:buffer" 
   process_state: "process:state"
+
   # Process content
   process_order_id: "process:order_id"
   process_name: "process:name"
   process_params: "process:params"
   robot_status: "process:{id}:status"
+  robot_cmd_template: "robot:{id}:cmd_buffer"
 
   robot_enabled: "robot:{id}:robot_enabled"
   last_cmd_result_template: "robot:{id}:last_result"

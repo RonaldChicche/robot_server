@@ -102,3 +102,18 @@ INSERT INTO parameters (method_id, name, type, required)
 VALUES
 ((SELECT id FROM methods WHERE name = 'modify_output_y'), 'output_id', 'integer', true),
 ((SELECT id FROM methods WHERE name = 'modify_output_y'), 'value', 'boolean', false);
+
+
+
+-- Ordenamiento de parametros por param_order
+
+WITH ordered_params AS (
+  SELECT
+    id,
+    ROW_NUMBER() OVER (PARTITION BY method_id ORDER BY id) AS new_order
+  FROM parameters
+)
+UPDATE parameters t
+SET param_order = o.new_order
+FROM ordered_params o
+WHERE t.id = o.id;
