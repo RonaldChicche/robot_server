@@ -62,6 +62,7 @@ def main():
         try:
             cmd_type = data.get("type")
             if cmd_type in ["method"]:
+                # linea de distribucion de comando si no se especifica solo aplica a method ++++++++++++++++++++++++++++++++++
                 target_ids = [data.get("robot_id")] if data.get("robot_id") else DEFAULT_ROBOT_IDS
                 for robot_id in target_ids:
                     redis_key = keys["command_listener"]["robot_cmd_template"].format(id=robot_id)

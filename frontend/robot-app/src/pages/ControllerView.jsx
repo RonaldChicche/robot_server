@@ -56,23 +56,55 @@ export default function ControllerView() {
   }
 
   return (
+    <div className="w-full max-w-screen-xl mx-auto p-6 px-20 ">
     <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="flex flex-col gap-2">
-        <Button onClick={() => sendCommand("startButton")}>Start Button</Button>
-        <Button onClick={() => sendCommand("pauseButton")} variant="outline">Pause Button</Button>
-        <Button onClick={() => sendCommand("stopButton")} variant="destructive">Stop Button</Button>
-        <Button onClick={() => sendCommand("clearAlarm")}>Clear Alarm</Button>
+      <div className="flex flex-col gap-3 md:col-span-1">
+        <Button onClick={() => sendCommand("startButton")} className="bg-cyan-600 hover:bg-cyan-700">Start Button</Button>
+        <Button onClick={() => sendCommand("pauseButton")} variant="secondary">Pause Button</Button>
         <Button onClick={sendData} className="bg-cyan-600 hover:bg-cyan-700">Send Data</Button>
-      </div>
+        <Button onClick={() => sendCommand("clearAlarm")} variant="secondary">Clear Alarm</Button>
+        <Button onClick={() => sendCommand("stopButton")} variant="destructive">Stop Button</Button>
 
-      <div className="bg-slate-800 rounded-xl p-4 space-y-4">
+        <div className="space-y-6 mt-6">
+          <div className="flex items-center justify-between">
+            <span>Bit Stack</span>
+            <Switch
+              checked={bitStack}
+              onCheckedChange={(val) => {
+                setBitStack(val)
+                fetch("http://localhost:5000/api/switch", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ bit: "stack", value: val })
+                })
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <span>Bit Coordinador</span>
+            <Switch
+              checked={form.bit_coordinador}
+              onCheckedChange={(val) => {
+                updateField("bit_coordinador", val)
+                fetch("http://localhost:5000/api/switch", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ bit: "coordinador", value: val })
+                })
+              }}
+            />
+          </div>
+        </div>
+      </div>        
+
+      <div className="bg-slate-800 rounded-xl p-4 space-y-4 md:col-span-2">
         <div>
           <label className="font-bold">Pick</label>
           <div className="grid grid-cols-6 gap-2 mt-2">
             {form.pick.map((val, i) => (
               <Input
                 key={i}
-                placeholder="x"
+                placeholder="-"
                 value={val}
                 onChange={(e) => updateArrayField("pick", i, e.target.value)}
               />
@@ -86,7 +118,7 @@ export default function ControllerView() {
             {form.put.map((val, i) => (
               <Input
                 key={i}
-                placeholder="x"
+                placeholder="-"
                 value={val}
                 onChange={(e) => updateArrayField("put", i, e.target.value)}
               />
@@ -95,44 +127,61 @@ export default function ControllerView() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Input
-            type="number"
-            min={1}
-            placeholder="cantidad_z"
-            value={form.cantidad_z}
-            onChange={(e) => updateField("cantidad_z", parseInt(e.target.value))}
-          />
-          <Input
-            type="number"
-            min={1}
-            placeholder="cantidad_x"
-            value={form.cantidad_x}
-            onChange={(e) => updateField("cantidad_x", parseInt(e.target.value))}
-          />
-          <Input
-            type="number"
-            placeholder="dx"
-            value={form.dx}
-            onChange={(e) => updateField("dx", parseFloat(e.target.value))}
-          />
-          <Input
-            type="number"
-            placeholder="dy"
-            value={form.dy}
-            onChange={(e) => updateField("dy", parseFloat(e.target.value))}
-          />
-          <Input
-            type="number"
-            placeholder="ancho"
-            value={form.ancho}
-            onChange={(e) => updateField("ancho", parseFloat(e.target.value))}
-          />
-          <Input
-            type="number"
-            placeholder="espesor"
-            value={form.espesor}
-            onChange={(e) => updateField("espesor", parseFloat(e.target.value))}
-          />
+          <div>
+            <label className="text-sm font-semibold mb-1 block">Cantidad Z</label>
+            <Input
+              type="number"
+              min={1}
+              value={form.cantidad_z}
+              onChange={(e) => updateField("cantidad_z", parseInt(e.target.value))}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold mb-1 block">Cantidad X</label>
+            <Input
+              type="number"
+              min={1}
+              value={form.cantidad_x}
+              onChange={(e) => updateField("cantidad_x", parseInt(e.target.value))}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold mb-1 block">dx</label>
+            <Input
+              type="number"
+              value={form.dx}
+              onChange={(e) => updateField("dx", parseFloat(e.target.value))}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold mb-1 block">dy</label>
+            <Input
+              type="number"
+              value={form.dy}
+              onChange={(e) => updateField("dy", parseFloat(e.target.value))}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold mb-1 block">Ancho</label>
+            <Input
+              type="number"
+              value={form.ancho}
+              onChange={(e) => updateField("ancho", parseFloat(e.target.value))}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold mb-1 block">Espesor</label>
+            <Input
+              type="number"
+              value={form.espesor}
+              onChange={(e) => updateField("espesor", parseFloat(e.target.value))}
+            />
+          </div>
         </div>
 
         <div>
@@ -155,37 +204,10 @@ export default function ControllerView() {
           <span>Bit Coordinador</span>
         </div>
       </div>
+      
 
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <span>Bit Stack</span>
-          <Switch
-            checked={bitStack}
-            onCheckedChange={(val) => {
-              setBitStack(val)
-              fetch("http://localhost:5000/api/switch", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ bit: "stack", value: val })
-              })
-            }}
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <span>Bit Coordinador</span>
-          <Switch
-            checked={form.bit_coordinador}
-            onCheckedChange={(val) => {
-              updateField("bit_coordinador", val)
-              fetch("http://localhost:5000/api/switch", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ bit: "coordinador", value: val })
-              })
-            }}
-          />
-        </div>
-      </div>
+
+    </div>
     </div>
   )
 }

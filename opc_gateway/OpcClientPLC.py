@@ -1,4 +1,5 @@
 from opcua import Client
+from opcua import ua
 from datetime import datetime
 
 import yaml, logging
@@ -11,6 +12,9 @@ class OpcClient:
         self.client = Client(endpoint)
         self.client.name = "Python PLC Gateway"
         #self.client.session_timeout = 300000 # 5 min
+        # self.client.set_security_string("Basic256Sha256,UserName,None,None")
+        # self.client.set_user("OpcUser")
+        # self.client.set_password("Bertek@69")
         self.client.connect()
         self.config = self.load_config(config_path)
         self.node_map = self.init_nodes()

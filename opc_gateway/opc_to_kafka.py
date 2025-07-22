@@ -13,7 +13,6 @@ logger = logging.getLogger("OpctoKafka")
 
 
 PROCESS_ID = os.getenv("PROCESS_ID", "modbus_to_kafka_bridge")
-#OPC_ENDPOINT = os.getenv("OPC_ENDPOINT", "opc.tcp://192.168.18.89:62640/IntegrationObjects/ServerSimulator")
 OPC_ENDPOINT = os.getenv("OPC_ENDPOINT", "opc.tcp://ronald_desk:62640/IntegrationObjects/ServerSimulator")
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 KAFKA_TOPIC_COMMANDS = os.getenv("KAFKA_TOPIC_COMMANDS", "robot.commands")
@@ -62,6 +61,8 @@ def main():
     while error_count < 3:
         try:
             #response = opc.read_all_inputs()
+            node = opc.client.get_node("ns=2;s=StartBit")
+            res = opc.client.get_values([node])
             logger.info(f"Estado de las entradas ok")
             time.sleep(30)
         except KeyboardInterrupt:

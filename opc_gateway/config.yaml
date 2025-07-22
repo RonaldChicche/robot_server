@@ -1,97 +1,117 @@
 opc_nodes:
   read:                                 # importante manteenr el orden de estos elementos ya que asi empieza la suscripcion de nodos
     start_button:
-      node_id: "ns=2;s=StartBit"
+      #node_id: "ns=2;s=StartBit"
+      node_id: "ns=4;i=20"
       type: "method"
       name: "start_button"
     pause_button: 
-      node_id: "ns=2;s=PauseBit"
+      # node_id: "ns=2;s=PauseBit"
+      node_id: "ns=4;i=21"
       type: "method"
       name: "pause_button"
     stop_button: 
-      node_id: "ns=2;s=StopBit"
+      # node_id: "ns=2;s=StopBit"
+      node_id: "ns=4;i=22"
       type: "method"
       name: "stop_button"
     clear_alarm_button: 
-      node_id: "ns=2;s=CleanAlarm"
+      # node_id: "ns=2;s=CleanAlarm"
+      node_id: "ns=4;i=23"
       type: "method"
       name: "clear_alarm_button"
     send_data: 
-      node_id: "ns=2;s=SendData"
+      # node_id: "ns=2;s=SendData"
+      node_id: "ns=4;i=24"
       type: "proceso"
       val: 0
     long_caja: 
-      node_id: "ns=2;s=LongCaja"
+      # node_id: "ns=2;s=LongCaja"
+      node_id: "ns=4;s=3"
       type: "data"
       val: 0
     ancho_caja: 
-      node_id: "ns=2;s=AnchoCaja"
+      # node_id: "ns=2;s=AnchoCaja"
+      node_id: "ns=4;s=2"
       type: "data"
       val: 0
     long_barra:
-      node_id: "ns=2;s=LongBarra"
+      # node_id: "ns=2;s=LongBarra"
+      node_id: "ns=4;s=8"
       type: "data"
       val: 0
     ancho_barra: 
-      node_id: "ns=2;s=AnchoBarra"
+      # node_id: "ns=2;s=AnchoBarra"
+      node_id: "ns=4;s=7"
       type: "data"
       val: 0
     espesor: 
-      node_id: "ns=2;s=Espesor"
+      # node_id: "ns=2;s=Espesor"
+      node_id: "ns=4;s=9"
       type: "data"
       val: 0
     peso:
-      node_id: "ns=2;s=Peso"
+      # node_id: "ns=2;s=Peso"
+      node_id: "ns=4;s=13"
       type: "data"
       val: 0
     cantidad_x: 
-      node_id: "ns=2;s=Cantidad_x"
+      # node_id: "ns=2;s=Cantidad_x"
+      node_id: "ns=4;s=17"
       type: "data"
       val: 0
     cantidad_z: 
-      node_id: "ns=2;s=Cantidad_z"
+      # node_id: "ns=2;s=Cantidad_z"
+      node_id: "ns=4;s=12"
       type: "data"
       val: 0
     no_carro:
-      node_id: "ns=2;s=NoCarro"
+      # node_id: "ns=2;s=NoCarro"
+      node_id: "ns=4;s=18"
       type: "data"
       val: 0
     velocidad: 
-      node_id: "ns=2;s=Velocidad"
+      # node_id: "ns=2;s=Velocidad"
+      node_id: "ns=4;s=18"
       type: "data"
       val: 0
     bit_voltear:
-      node_id: "ns=2;s=bit_voltear"
+      # node_id: "ns=2;s=bit_voltear"
+      node_id: "ns=4;s=25"
       type: "bridge"
       name: "modify_output_y"
       param: 
         output_id: "40"
         value: false
     bit_stack:
-      node_id: "ns=2;s=bit_stack"
+      # node_id: "ns=2;s=bit_stack"
+      node_id: "ns=4;s=26"
       type: "bridge"
       name: "modify_output_y"
       param: 
         output_id: "42"
         value: false
-    bit_libre:
-      node_id: "ns=2;s=bit_libre"
-      type: "bridge"
-      name: "modify_output_y"
-      param: 
-        output_id: "43"
-        value: false
+    # bit_libre:
+    #   node_id: "ns=2;s=bit_libre"
+    #   type: "bridge"
+    #   name: "modify_output_y"
+    #   param: 
+    #     output_id: "43"
+    #     value: false
   write:
     robot1:
-      running: "ns=2;s=01_Running"
-      stack_count: "ns=2;s=01_StackCount"
-      alarm_code: "ns=2;s=01_AlarmCode"
-      pos_x: "ns=2;s=01_PosX"
-      pos_y: "ns=2;s=01_PosY"
-      pos_z: "ns=2;s=01_PosZ"
-      ang_u: "ns=2;s=01_AngU"
-      ang_v: "ns=2;s=01_AngV"
-      ang_w: "ns=2;s=01_AngW"
+      # running: "ns=2;s=01_Running"
+      running: "ns=4;i=29"
+      # stack_count: "ns=2;s=01_StackCount"
+      stack_count: "ns=4;i=32"
+      # alarm_code: "ns=2;s=01_AlarmCode"
+      alarm_code: "ns=4;i=33"
+      # pos_x: "ns=2;s=01_PosX"
+      # pos_y: "ns=2;s=01_PosY"
+      # pos_z: "ns=2;s=01_PosZ"
+      # ang_u: "ns=2;s=01_AngU"
+      # ang_v: "ns=2;s=01_AngV"
+      # ang_w: "ns=2;s=01_AngW"
       j1: "ns=2;s=01_J1"
       j2: "ns=2;s=01_J2"
       j3: "ns=2;s=01_J3"

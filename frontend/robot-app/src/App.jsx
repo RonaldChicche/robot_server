@@ -3,6 +3,7 @@ import Sidebar from '@/components/Sidebar'
 import TableView from '@/pages/TableView'
 import FormView from '@/pages/FormView'
 import ControllerView from '@/pages/ControllerView'
+import ProcessView from '@/pages/ProcessView'
 import AboutView from '@/pages/AboutView'
 
 function App() {
@@ -16,6 +17,8 @@ function App() {
         return <FormView />
       case 'controller':
         return <ControllerView />
+      case 'process':
+        return <ProcessView />
       case 'about':
         return <AboutView />
       default:

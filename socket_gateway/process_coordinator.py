@@ -92,7 +92,7 @@ def handle_process(redis_client, keys, process_trama):
 
     ## X_1_1 : (Ubicacion de Tope de guia en mesa 1 con gripper - Largo de gripper/2)
     ## X_1_2 : (Ubicacion de Tope de guia en mesa 2 con gripper - Largo de gripper/2)
-    ## Y_1 : irrelevante (la trayectoria va a ser recta)
+    ## Y_1 : tope de y_0 ya que esta alineado pero 
     ## Z_1 : al nivel de una caja mas un juego (se tiene que estandarizar las medidas de estas en cuanto a altura)
     ## U_1, V_1, W_1 : U_0, V_0, W_0
 
@@ -106,14 +106,17 @@ def handle_process(redis_client, keys, process_trama):
 
     # calculo de put 
     ## X : (if no_carro == 1,2) X_1_1, X_1_2 + ancho de caja/2 - (ancho de barra/2 x (cantidad_x - 1))
-    ## Y : irrelevante (la trayectoria va a ser recta)
+    ## Y : Y_1 + largo de caja/2 (ajuste por medio de largo de caja)
     ## Z : Z_1 + espesor
     ## U, V, W : U_0, V_0, W_0
 
+    # ajuste de carro
     if int(parametros["no_carro"]) == 1:
-        put_x = x_1_1 + float(parametros["ancho_caja"])/2
+        x_1 = x_1_1 
     elif parametros["no_carro"] == 2:
-        put_x = x_1_2 + float(parametros["ancho_caja"])/2
+        x_1 = x_1_2 
+
+    put_x = x_1 + float(parametros["ancho_caja"])/2 - (parametros["ancho_barra"] * (parametros["cantidad_x"] - 1))
     put_y = y_1 + float(parametros["long_caja"])/2
     put_z = z_1 + float(parametros["espesor"])
     put_u = u_1

@@ -9,8 +9,9 @@ volumes:
 
 services:
   kafka:
-    image: bitnami/kafka:latest
+    image: bitnami/kafka:3.7.0
     container_name: kafka
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
       interval: 5s
@@ -32,8 +33,9 @@ services:
       - KAFKA_KRAFT_CLUSTER_ID=${KAFKA_KRAFT_CLUSTER_ID}
   
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    image: provectuslabs/kafka-ui:v0.7.1
     container_name: kafka-ui
+    restart: unless-stopped
     ports:
       - "8080:8080"
     networks:
@@ -49,7 +51,7 @@ services:
     build: ./opc_gateway
     container_name: opc_gateway
     network_mode: "host"
-    #restart: always
+    restart: unless-stopped
     environment:
       - MODE=${MODE_OPC_GATEWAY}
       - OPC_ENDPOINT=${OPC_ENDPOINT}
@@ -63,9 +65,27 @@ services:
       kafka:
         condition: service_healthy
 
+  opc-gateway-status:
+    build: ./opc_gateway
+    container_name: opc_gateway-status
+    network_mode: "host"
+    restart: unless-stopped
+    environment:
+      - MODE=${MODE_OPC_STATUS}
+      - OPC_ENDPOINT=${OPC_ENDPOINT}
+      - KAFKA_GROUP_ID=${KAFKA_GROUP_ID_OPC}
+      - KAFKA_BROKER=${KAFKA_BROKER}
+      - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
+    volumes:
+      - ./opc_gateway:/app
+    depends_on:
+      kafka:
+        condition: service_healthy
+
   postgres-db:
     image: postgres:17.5
     container_name: postgres-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASS}
@@ -81,8 +101,9 @@ services:
       retries: 5
 
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:8.6
     container_name: pgadmin
+    restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASS}
@@ -97,6 +118,7 @@ services:
     build:
       context: ./backend
     container_name: backend
+    restart: unless-stopped
     ports:
       - "${BACKEND_PORT}:5000"
     volumes:
@@ -126,6 +148,7 @@ services:
       context: ./frontend/robot-app
       dockerfile: Dockerfile
     container_name: frontend
+    restart: unless-stopped
     ports:
       - "${FRONTEND_PORT}:5173"
     volumes:
@@ -137,7 +160,8 @@ services:
     command: sh -c "npm install && npm run dev -- --host"
 
   redis:
-    image: redis:alpine
+    image: redis:7.2-alpine
+    restart: unless-stopped
     ports:
       - "${REDIS_PORT}:6379"
     volumes:
@@ -152,7 +176,7 @@ services:
     build: ./socket_gateway
     container_name: socket_command
     network_mode: "host"
-    #restart: always
+    restart: unless-stopped
     environment:
       - MODE=command_listener
       - KAFKA_BROKER=${KAFKA_BROKER}
@@ -172,7 +196,7 @@ services:
     build: ./socket_gateway
     container_name: socket_status
     network_mode: "host"
-    #restart: always
+    restart: unless-stopped
     environment:
       - MODE=status
       - KAFKA_BROKER=${KAFKA_BROKER}
@@ -192,7 +216,7 @@ services:
     build: ./socket_gateway
     container_name: socket_coordinator
     network_mode: "host"
-    #restart: always
+    restart: unless-stopped
     environment:
       - MODE=coordinator
       - KAFKA_BROKER=${KAFKA_BROKER}
@@ -212,7 +236,7 @@ services:
     build: ./socket_gateway
     container_name: socket_gateway_01
     network_mode: "host"
-    #restart: always
+    restart: unless-stopped
     environment:
       - MODE=gateway_robot
       - ROBOT_ID=${BORUNTE_01_ID}
