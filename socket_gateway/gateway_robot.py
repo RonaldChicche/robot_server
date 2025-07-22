@@ -116,7 +116,7 @@ def main():
 
             if time.time() - last_query_time >= 0.2:
                 response = robot.query_all_borunte_data()
-                redis.set(gateway_keys["sensor_data"], json.dumps(response), ex=5)
+                redis.set(gateway_keys["sensor_data"], json.dumps(response))
                 last_query_time = time.time()   
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as known_error:

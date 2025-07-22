@@ -1,7 +1,7 @@
 const { Kafka } = require("kafkajs");
 
 const kafka = new Kafka({
-  clientId: "robot-status-consumer",
+  clientId: "backend-status-consumer",
   brokers: [process.env.KAFKA_BROKER],
 });
 

@@ -63,8 +63,15 @@ def main():
         "01": 0,
         "02": 0
     }
-    last_raw_statuses = {}
-    last_raw_results = {}
+    last_raw_statuses = {
+        "01": None,
+        "02": None
+    }
+    last_raw_results = {
+        "01": None,
+        "02": None
+    }
+
     time.sleep(5)
 
     while True:
@@ -83,14 +90,22 @@ def main():
                  # status data
                 if current_time - last_status_time[robot_id] >= float(STATUS_INTERVAL):
                     sensor_key = keys["status_listener"]["redis_sensor_template"].format(id=robot_id)
-                    raw_data = redis_client.get(sensor_key)
-                    #redis_client.delete(sensor_key)
+                    connection_key = keys["status_listener"]["redis_robot_connected"].format(id=robot_id)
                     last_status_time[robot_id] = current_time
+                    raw_data = redis_client.get(sensor_key)
                     if raw_data:
-                        raw_status = json.loads(raw_data)
-                        kafka_producer.send(KAFKA_TOPIC_STATUS, value=raw_status)
+                        raw_status = json.loads(raw_data)   
+
+                        if redis_client.get(connection_key) is None:
+                            logger.error(f"⚠️ Robot {robot_id} desconectado")
+                            raw_status["status"]["status"]["alarm_code"] = [9001]
+                            raw_data = redis_client.get(sensor_key)     
+                        
+                        kafka_producer.send(KAFKA_TOPIC_STATUS, value=raw_status)                
                     else:
-                        logger.warning(f"⚠️ No se encontró status para robot {robot_id}")
+                        logger.warning(f"⚠️ No se encontró status para robot {robot_id}")                    
+                            
+                    raw_status = None
             
             except (json.JSONDecodeError, KeyError, TypeError) as known_error:
                 logger.error(f"⚠️ Datos mal formados para {robot_id}: {known_error}", exc_info=True)

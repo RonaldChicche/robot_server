@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef  } from "react"
+import socket from "@/lib/socket"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -25,7 +26,7 @@ export default function ProcesoView() {
     conteo_stack_z: 0,
     codigo_alarma: 0,
     significado_alarma: "Normal",
-    corriente_j: [0, 0, 0, 0, 0, 0],
+    torque_j: [0, 0, 0, 0, 0, 0],
     estado_inicio: false,
     estado_layer: false,
     estado_fin: false,
@@ -37,6 +38,21 @@ export default function ProcesoView() {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
+  const sendButton = (nameButton) => {
+    fetch(`http://localhost:5000/api/kafka/01/${nameButton}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Servidor respondió:", data)
+        setConsoleOutput(prev => [...prev, `✅ Proceso iniciado correctamente: ${JSON.stringify(data)}`])
+      })
+      .catch(err => {
+        setConsoleOutput(prev => [...prev, `❌ Error al iniciar proceso: ${err.message}`])
+      })
+  }
+
   const sendData = () => {
     const payload = {
       type: "process",
@@ -44,7 +60,7 @@ export default function ProcesoView() {
       params: form,
     }
 
-    fetch("http://localhost:5000/api/send", {
+    fetch("http://localhost:5000/api/kafka/send-process", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -60,36 +76,76 @@ export default function ProcesoView() {
   }
 
   const toggleBit = (bit, value) => {
-    fetch("http://localhost:5000/api/switch", {
+    console.log(`🛰 Enviando bit ${bit} con valor ${value}`) // <-- agrega esto
+
+    fetch(`http://localhost:5000/api/kafka/01/${bit}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bit, value })
+      body: JSON.stringify({ "value": value })
     })
-      .then(() => setMonitor(prev => ({ ...prev, [bit]: value })))
-      .catch(() => setConsoleOutput(prev => [...prev, `⚠️ Error al actualizar bit ${bit}`]))
+      .then(() => {
+        setMonitor(prev => {
+          if (bit === "toggle-stack-bit") {
+            return { ...prev, bit_stack: value }
+          } else if (bit === "toggle-coord-bit") {
+            return { ...prev, bit_coordinador: value }
+          }
+          return prev
+        })
+      })
+      .catch((err) => {
+        console.log("❌ Error en fetch:", err)
+        setConsoleOutput(prev => [...prev, `⚠️ Error al actualizar bit ${bit}`])
+      })
   }
 
-  useEffect(() => {
-    const ws = new WebSocket("ws://localhost:5000/ws/monitor")
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      setMonitor(prev => {
-        if (data.codigo_alarma !== prev.codigo_alarma) {
-          fetch(`http://localhost:5000/api/alarm/${data.codigo_alarma}`)
-            .then(res => res.json())
-            .then(alarm => {
-              setMonitor(m => ({ ...m, significado_alarma: alarm.message || "Error", codigo_alarma: data.codigo_alarma }))
+  const prevAlarmaRef = useRef(0)
+
+  useEffect(() => {
+    socket.on("status:01", (data) => {
+      //console.log(data)
+      const alarma = data.status?.alarm_code ?? 0
+
+      setMonitor((prev) => {
+        if (alarma !== prevAlarmaRef.current) {
+          prevAlarmaRef.current = alarma
+          fetch(`http://localhost:5000/api/alarm/${alarma}`)
+            .then((res) => res.json())
+            .then((alarm) => {
+              setMonitor((m) => ({
+                ...m,
+                significado_alarma: alarm.message || "Error",
+                codigo_alarma: alarma,
+              }))
             })
             .catch(() => {
-              setMonitor(m => ({ ...m, significado_alarma: "Error", codigo_alarma: data.codigo_alarma }))
+              setMonitor((m) => ({
+                ...m,
+                significado_alarma: "Error",
+                codigo_alarma: alarma,
+              }))
             })
         }
-        return { ...prev, ...data }
-      })
-    }
 
-    return () => ws.close()
+        return {
+          ...prev,
+          codigo_alarma: alarma,
+          conteo_stack_x: data.counters?.["counter-0"]?.current ?? 0,
+          conteo_stack_z: data.counters?.["counter-1"]?.current ?? 0,
+          estado_inicio: data.status?.outputs?.y30 === 1,
+          estado_layer: data.status?.outputs?.y32 === 1,
+          estado_fin: data.status?.outputs?.y33 === 1,
+          torque_j : Array.from({ length: 6 }, (_, i) => data.axis_torque?.[i] ?? 0),
+          bit_stack: data.status?.outputs?.y42 === 1,
+          bit_coordinador: data.status?.outputs?.y41 === 1,
+        }
+      })
+    })
+
+    return () => {
+      socket.off("status:01")
+    }
   }, [])
 
 
@@ -101,19 +157,28 @@ export default function ProcesoView() {
     <div className="w-full max-w-screen-xl mx-auto p-4 sm:p-6 px-4 sm:px-20">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 sm:gap-6">
         <div className="flex flex-col gap-3">
-          <Button className="bg-cyan-600 hover:bg-cyan-700">Start</Button>
-          <Button variant="secondary">Pause</Button>
-          <Button variant="destructive">Stop</Button>
-          <Button variant="secondary">Clear Alarm</Button>
+          <Button onClick={() => sendButton("start_button")} className="bg-cyan-600 hover:bg-cyan-700">Start</Button>
+          <Button onClick={() => sendButton("pause_button")} variant="secondary">Pause</Button>
+          <Button onClick={() => sendButton("stop_button")} variant="destructive">Stop</Button>
+          <Button onClick={() => sendButton("clear_alarm_button")} variant="secondary">Clear Alarm</Button>
 
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-white">Bit Stack</span>
-              <Switch checked={monitor.bit_stack} onCheckedChange={(val) => toggleBit("bit_stack", val)} />
+              <Switch
+                checked={monitor.bit_stack}
+                onCheckedChange={(val) => toggleBit("toggle-stack-bit", val)}
+              />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-white">Bit Coordinador</span>
-              <Switch checked={monitor.bit_coordinador} onCheckedChange={(val) => toggleBit("bit_coordinador", val)} />
+              <Switch
+                checked={monitor.bit_coordinador}
+                onCheckedChange={(val) => {
+                  toggleBit("toggle-coord-bit", val)
+                  setMonitor((prev) => ({ ...prev, bit_coordinador: val }))
+                }}
+              />
             </div>
           </div>
         </div>
@@ -157,16 +222,16 @@ export default function ProcesoView() {
             <p><strong>Significado:</strong> {monitor.significado_alarma}</p>
           </div>
           <div>
-            <strong>Corriente por Junte:</strong>
+            <strong>Torque por Junte:</strong>
             <table className="w-full text-sm mt-2">
               <thead>
                 <tr className="text-left text-cyan-400">
                   <th>Junte</th>
-                  <th>Corriente</th>
+                  <th>Torque</th>
                 </tr>
               </thead>
               <tbody>
-                {monitor.corriente_j.map((val, idx) => (
+                {monitor.torque_j.map((val, idx) => (
                   <tr key={idx} className={val > 80 ? "bg-red-600 text-white" : ""}>
                     <td>J{idx + 1}</td>
                     <td>{val} A</td>

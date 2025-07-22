@@ -88,7 +88,7 @@ export default function FormView() {
       }
 
       try {
-        const res = await fetch("http://localhost:5000/api/kafka/send", {
+        const res = await fetch("http://localhost:5000/api/kafka/send-method", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data_msg),

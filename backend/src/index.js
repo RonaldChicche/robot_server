@@ -28,19 +28,25 @@ app.get("/", async (req, res) => {
 
 // Kafka + WebSocket bridge
 startStatusConsumer((payload) => {
-  const { robot_id, status, outputs, counters, timestamp } = payload;
+  const { robot_id, ip, status, online, timestamp } = payload;
   const filteredData = {
     robot_id,
+    ip,
+    online,
     timestamp,
     status: {
-      alarm_code: status.alarm_code,
-      movement_status: status.movement_status,
-      cur_mode: status.cur_mode,
-      axis_position: status.axis_position,
+      alarm_code: status.status.alarm_code[0],
+      movement_status: status.status.movement_status[0],
+      cur_mode: status.status.cur_mode[0],
+      outputs: status.outputs.y,
     },
-    outputs: outputs.y,
-    counters,
+    axis_position: status.status.axis_position,
+    axis_torque: status.status.axis_torque,
+    world_position: status.status.world_position,
+    counters: status.counters,
   };
+
+  //console.log(filteredData);
 
   io.emit(`status:${robot_id}`, filteredData);
   io.emit("status:update", filteredData);

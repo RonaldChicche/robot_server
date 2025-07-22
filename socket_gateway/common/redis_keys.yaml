@@ -37,6 +37,7 @@ status_listener:
   log: "status_listener:log"
   kafka_status_topic: "kafka:robot_status"
   process_status: "process:status"
+  redis_robot_connected: "robot:{id}:connected"
   redis_sensor_template: "robot:{id}:sensor_data"
   redis_result_template: "robot:{id}:cmd_result"
   redis_joint_pos_template: "robot:{id}:joint_pos"
