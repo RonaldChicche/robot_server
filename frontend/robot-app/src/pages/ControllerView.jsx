@@ -24,7 +24,7 @@ export default function ControllerView() {
 
   const updateField = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }))
-    console.log(form)
+    //console.log(form)
   }
 
   const updateArrayField = (field, index, value) => {
@@ -36,34 +36,41 @@ export default function ControllerView() {
   }
 
   const sendCommand = (cmd) => {
-    fetch("http://localhost:5000/api/send", {
+    fetch(`http://localhost:5000/api/kafka/01/${cmd}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "method", name: cmd })
+      headers: { "Content-Type": "application/json" }
     })
   }
 
   const sendData = () => {
-    fetch("http://localhost:5000/api/send", {
+    fetch("http://localhost:5000/api/kafka/send-process", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "process",
         name: "send_data",
-        data: form,
+        params: form,
       })
-    })
+    })  
+      .then(res => res.json())
+      .then(data => {
+        console.log("Servidor respondió:", data)
+        console.log(form)
+      })
+      .catch(err => {
+        console.log(err)
+      })
   }
 
   return (
     <div className="w-full max-w-screen-xl mx-auto p-6 px-20 ">
     <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="flex flex-col gap-3 md:col-span-1">
-        <Button onClick={() => sendCommand("startButton")} className="bg-cyan-600 hover:bg-cyan-700">Start Button</Button>
-        <Button onClick={() => sendCommand("pauseButton")} variant="secondary">Pause Button</Button>
+        <Button onClick={() => sendCommand("start_button")} className="bg-cyan-600 hover:bg-cyan-700">Start Button</Button>
+        <Button onClick={() => sendCommand("pause_button")} variant="secondary">Pause Button</Button>
         <Button onClick={sendData} className="bg-cyan-600 hover:bg-cyan-700">Send Data</Button>
-        <Button onClick={() => sendCommand("clearAlarm")} variant="secondary">Clear Alarm</Button>
-        <Button onClick={() => sendCommand("stopButton")} variant="destructive">Stop Button</Button>
+        <Button onClick={() => sendCommand("clear_alarm_button")} variant="secondary">Clear Alarm</Button>
+        <Button onClick={() => sendCommand("stop_button")} variant="destructive">Stop Button</Button>
 
         <div className="space-y-6 mt-6">
           <div className="flex items-center justify-between">

@@ -1,5 +1,5 @@
 from common.utils import load_keys, create_redis_client
-from JsonBorunteClient import JSONBorunteClient
+from JsonBorunteClient import JSONBorunteClient, RobotStateMachine
 
 import os, json, logging, signal, sys, time
 
@@ -73,6 +73,7 @@ def main():
     }
 
     logger.info("🔄 Iniciando bucle principal...")
+    fsm = RobotStateMachine()
     
     last_query_time = 0
     while True:
@@ -95,6 +96,19 @@ def main():
                     logger.info(f"🚀 Ejecutando '{cmd_type}' → {cmd_name} con parámetros: {params}")
                     result = method(**params)
 
+                    if cmd_name in ["start_button", "pause_button"]:
+                        new_state = fsm.handle_command(cmd_name)
+                        logger.info(f"🔄 Estado FSM → {new_state}")
+                    elif cmd_name in ["stop_button"]:
+                        new_state = fsm.handle_command(cmd_name)
+                        # Limpia bits de estado
+                        robot.modify_output_y(30, False)
+                        robot.modify_output_y(32, False)
+                        robot.modify_output_y(33, False)
+                        # Limpia contadores
+                        robot.modify_counter("counter-1", 0, 0)
+                        robot.modify_counter("counter-0", 0, 0)
+
                 else:
                     logger.warning(f"⛔ Método no permitido: {cmd_name}")
                     result = None
@@ -112,11 +126,18 @@ def main():
             
             # Leer estado del robot siempre
             redis.set(gateway_keys["connected"], 1, ex=5)
+            if fsm.check_clean():
+                logger.info("🧼 Estado reseteado a Vacio tras STOP")
+            
+            redis.set(keys_all["process_coordinator"]["process_state"], fsm.state)
             # redis.set(gateway_keys["status"], "activo", ex=5)
 
             if time.time() - last_query_time >= 0.2:
                 response = robot.query_all_borunte_data()
                 redis.set(gateway_keys["sensor_data"], json.dumps(response))
+                fsm.evaluate_termination(response["outputs"]["y"])
+                if response["status"]["status"]["alarm_code"][0] != 0:
+                    fsm.handle_command("stop_button")
                 last_query_time = time.time()   
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as known_error:

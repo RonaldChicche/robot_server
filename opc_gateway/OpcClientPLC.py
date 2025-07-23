@@ -6,24 +6,17 @@ import yaml, logging
 
 logger = logging.getLogger(__name__)
 
-
 class OpcClient:
     def __init__(self, endpoint, kafka_producer, kafka_topic="orders.to_robots", config_path="config.yaml"):
         self.client = Client(endpoint)
         self.client.name = "Python PLC Gateway"
-        #self.client.session_timeout = 300000 # 5 min
-        # self.client.set_security_string("Basic256Sha256,UserName,None,None")
-        # self.client.set_user("OpcUser")
-        # self.client.set_password("Bertek@69")
         self.client.connect()
         self.config = self.load_config(config_path)
         self.node_map = self.init_nodes()
-        self.sub_handler = self.SubHandler(self)
-        self.values = {}
-        self.first_trigger_skipped = set()
         self.kafka_producer = kafka_producer
         self.kafka_topic = kafka_topic
-        self.handle_data_change = None
+        self.values = {}
+        self.prev_triggers = {}
 
     def load_config(self, path):
         with open(path, 'r') as f:
@@ -39,89 +32,118 @@ class OpcClient:
             logger.error(f"⚠️ Error al inicializar los nodos: {e}", exc_info=True)
         return nodes
 
-    def subscribe_bits(self):
-        self.sub = self.client.create_subscription(500, self.sub_handler)
-        monitored_nodes = []
-        self.name_map = {}  # Mapea NodeId -> nombre lógico
-        self.config_map = {}  # Mapea NodeId -> tipo
-
-        for name, config in self.config['read'].items():
-            node = self.client.get_node(config['node_id'])
-            monitored_nodes.append(node)
-            self.name_map[node.nodeid] = name
-            self.config_map[node.nodeid] = config
-
-        self.handle_data_change = self.sub.subscribe_data_change(monitored_nodes)
-
     def read_all_inputs(self):
-        data = {}
         for name, node in self.node_map.items():
-            data[name] = node.get_value()
-        return data
+            val = node.get_value()
+            self.handle_read(name, val)
+        
+    def handle_read(self, name, val):
+        config = self.config['read'].get(name)
+        if not config:
+            return
+
+        type_str = config['type']
+
+        if type_str == 'data':
+            self.values[name] = val
+        elif type_str in ['method', 'proceso']:
+            prev = self.prev_triggers.get(name, False)
+            if not prev and val is True:
+                self.prev_triggers[name] = True
+                payload = self.generate_payload(name, config, val)
+                logger.info(f"📦 Payload generado: {payload}")
+                if self.kafka_producer:
+                    response = self.kafka_producer.send(self.kafka_topic, value=payload)
+                    logger.info(f"📦 Enviado a Kafka [{self.kafka_topic}]: {response}")
+            elif val is False:
+                self.prev_triggers[name] = False
 
     def disconnect(self):
-        if self.handle_data_change:
-            self.sub.unsubscribe(self.handle_data_change)
-            self.sub.delete()
         self.client.disconnect()
 
-    class SubHandler:
-        def __init__(self, outer):
-            self.outer = outer
+    def generate_payload(self, name, config, val):
+        type_str = config['type']
+        timestamp = datetime.now().strftime('%Y%m%dT%H%M%SZ')
 
-        def datachange_notification(self, node, val, data):
-            config = self.outer.config_map.get(node.nodeid)
-            if not config:
-                return
-            
-            name = self.outer.name_map.get(node.nodeid)
-            type_str = config['type']
-
-            if type_str == 'data':
-                self.outer.values[name] = val 
-                logger.info(f"📥 Dato actualizado: {name} - {self.outer.values}")
-                return
-
-            if type_str in ['method', 'proceso']:
-                if name not in self.outer.first_trigger_skipped:
-                    self.outer.first_trigger_skipped.add(name)
-                    return
-                if val is not True:
-                    return
-            
-            payload = self.generate_payload(name, config, val)
-            logger.info(f"📦 Payload generado: {payload}")
-            if self.outer.kafka_producer:
-                response = self.outer.kafka_producer.send(self.outer.kafka_topic, value=payload)
-                logger.info(f"📦 Enviado a Kafka [{self.outer.kafka_topic}]: {response}")
-
-        def generate_payload(self, name, config, val):
-            #     pick = [1654.937, -125.636, 1100, 180, 0, -151]
-            #     put = [2476.343, -125.616, 822.786, 180, 0, -151]
-            type_str = config['type']
-            timestamp = datetime.now().strftime('%Y%m%dT%H%M%SZ')
-            
-            if type_str == "proceso":
-                params = {
-                    key: self.outer.values[key]
-                    for key in [
-                        "long_caja", "ancho_caja", "long_barra", "ancho_barra", "espesor",
-                        "peso", "cantidad_x", "cantidad_z", "no_carro"
-                    ]
-                }
-            elif type_str == "bridge":
-                params = config.get("param", {})
-                type_str = "method"
-                params["value"] = val  
-            else:
-                params = {}
-
-            return {
-                "order_id": f"ORD_{timestamp}_borunte",
-                "type": type_str,
-                "name": config.get("name", name),
-                "params": params,
-                "timestamp": timestamp
+        if type_str == "proceso":
+            params = {
+                key: self.values[key]
+                for key in [
+                    "long_caja", "ancho_caja", "long_barra", "ancho_barra", "espesor",
+                    "peso", "cantidad_x", "cantidad_z", "no_carro"
+                ]
             }
+        elif type_str == "bridge":
+            params = config.get("param", {})
+            type_str = "method"
+            params["value"] = val
+        else:
+            params = {}
 
-        
+        return {
+            "order_id": f"ORD_{timestamp}_borunte",
+            "type": type_str,
+            "name": config.get("name", name),
+            "params": params,
+            "timestamp": timestamp
+        }
+    
+    def write_node(self, node_id_str, value):
+        node = self.client.get_node(node_id_str)
+        variant_type = node.get_data_type_as_variant_type()
+
+        wv = ua.WriteValue()
+        wv.NodeId = node.nodeid
+        wv.AttributeId = ua.AttributeIds.Value
+        wv.Value = ua.DataValue(ua.Variant(value, variant_type))
+
+        params = ua.WriteParameters()
+        params.NodesToWrite = [wv]
+
+        result = self.client.uaclient.write(params)
+        if result[0].is_good():
+            logger.info(f"✅ Nodo {node_id_str} escrito correctamente con valor {value}")
+        else:
+            logger.warning(f"⚠️ Fallo al escribir nodo {node_id_str}: {result[0]}")
+
+    
+    def write_values(self, robot_key, values, write_map):
+        if robot_key not in write_map:
+            logger.warning(f"⚠️ Robot {robot_key} no encontrado en YAML")
+            return
+
+        write_values = []
+
+        for key, val in values.items():
+            node_id_str = write_map[robot_key].get(key)
+            if not node_id_str:
+                logger.debug(f"⏭️ Clave {key} no definida en YAML para {robot_key}")
+                continue
+
+            try:
+                node = self.client.get_node(node_id_str)
+                variant_type = node.get_data_type_as_variant_type()
+
+                wv = ua.WriteValue()
+                wv.NodeId = node.nodeid
+                wv.AttributeId = ua.AttributeIds.Value
+                wv.Value = ua.DataValue(ua.Variant(val, variant_type))
+
+                write_values.append(wv)
+            except Exception as e:
+                logger.error(f"❌ Error preparando {key}: {e}", exc_info=True)
+
+        if write_values:
+            try:
+                params = ua.WriteParameters()
+                params.NodesToWrite = write_values
+
+                result = self.client.uaclient.write(params)
+                for idx, res in enumerate(result):
+                    key = list(values.keys())[idx]
+                    if res.is_good():
+                        logger.info(f"✅ {key} escrito correctamente")
+                    else:
+                        logger.warning(f"⚠️ Fallo al escribir {key}: {res}")
+            except Exception as e:
+                logger.error(f"❌ Error al escribir OPC UA: {e}", exc_info=True)

@@ -6,3 +6,4 @@ pytz==2025.2
 PyYAML==6.0.2
 six==1.17.0
 cryptography
+redis==6.2.0

@@ -27,6 +27,7 @@ export default function ProcesoView() {
     codigo_alarma: 0,
     significado_alarma: "Normal",
     torque_j: [0, 0, 0, 0, 0, 0],
+    estado_running: false,
     estado_inicio: false,
     estado_layer: false,
     estado_fin: false,
@@ -59,7 +60,6 @@ export default function ProcesoView() {
       name: "send_data",
       params: form,
     }
-
     fetch("http://localhost:5000/api/kafka/send-process", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -76,8 +76,6 @@ export default function ProcesoView() {
   }
 
   const toggleBit = (bit, value) => {
-    console.log(`🛰 Enviando bit ${bit} con valor ${value}`) // <-- agrega esto
-
     fetch(`http://localhost:5000/api/kafka/01/${bit}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -86,10 +84,13 @@ export default function ProcesoView() {
       .then(() => {
         setMonitor(prev => {
           if (bit === "toggle-stack-bit") {
+            console.log("🛰 Enviando bit stack con valor", value)
             return { ...prev, bit_stack: value }
           } else if (bit === "toggle-coord-bit") {
+            console.log("🛰 Enviando bit coordinador con valor", value)
             return { ...prev, bit_coordinador: value }
           }
+          console.log(`⚠️ No se pudo actualizar el bit ${bit}`)
           return prev
         })
       })
@@ -133,6 +134,7 @@ export default function ProcesoView() {
           codigo_alarma: alarma,
           conteo_stack_x: data.counters?.["counter-0"]?.current ?? 0,
           conteo_stack_z: data.counters?.["counter-1"]?.current ?? 0,
+          estado_running: data.status?.movement_status === 1,
           estado_inicio: data.status?.outputs?.y30 === 1,
           estado_layer: data.status?.outputs?.y32 === 1,
           estado_fin: data.status?.outputs?.y33 === 1,
@@ -174,10 +176,7 @@ export default function ProcesoView() {
               <span className="text-white">Bit Coordinador</span>
               <Switch
                 checked={monitor.bit_coordinador}
-                onCheckedChange={(val) => {
-                  toggleBit("toggle-coord-bit", val)
-                  setMonitor((prev) => ({ ...prev, bit_coordinador: val }))
-                }}
+                onCheckedChange={(val) => toggleBit("toggle-coord-bit", val)}
               />
             </div>
           </div>
@@ -241,11 +240,15 @@ export default function ProcesoView() {
             </table>
           </div>
           <div className="flex items-center justify-between pt-4">
+            <span className="text-white">Runnnig</span>
+            {renderStateDot(monitor.estado_running)}
+          </div>
+          <div className="flex items-center justify-between">
             <span className="text-white">Bit Inicio</span>
             {renderStateDot(monitor.estado_inicio)}
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-white">Bit Layer Terminado</span>
+            <span className="text-white">Bit Stack Item</span>
             {renderStateDot(monitor.estado_layer)}
           </div>
           <div className="flex items-center justify-between">

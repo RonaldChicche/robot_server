@@ -12,6 +12,9 @@ gateway_template:
   cmd_result: "robot:{id}:cmd_result"
   sensor_data: "robot:{id}:sensor_data"
   error: "robot:{id}:error"
+  start_button: "robot:{id}:start_button"
+  pause_button: "robot:{id}:pause_button"
+  stop_button: "robot:{id}:stop_button"
   # parametros de process
   # pickup: "robot:{id}:pickup"
   # place: "robot:{id}:place"

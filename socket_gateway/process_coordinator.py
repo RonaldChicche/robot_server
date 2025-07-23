@@ -183,15 +183,18 @@ def main():
     logger.info("🟢 Proceso coordinador iniciado")
 
     while True:
-        # Verifica si hay definido un proceso en el buffer si no ignora todo
         try: 
+            # Verifica si hay definido un proceso en el buffer si no ignora todo
             process_raw = redis_client.get(keys["process_coordinator"]["process_template"])
             if process_raw is not None:
                 process = json.loads(process_raw)
                 logger.info(f"🟢 Proceso recibido: {process}")
                 trama = handle_process(redis_client, keys, process)
                 logger.info(f"🟢 Trama generada: {trama}")
-                redis_client.delete(keys["process_coordinator"]["process_template"])
+                #redis_client.delete(keys["process_coordinator"]["process_template"])
+
+            # Verifica estado del proceso en ejecucion
+
         except Exception as e:
             logger.error(f"❌ Error inesperado al procesar: {e}", exc_info=True)
             redis_client.delete(keys["process_coordinator"]["process_template"])
@@ -287,10 +290,10 @@ if __name__ == "__main__":
 ## Salidas:
 ##     - y20 : Actuador neumatico
 ##     ------ Bits de estado
-##     - y30 : Posicion para paletizar
+##     - y30 : (INICIO) Posicion para paletizar
 ##     - y31 : Posicion de deposicion de barra
-##     - y32 : Confirmaacion de paletizado (despues de soltar la barra)
-##     - y33 : Posicion de reposo (Proceso terminado)
+##     - y32 : (PALETIZADO) Confirmaacion de paletizado (despues de soltar la barra)
+##     - y33 : (FIN) Posicion de reposo (Proceso terminado)
 ##     ------ Estos vienen de fuera de la logica del progrma interno del robot
 ##     - y40 : Bit de confirmacion de barra lista para VOLTEAR (viene de OPC)
 ##     - y41 : Bit de confirmacion de coordinacion (viene de Coordinador - DESHABILITADO)
@@ -330,3 +333,57 @@ if __name__ == "__main__":
 ## if current_counter_z < target_counter_z -> Bucle
 ## Clear current_counter_z = 0
 ## Go posicion de reposo
+
+
+
+## manejo de estados
+
+## entrada ======
+## start button
+## stop button
+## pause button
+
+## green -> y10
+## yello -> y11
+## red -> y12
+
+## salida =======
+## bit green opc (G0)
+## bit yello opc (Y0)
+## bit red opc   (R0)
+
+## -> estados 
+# Vacio -> (G0, Y0, R0)
+# Running -> (G1, Y0, R0)
+# Paused -> (G0, Y1, R0)
+# Stopped -> (G0, Y0, R1)
+# Terminado -> (G0, Y0, R0)
+
+## caso 1 - inicio fin normal
+## manda start Button
+## y10 ON -> proceso Running 
+## bits proceso terminado y33 ON
+## proceso Terminado = y10 and y33 (ambos ON)
+
+## caso 2 -> pausa
+## manda start Button
+## y10 ON -> proceso Running
+## manda pause Button 
+## y11 ON -> proceso Paused
+## manda start Button
+## y10 ON -> proceso Running
+## bits proceso terminado y33 ON
+## proceso Terminado = y10 and y33 (ambos ON)
+
+## caso 3 -> parada
+## manda start Button ( - Empieza proceso)
+## y10 ON -> proceso Running
+## manda stop Button
+## y12 ON -> proceso Stopped ( - Termina proceso)
+## orden y30, y32, y33 OFF (- Reinicio de proceso)
+## orden clear counters (- Reinicio de proceso)
+## espera 2 segundos -> proceso Vacio
+## manda start Button
+## y10 ON -> proceso Running 
+## bits proceso terminado y33 ON
+## proceso Terminado = y10 and y33 (ambos ON)

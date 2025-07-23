@@ -28,12 +28,13 @@ app.get("/", async (req, res) => {
 
 // Kafka + WebSocket bridge
 startStatusConsumer((payload) => {
-  const { robot_id, ip, status, online, timestamp } = payload;
+  const { robot_id, ip, status, online, timestamp, process_status } = payload;
   const filteredData = {
     robot_id,
     ip,
     online,
     timestamp,
+    process_status: process_status.state,
     status: {
       alarm_code: status.status.alarm_code[0],
       movement_status: status.status.movement_status[0],
@@ -42,6 +43,7 @@ startStatusConsumer((payload) => {
     },
     axis_position: status.status.axis_position,
     axis_torque: status.status.axis_torque,
+    axis_velocity: status.status.axis_velocity,
     world_position: status.status.world_position,
     counters: status.counters,
   };

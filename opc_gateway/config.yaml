@@ -27,57 +27,57 @@ opc_nodes:
       val: 0
     long_caja: 
       # node_id: "ns=2;s=LongCaja"
-      node_id: "ns=4;s=3"
+      node_id: "ns=4;i=3"
       type: "data"
       val: 0
     ancho_caja: 
       # node_id: "ns=2;s=AnchoCaja"
-      node_id: "ns=4;s=2"
+      node_id: "ns=4;i=2"
       type: "data"
       val: 0
     long_barra:
       # node_id: "ns=2;s=LongBarra"
-      node_id: "ns=4;s=8"
+      node_id: "ns=4;i=8"
       type: "data"
       val: 0
     ancho_barra: 
       # node_id: "ns=2;s=AnchoBarra"
-      node_id: "ns=4;s=7"
+      node_id: "ns=4;i=7"
       type: "data"
       val: 0
     espesor: 
       # node_id: "ns=2;s=Espesor"
-      node_id: "ns=4;s=9"
+      node_id: "ns=4;i=9"
       type: "data"
       val: 0
     peso:
       # node_id: "ns=2;s=Peso"
-      node_id: "ns=4;s=13"
+      node_id: "ns=4;i=13"
       type: "data"
       val: 0
     cantidad_x: 
       # node_id: "ns=2;s=Cantidad_x"
-      node_id: "ns=4;s=17"
+      node_id: "ns=4;i=17"
       type: "data"
       val: 0
     cantidad_z: 
       # node_id: "ns=2;s=Cantidad_z"
-      node_id: "ns=4;s=12"
+      node_id: "ns=4;i=12"
       type: "data"
       val: 0
     no_carro:
       # node_id: "ns=2;s=NoCarro"
-      node_id: "ns=4;s=18"
+      node_id: "ns=4;i=18"
       type: "data"
       val: 0
     velocidad: 
       # node_id: "ns=2;s=Velocidad"
-      node_id: "ns=4;s=18"
+      node_id: "ns=4;i=18"
       type: "data"
       val: 0
     bit_voltear:
       # node_id: "ns=2;s=bit_voltear"
-      node_id: "ns=4;s=25"
+      node_id: "ns=4;i=25"
       type: "bridge"
       name: "modify_output_y"
       param: 
@@ -85,7 +85,7 @@ opc_nodes:
         value: false
     bit_stack:
       # node_id: "ns=2;s=bit_stack"
-      node_id: "ns=4;s=26"
+      node_id: "ns=4;i=26"
       type: "bridge"
       name: "modify_output_y"
       param: 

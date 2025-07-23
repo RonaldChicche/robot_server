@@ -1,8 +1,39 @@
 
 import socket
 import json
+from time import time
 from datetime import datetime
 
+class RobotStateMachine:
+    def __init__(self):
+        self.state = "Vacio"
+        self.awaiting_clean = False
+
+    def handle_command(self, command_name: str):
+        if command_name == "start_button":
+            self.state = "Running"
+        elif command_name == "pause_button":
+            self.state = "Paused"
+        elif command_name == "stop_button":
+            self.state = "Stopped"
+            self.awaiting_clean = True
+            self.clean_time = time() + 4  # esperar 2 segundos sin bloquear
+        return self.state
+    
+    def check_clean(self):
+        if self.awaiting_clean and time() >= self.clean_time:
+            self.state = "Vacio"
+            self.awaiting_clean = False
+            return True
+        return False
+
+    def evaluate_termination(self, outputs: dict):
+        if outputs.get("y10") and outputs.get("y33"):
+            self.state = "Terminado"
+        return self.state
+    
+    def clean_state(self):
+        self.state = "Vacio"
 
 class JSONBorunteClient:
     def __init__(self, host='127.0.0.1', robot_id="01", port=9760, timeout=5):

@@ -1,27 +1,26 @@
 from kafka import KafkaProducer
-from OpcClientPLC import OpcClient  
-
+from OpcClientPLC import OpcClient
 import os, time, json, logging, signal, sys
-
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s [%(name)s] %(message)s',
 )
 
+
+logging.getLogger("opcua.client.ua_client").setLevel(logging.WARNING)
+logging.getLogger("opcua.uaprotocol").setLevel(logging.WARNING)
+
 logger = logging.getLogger("OpctoKafka")
 
-
-PROCESS_ID = os.getenv("PROCESS_ID", "modbus_to_kafka_bridge")
+PROCESS_ID = os.getenv("PROCESS_ID", "opc_to_kafka_bridge")
 OPC_ENDPOINT = os.getenv("OPC_ENDPOINT", "opc.tcp://ronald_desk:62640/IntegrationObjects/ServerSimulator")
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 KAFKA_TOPIC_COMMANDS = os.getenv("KAFKA_TOPIC_COMMANDS", "robot.commands")
 
-
 producer = None
 opc = None
-
-
+prev_state = {}  # Para detectar flancos positivos
 def crear_kafka_producer():
     return KafkaProducer(
         bootstrap_servers=KAFKA_BROKER,
@@ -43,39 +42,35 @@ def graceful_shutdown(sig=None, frame=None):
     sys.exit(0)
 
 def main():
-    global producer, opc
+    global producer, opc, prev_state
     signal.signal(signal.SIGINT, graceful_shutdown)
     signal.signal(signal.SIGTERM, graceful_shutdown)
-    
+
     try:
         producer = crear_kafka_producer()
         logger.info(f"🔗 Conectando a {OPC_ENDPOINT} ...")
         opc = OpcClient(OPC_ENDPOINT, kafka_producer=producer, kafka_topic=KAFKA_TOPIC_COMMANDS)
-        opc.subscribe_bits()
-        logger.info("🟢 Lectura de comandos iniciada")
+        logger.info("🟢 Iniciando ciclo de lectura")
     except Exception as e:
         logger.error(f"❌ Error al inicializar OPC o Kafka: {e}", exc_info=True)
         graceful_shutdown()
 
     error_count = 0
+
     while error_count < 3:
         try:
-            #response = opc.read_all_inputs()
-            node = opc.client.get_node("ns=2;s=StartBit")
-            res = opc.client.get_values([node])
-            logger.info(f"Estado de las entradas ok")
-            time.sleep(30)
+            opc.read_all_inputs()
+            #logger.info(f"📊 Parámetros actuales: {opc.values}")
+            time.sleep(0.1)
+
         except KeyboardInterrupt:
-            logger.info("🔴 Lectura de comandos detenido.")
             graceful_shutdown()
         except Exception as e:
-            logger.error(f"🔴 Error en hilo de heart beat: {e}")
             error_count += 1
-        if error_count >= 3:
-            graceful_shutdown()
-            logger.info("🔴 Lectura de comandos detenido.")
-        
+            logger.error(f"❌ Error en ciclo principal: {e}", exc_info=True)
+            time.sleep(2)
+
+    graceful_shutdown()
 
 if __name__ == "__main__":
     main()
-            
