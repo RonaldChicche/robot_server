@@ -39,6 +39,7 @@ startStatusConsumer((payload) => {
       alarm_code: status.status.alarm_code[0],
       movement_status: status.status.movement_status[0],
       cur_mode: status.status.cur_mode[0],
+      process_status: process_status.state,
       outputs: status.outputs.y,
     },
     axis_position: status.status.axis_position,

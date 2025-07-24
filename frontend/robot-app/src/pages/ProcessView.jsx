@@ -56,7 +56,6 @@ export default function ProcesoView() {
 
   const sendData = () => {
     const payload = {
-      type: "process",
       name: "send_data",
       params: form,
     }

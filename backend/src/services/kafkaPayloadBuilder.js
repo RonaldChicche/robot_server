@@ -18,7 +18,7 @@ function buildProcessPayload({ name, params = {} }) {
 
   return {
     order_id,
-    type: "process",
+    type: "proceso",
     name,
     params,
     timestamp,

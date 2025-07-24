@@ -54,21 +54,21 @@ def handle_process(redis_client, keys, process_trama):
             }
     """
     parametros = process_trama["params"]
-    largo_gripper = 2055
+    largo_gripper = 2069
     ancho_gripper = 121
 
     # esquina de barra solo para este caso
-    tope_x0 = 966.996
-    tope_y0 = -2189.924
-    tope_z0 = 349.647+10
+    tope_x0 = 970.647
+    tope_y0 = -2071.277
+    tope_z0 = 375.895-10
 
     # calibracion pick
     x_0 = tope_x0 + ancho_gripper/2
     y_0 = tope_y0 - largo_gripper/2
     z_0 = tope_z0 + 300 # prueba y error
-    u_0 = 179.727
-    v_0 = -0.813
-    w_0 = -149.879
+    u_0 = -179.858
+    v_0 = -0.971
+    w_0 = -149.793
 
     # calculo de pick
     ## Calculo inicial de Pick 
@@ -85,10 +85,10 @@ def handle_process(redis_client, keys, process_trama):
     pick_w = w_0
 
     # esquina de caja
-    tope_x1_1 = 1981.142
-    tope_x1_2 = 2652.369
+    tope_x1_1 = 1980.422 - 4  
+    tope_x1_2 = 2652.369 + 0.5
     tope_y1 = y_0   # irrelevante ya no tanto
-    tope_z1 = 181.987
+    tope_z1 = 191.987
 
     ## X_1_1 : (Ubicacion de Tope de guia en mesa 1 con gripper - Largo de gripper/2)
     ## X_1_2 : (Ubicacion de Tope de guia en mesa 2 con gripper - Largo de gripper/2)
@@ -100,9 +100,7 @@ def handle_process(redis_client, keys, process_trama):
     x_1_2 = tope_x1_2 - ancho_gripper/2
     y_1 = y_0
     z_1 = tope_z1 + 300 # prueba y error
-    u_1 = u_0
-    v_1 = v_0
-    w_1 = w_0
+    
 
     # calculo de put 
     ## X : (if no_carro == 1,2) X_1_1, X_1_2 + ancho de caja/2 - (ancho de barra/2 x (cantidad_x - 1))
@@ -113,8 +111,15 @@ def handle_process(redis_client, keys, process_trama):
     # ajuste de carro
     if int(parametros["no_carro"]) == 1:
         x_1 = x_1_1 
+        u_1 = -179.658
+        v_1 = -0.761
+        w_1 = -149.885
+
     elif parametros["no_carro"] == 2:
         x_1 = x_1_2 
+        u_1 = -179.987
+        v_1 = -0.757
+        w_1 = -149.895
 
     put_x = x_1 + float(parametros["ancho_caja"])/2 - (parametros["ancho_barra"] * (parametros["cantidad_x"] - 1))
     put_y = y_1 + float(parametros["long_caja"])/2
@@ -191,7 +196,19 @@ def main():
                 logger.info(f"🟢 Proceso recibido: {process}")
                 trama = handle_process(redis_client, keys, process)
                 logger.info(f"🟢 Trama generada: {trama}")
-                #redis_client.delete(keys["process_coordinator"]["process_template"])
+                redis_client.delete(keys["process_coordinator"]["process_template"])
+
+                # Envia trama a robot 01
+                redis_key = keys["process_coordinator"]["robot_cmd_template"].format(id="01")
+                redis_client.set(redis_key, json.dumps(trama))
+                logger.info(f"🟢 Trama enviada a robot 01: {trama}")
+
+                # Envia trama a robot 02
+                redis_key = keys["process_coordinator"]["robot_cmd_template"].format(id="02")
+                redis_client.set(redis_key, json.dumps(trama))
+                logger.info(f"🟢 Trama enviada a robot 02: {trama}")
+
+                
 
             # Verifica estado del proceso en ejecucion
 
@@ -298,6 +315,7 @@ if __name__ == "__main__":
 ##     - y40 : Bit de confirmacion de barra lista para VOLTEAR (viene de OPC)
 ##     - y41 : Bit de confirmacion de coordinacion (viene de Coordinador - DESHABILITADO)
 ##     - y42 : Bit de confirmacion de barra lista para depositar (viene de OPC)
+##     - y45 : Bit de confirmacion de lectura de datos para proceso (DE donde sea)
 
 
 ## Programa Borunte:  Parte de un reposo al que vuelve al final
