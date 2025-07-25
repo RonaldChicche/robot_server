@@ -198,6 +198,10 @@ def main():
                 logger.info(f"🟢 Trama generada: {trama}")
                 redis_client.delete(keys["process_coordinator"]["process_template"])
 
+                # save on process_back_template
+                redis_key = keys["process_coordinator"]["process_back_template"]
+                redis_client.set(redis_key, json.dumps(process))
+
                 # Envia trama a robot 01
                 redis_key = keys["process_coordinator"]["robot_cmd_template"].format(id="01")
                 redis_client.set(redis_key, json.dumps(trama))
@@ -207,8 +211,6 @@ def main():
                 redis_key = keys["process_coordinator"]["robot_cmd_template"].format(id="02")
                 redis_client.set(redis_key, json.dumps(trama))
                 logger.info(f"🟢 Trama enviada a robot 02: {trama}")
-
-                
 
             # Verifica estado del proceso en ejecucion
 

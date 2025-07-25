@@ -6,6 +6,15 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Terminal } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 
+
+const statusColors = {
+  running: "text-green-400",
+  paused: "text-yellow-400",
+  stopped: "text-red-400",
+  terminado: "text-gray-400",
+  vacio: "text-gray-400",
+}
+
 export default function ProcesoView() {
   const [form, setForm] = useState({
     long_caja: 1100,
@@ -21,12 +30,14 @@ export default function ProcesoView() {
 
   const [consoleOutput, setConsoleOutput] = useState([])
   const [open, setOpen] = useState(false)
+  const [estado, setEstado] = useState("")
   const [monitor, setMonitor] = useState({
     conteo_stack_x: 0,
     conteo_stack_z: 0,
     codigo_alarma: 0,
     significado_alarma: "Normal",
     torque_j: [0, 0, 0, 0, 0, 0],
+    velocidad_j: [0, 0, 0, 0, 0, 0],
     estado_running: false,
     estado_inicio: false,
     estado_layer: false,
@@ -51,6 +62,22 @@ export default function ProcesoView() {
       })
       .catch(err => {
         setConsoleOutput(prev => [...prev, `❌ Error al iniciar proceso: ${err.message}`])
+      })
+  }
+
+  const sendMethod = (nameMethod) => {
+    fetch(`http://localhost:5000/api/kafka/send-method`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ "params": {}, "name": nameMethod, "robot_id": "01" })
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Servidor respondió:", data)
+        setConsoleOutput(prev => [...prev, `✅ Metodo enviado correctamente: ${JSON.stringify(data)}`])
+      })
+      .catch(err => {
+        setConsoleOutput(prev => [...prev, `❌ Error al pausar proceso: ${err.message}`])
       })
   }
 
@@ -138,6 +165,7 @@ export default function ProcesoView() {
           estado_layer: data.status?.outputs?.y32 === 1,
           estado_fin: data.status?.outputs?.y33 === 1,
           torque_j : Array.from({ length: 6 }, (_, i) => data.axis_torque?.[i] ?? 0),
+          velocidad_j : Array.from({ length: 6 }, (_, i) => data.axis_velocity?.[i] ?? 0),
           bit_stack: data.status?.outputs?.y42 === 1,
           bit_coordinador: data.status?.outputs?.y41 === 1,
         }
@@ -162,6 +190,8 @@ export default function ProcesoView() {
           <Button onClick={() => sendButton("pause_button")} variant="secondary">Pause</Button>
           <Button onClick={() => sendButton("stop_button")} variant="destructive">Stop</Button>
           <Button onClick={() => sendButton("clear_alarm_button")} variant="secondary">Clear Alarm</Button>
+          <Button onClick={() => sendMethod("proceso_04")} variant="secondary">Rel Z+</Button>
+          <Button onClick={() => sendMethod("proceso_05")} variant="secondary">HOME</Button>
 
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between">
@@ -215,26 +245,36 @@ export default function ProcesoView() {
           <h2 className="text-xl font-bold">Monitoreo</h2>
           <p><strong>Conteo Stack X:</strong> {monitor.conteo_stack_x}</p>
           <p><strong>Conteo Stack Z:</strong> {monitor.conteo_stack_z}</p>
+          <p>
+            <strong>Estado:</strong> <span className={statusColors[estado]}>{estado || "Sin estado"}</span>
+          </p>
           <div className={monitor.codigo_alarma !== 0 ? "bg-red-700 p-2 rounded" : ""}>
             <p><strong>Código de Alarma:</strong> {monitor.codigo_alarma}</p>
             <p><strong>Significado:</strong> {monitor.significado_alarma}</p>
           </div>
           <div>
-            <strong>Torque por Junte:</strong>
-            <table className="w-full text-sm mt-2">
+            <strong>Lectura por Junte:</strong>
+            <table className="w-full text-sm mt-2 text-center">
               <thead>
-                <tr className="text-left text-cyan-400">
+                <tr className="text-cyan-400">
                   <th>Junte</th>
                   <th>Torque</th>
+                  <th>Velocidad</th>
                 </tr>
               </thead>
               <tbody>
-                {monitor.torque_j.map((val, idx) => (
-                  <tr key={idx} className={val > 80 ? "bg-red-600 text-white" : ""}>
-                    <td>J{idx + 1}</td>
-                    <td>{val} A</td>
-                  </tr>
-                ))}
+                {Array.isArray(monitor.torque_j) && monitor.torque_j.map((torque, idx) => {
+                  const torqueOver = torque > 80
+                  const velocidad = Array.isArray(monitor.velocidad_j) ? monitor.velocidad_j[idx] ?? 0 : 0
+                  const velOver = velocidad > 100
+                  return (
+                    <tr key={idx}>
+                      <td>J{idx + 1}</td>
+                      <td className={`${torqueOver ? "bg-red-600 text-white" : ""}`}>{torque} NM</td>
+                      <td className={`${velOver ? "bg-red-600 text-white" : ""}`}>{velocidad} RPM</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

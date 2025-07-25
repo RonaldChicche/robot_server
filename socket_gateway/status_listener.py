@@ -18,7 +18,7 @@ STATUS_INTERVAL=1    #os.getenv("STATUS_INTERVAL", 5)\
 KAFKA_TOPIC_STATUS = os.getenv("KAFKA_TOPIC_STATUS", "robot.status")
 KAFKA_TOPIC_RESPONSE = os.getenv("KAFKA_TOPIC_RESPONSE", "robot.responses")
 
-ROBOT_IDS = ["01", "02"]
+ROBOT_IDS = ["01"]
 
 
 redis_client = None
@@ -87,7 +87,8 @@ def main():
                 if current_time - last_status_time[robot_id] >= float(STATUS_INTERVAL):
                     sensor_key = keys["status_listener"]["redis_sensor_template"].format(id=robot_id)
                     connection_key = keys["status_listener"]["redis_robot_connected"].format(id=robot_id)
-                    process_status_key = keys["process_coordinator"]["process_state"].format(id=robot_id)
+                    process_status_key = keys["process_coordinator"]["process_state"]
+                    process_current_key = keys["process_coordinator"]["process_current"]
                     last_status_time[robot_id] = current_time
                     raw_data = redis_client.get(sensor_key)
                     if raw_data:
@@ -99,6 +100,7 @@ def main():
                             raw_data = redis_client.get(sensor_key)    
                         # Logica de status de feedback
                         process_status = redis_client.get(process_status_key) 
+                        process_current = redis_client.get(process_current_key)
                         raw_status.setdefault("process_status", {})
                         if process_status is not None:
                             bit_green = process_status == "Running"
@@ -109,13 +111,21 @@ def main():
                             if process_status not in ["Running", "Paused", "Stopped"]:
                                 bit_green = bit_yellow = bit_red = False
 
+                            # Logica de cerrado de proceso ... borrar current cuando acabe el proceso
+                            if process_status in ["Terminated"]:
+                                redis_client.delete(process_current_key)
+                            
+                            # Logica de cecrrado de proceso
                             raw_status["process_status"]["state"] = process_status
+                            raw_status["process_status"]["current"] = process_current
                             raw_status["process_status"]["bit_green"] = bit_green
                             raw_status["process_status"]["bit_yellow"] = bit_yellow
                             raw_status["process_status"]["bit_red"] = bit_red
                         else:
                             raw_status["process_status"] = {"bit_green": False, "bit_yellow": False, "bit_red": False}
                         
+                        # 
+
                         kafka_producer.send(KAFKA_TOPIC_STATUS, value=raw_status)                
                     else:
                         logger.warning(f"⚠️ No se encontró status para robot {robot_id}")                    

@@ -72,6 +72,8 @@ services:
     restart: unless-stopped
     environment:
       - MODE=${MODE_OPC_STATUS}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
       - OPC_ENDPOINT=${OPC_ENDPOINT}
       - KAFKA_GROUP_ID=${KAFKA_GROUP_ID_OPC}
       - KAFKA_BROKER=${KAFKA_BROKER}

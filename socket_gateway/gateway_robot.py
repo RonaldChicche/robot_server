@@ -69,7 +69,9 @@ def main():
         "modify_output_y": robot.modify_output_y,
         "proceso_01": robot.proceso_01,
         "proceso_02": robot.proceso_02,
-        "proceso_03": robot.proceso_03
+        "proceso_03": robot.proceso_03,
+        "proceso_04": robot.proceso_04,
+        "proceso_05": robot.proceso_05
     }
 
     logger.info("🔄 Iniciando bucle principal...")

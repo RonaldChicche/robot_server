@@ -1,7 +1,7 @@
 
 import socket
 import json
-from time import time
+import time
 from datetime import datetime
 
 class RobotStateMachine:
@@ -17,11 +17,11 @@ class RobotStateMachine:
         elif command_name == "stop_button":
             self.state = "Stopped"
             self.awaiting_clean = True
-            self.clean_time = time() + 4  # esperar 2 segundos sin bloquear
+            self.clean_time = time.time() + 4  # esperar 2 segundos sin bloquear
         return self.state
     
     def check_clean(self):
-        if self.awaiting_clean and time() >= self.clean_time:
+        if self.awaiting_clean and time.time() >= self.clean_time:
             self.state = "Vacio"
             self.awaiting_clean = False
             return True
@@ -188,10 +188,33 @@ class JSONBorunteClient:
 
     def proceso_02(self):
         response = self.write_data_single(850, 2)
+
+        time.sleep(1)
+        self.start_button()
+
         return response
 
     def proceso_03(self):
         response = self.write_data_single(850, 3)
+
+        time.sleep(1)
+        self.start_button()
+
+        return response
+    
+    def proceso_04(self):
+        response = self.write_data_single(850, 4)
+
+        time.sleep(1)
+        self.start_button()
+        
+        return response
+    def proceso_05(self):
+        response = self.write_data_single(850, 5)
+
+        time.sleep(1)
+        self.start_button()
+        
         return response
 
     def query_all_borunte_data(self):

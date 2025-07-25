@@ -50,6 +50,25 @@ def parsear_status(status_dict):
     count = status.get("counters")
     count_total = int(count["counter-0"]["current"]) + int(count["counter-1"]["current"])
     status_data["stack_count"] = count_total
+    pos_x = status_dict["status"]["status"]["world_position"][0]
+    pos_y = status_dict["status"]["status"]["world_position"][1]
+    pos_z = status_dict["status"]["status"]["world_position"][2]
+    status_data["pos_x"] = pos_x
+    status_data["pos_y"] = pos_y
+    status_data["pos_z"] = pos_z
+
+    torq_J1 = status_info["axis_torque"][0]
+    torq_J2 = status_info["axis_torque"][1]
+    torq_J3 = status_info["axis_torque"][2]
+    torq_J4 = status_info["axis_torque"][3]
+    torq_J5 = status_info["axis_torque"][4]
+    torq_J6 = status_info["axis_torque"][5]
+    status_data["j1"] = torq_J1
+    status_data["j2"] = torq_J2
+    status_data["j3"] = torq_J3
+    status_data["j4"] = torq_J4
+    status_data["j5"] = torq_J5
+    status_data["j6"] = torq_J6
 
     return status_data
 
