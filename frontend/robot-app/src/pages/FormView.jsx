@@ -15,7 +15,7 @@ export default function FormView() {
   //const [showParams, setShowParams] = useState(false)
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/methods")
+    fetch("http://190.168.10.102:5000/api/methods")
       .then((res) => res.json())
       .then((data) => setMethods(data))
       .catch((err) => console.error("❌ Error cargando métodos:", err))
@@ -23,7 +23,7 @@ export default function FormView() {
 
   useEffect(() => {
     if (selectedMethod && selectedMethod.requires_params) {
-      fetch(`http://localhost:5000/api/methods/${selectedMethod.id}/parameters`)
+      fetch(`http://190.168.10.102:5000/api/methods/${selectedMethod.id}/parameters`)
         .then((res) => res.json())
         .then((data) => {
           const initialParams = {}
@@ -88,7 +88,7 @@ export default function FormView() {
       }
 
       try {
-        const res = await fetch("http://localhost:5000/api/kafka/send-method", {
+        const res = await fetch("http://190.168.10.102:5000/api/kafka/send-method", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data_msg),

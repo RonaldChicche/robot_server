@@ -112,6 +112,7 @@ opc_nodes:
     robot1:
       # running: "ns=2;s=01_Running"
       running: "ns=4;i=29"
+      terminado: "ns=4;i=41"
       # stack_count: "ns=2;s=01_StackCount"
       stack_count: "ns=4;i=32"
       # alarm_code: "ns=2;s=01_AlarmCode"

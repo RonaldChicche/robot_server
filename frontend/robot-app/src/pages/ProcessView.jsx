@@ -51,7 +51,7 @@ export default function ProcesoView() {
   }
 
   const sendButton = (nameButton) => {
-    fetch(`http://localhost:5000/api/kafka/01/${nameButton}`, {
+    fetch(`http://190.168.10.102:5000/api/kafka/01/${nameButton}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" }
     })
@@ -66,7 +66,7 @@ export default function ProcesoView() {
   }
 
   const sendMethod = (nameMethod) => {
-    fetch(`http://localhost:5000/api/kafka/send-method`, {
+    fetch(`http://190.168.10.102:5000/api/kafka/send-method`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ "params": {}, "name": nameMethod, "robot_id": "01" })
@@ -86,7 +86,7 @@ export default function ProcesoView() {
       name: "send_data",
       params: form,
     }
-    fetch("http://localhost:5000/api/kafka/send-process", {
+    fetch("http://190.168.10.102:5000/api/kafka/send-process", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -102,7 +102,7 @@ export default function ProcesoView() {
   }
 
   const toggleBit = (bit, value) => {
-    fetch(`http://localhost:5000/api/kafka/01/${bit}`, {
+    fetch(`http://190.168.10.102:5000/api/kafka/01/${bit}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ "value": value })
@@ -137,7 +137,7 @@ export default function ProcesoView() {
       setMonitor((prev) => {
         if (alarma !== prevAlarmaRef.current) {
           prevAlarmaRef.current = alarma
-          fetch(`http://localhost:5000/api/alarm/${alarma}`)
+          fetch(`http://190.168.10.102:5000/api/alarm/${alarma}`)
             .then((res) => res.json())
             .then((alarm) => {
               setMonitor((m) => ({

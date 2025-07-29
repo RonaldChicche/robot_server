@@ -46,9 +46,10 @@ def parsear_status(status_dict):
     status_info = status.get("status", {})
 
     status_data["running"] = True if status_dict.get("movement_status") else False
+    status_data["terminado"] = True if status["outputs"]["y"]["y33"] else False
     status_data["alarm_code"] = int(status_info.get("alarm_code", [0])[0])
     count = status.get("counters")
-    count_total = int(count["counter-0"]["current"]) + int(count["counter-1"]["current"])
+    count_total = int(count["counter-2"]["current"])
     status_data["stack_count"] = count_total
     pos_x = status_dict["status"]["status"]["world_position"][0]
     pos_y = status_dict["status"]["status"]["world_position"][1]

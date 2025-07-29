@@ -58,17 +58,17 @@ def handle_process(redis_client, keys, process_trama):
     ancho_gripper = 121
 
     # esquina de barra solo para este caso
-    tope_x0 = 970.647
-    tope_y0 = -2071.277
-    tope_z0 = 375.895-10
+    tope_x0 = 1643.299
+    tope_y0 = -1859.776
+    tope_z0 = 367.032 - 5
 
     # calibracion pick
     x_0 = tope_x0 + ancho_gripper/2
     y_0 = tope_y0 - largo_gripper/2
     z_0 = tope_z0 + 300 # prueba y error
-    u_0 = -179.858
-    v_0 = -0.971
-    w_0 = -149.793
+    u_0 = -179.479
+    v_0 = -0.657
+    w_0 = -150.234
 
     # calculo de pick
     ## Calculo inicial de Pick 
@@ -78,6 +78,8 @@ def handle_process(redis_client, keys, process_trama):
     ## U, V, W : U_0, V_0, W_0
 
     pick_x = x_0 - float(parametros["ancho_barra"]) / 2
+    if pick_x > tope_x0:
+        pick_x = tope_x0
     pick_y = y_0 + float(parametros["long_barra"]) / 2
     pick_z = z_0 + float(parametros["espesor"])
     pick_u = u_0
@@ -86,7 +88,7 @@ def handle_process(redis_client, keys, process_trama):
 
     # esquina de caja
     tope_x1_1 = 1980.422 - 4  
-    tope_x1_2 = 2652.369 + 0.5
+    tope_x1_2 = 2652.369 + 4
     tope_y1 = y_0   # irrelevante ya no tanto
     tope_z1 = 191.987
 
@@ -119,7 +121,7 @@ def handle_process(redis_client, keys, process_trama):
         x_1 = x_1_2 
         u_1 = -179.987
         v_1 = -0.757
-        w_1 = -149.895
+        w_1 = -149.880
 
     put_x = x_1 + float(parametros["ancho_caja"])/2 - (parametros["ancho_barra"] * (parametros["cantidad_x"] - 1))
     put_y = y_1 + float(parametros["long_caja"])/2
@@ -199,7 +201,7 @@ def main():
                 redis_client.delete(keys["process_coordinator"]["process_template"])
 
                 # save on process_back_template
-                redis_key = keys["process_coordinator"]["process_back_template"]
+                redis_key = keys["process_coordinator"]["process_current"]
                 redis_client.set(redis_key, json.dumps(process))
 
                 # Envia trama a robot 01

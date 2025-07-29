@@ -114,6 +114,7 @@ def main():
                         robot.modify_output_y(33, False)
                         robot.modify_output_y(45, False)
                         # Limpia contadores
+                        robot.modify_counter("counter-2", 0, 1000)
                         robot.modify_counter("counter-1", 0, 0)
                         robot.modify_counter("counter-0", 0, 0)
 

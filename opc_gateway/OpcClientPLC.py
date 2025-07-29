@@ -57,6 +57,15 @@ class OpcClient:
                     logger.info(f"📦 Enviado a Kafka [{self.kafka_topic}]: {response}")
             elif val is False:
                 self.prev_triggers[name] = False
+        elif type_str in ["bridge"]:
+            prev = self.prev_triggers.get(name, False)
+            if val != prev:
+                self.prev_triggers[name] = val
+                payload = self.generate_payload(name, config, val)
+                logger.info(f"📦 Payload generado: {payload}")
+                if self.kafka_producer:
+                    response = self.kafka_producer.send(self.kafka_topic, value=payload)
+                    logger.info(f"📦 Enviado a Kafka [{self.kafka_topic}]: {response}")
 
     def disconnect(self):
         self.client.disconnect()
