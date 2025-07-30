@@ -58,7 +58,7 @@ def handle_process(redis_client, keys, process_trama):
     ancho_gripper = 121
 
     # esquina de barra solo para este caso
-    tope_x0 = 1643.299
+    tope_x0 = 1644.901
     tope_y0 = -1859.776
     tope_z0 = 367.032 - 5
 
@@ -88,7 +88,7 @@ def handle_process(redis_client, keys, process_trama):
 
     # esquina de caja
     tope_x1_1 = 1980.422 - 4  
-    tope_x1_2 = 2652.369 + 4
+    tope_x1_2 = 2652.369 + 4 - 5 
     tope_y1 = y_0   # irrelevante ya no tanto
     tope_z1 = 191.987
 

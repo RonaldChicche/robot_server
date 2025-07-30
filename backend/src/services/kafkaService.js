@@ -1,8 +1,15 @@
-const { Kafka } = require("kafkajs");
+const { Kafka, logLevel } = require("kafkajs");
 
 const kafka = new Kafka({
   clientId: "robot-backend",
   brokers: [process.env.KAFKA_BROKER],
+  retry: {
+    retries: 10,
+    initialRetryTime: 300,
+    factor: 0.2,
+    multiplier: 2,
+  },
+  logLevel: logLevel.ERROR,
 });
 
 const producer = kafka.producer();
