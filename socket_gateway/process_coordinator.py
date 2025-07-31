@@ -58,7 +58,7 @@ def handle_process(redis_client, keys, process_trama):
     ancho_gripper = 121
 
     # esquina de barra solo para este caso
-    tope_x0 = 1644.901
+    tope_x0 = 1648.570
     tope_y0 = -1859.776
     tope_z0 = 367.032 - 5
 
@@ -68,7 +68,7 @@ def handle_process(redis_client, keys, process_trama):
     z_0 = tope_z0 + 300 # prueba y error
     u_0 = -179.479
     v_0 = -0.657
-    w_0 = -150.234
+    w_0 = -149.757
 
     # calculo de pick
     ## Calculo inicial de Pick 
