@@ -42,6 +42,9 @@ class JSONBorunteClient:
         self.timeout = timeout
         self.robot_id = robot_id
         self.sock = None
+        self.proceso_num = 1
+        self.vel_prod = 200
+        self.vel_test = 100
 
     def connect(self):
         self.sock = socket.create_connection((self.host, self.port), self.timeout)
@@ -164,6 +167,7 @@ class JSONBorunteClient:
         """
         # Establecimiento de selector de funcion
         self.write_data_single(850, 1)
+        self.proceso = 1
 
         compensacion_x = cantidad_x * ancho
         
@@ -183,37 +187,64 @@ class JSONBorunteClient:
             int(compensacion_x*1000)
         ])
 
-        self.modify_global_velocity(velocidad)
+        #self.modify_global_velocity(velocidad)
         return True
 
     def proceso_02(self):
         response = self.write_data_single(850, 2)
+        self.proceso = 2
 
         time.sleep(1)
         self.start_button()
+
+        time.sleep(1)
+        self.modify_global_velocity(self.vel_test)
+        self.write_data_single(850, 1)
+        self.proceso = 1
 
         return response
 
     def proceso_03(self):
+        ###### TEST 
         response = self.write_data_single(850, 3)
+        self.proceso = 3
 
         time.sleep(1)
         self.start_button()
+
+        time.sleep(1)
+        self.modify_global_velocity(self.vel_test)
+        self.write_data_single(850, 1)
+        self.proceso = 1
 
         return response
     
     def proceso_04(self):
+        #### rel z
         response = self.write_data_single(850, 4)
+        self.proceso = 4
+
+        time.sleep(1)
+        self.start_button()
+
+        time.sleep(1)
+        self.modify_global_velocity(self.vel_test)
+        self.write_data_single(850, 1)
+        self.proceso = 1
+        
+        return response
+    def proceso_05(self):
+        #### HOME
+        response = self.write_data_single(850, 5)
+        self.proceso = 5
 
         time.sleep(1)
         self.start_button()
         
-        return response
-    def proceso_05(self):
-        response = self.write_data_single(850, 5)
-
         time.sleep(1)
-        self.start_button()
+        self.modify_global_velocity(self.vel_test)
+        self.write_data_single(850, 1)
+        self.proceso = 1
         
         return response
 

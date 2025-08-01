@@ -106,6 +106,9 @@ def main():
                         new_state = fsm.handle_command(cmd_name)
                         robot.modify_output_y(45, False)
                         logger.info(f"🔄 Estado FSM → {new_state}")
+                        if cmd_name == "start_button" and robot.proceso == 1:
+                            time.sleep(1)
+                            robot.modify_global_velocity(robot.vel_prod)
                     elif cmd_name in ["stop_button"]:
                         new_state = fsm.handle_command(cmd_name)
                         # Limpia bits de estado

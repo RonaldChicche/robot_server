@@ -78,8 +78,8 @@ class OpcClient:
             params = {
                 key: self.values[key]
                 for key in [
-                    "long_caja", "ancho_caja", "long_barra", "ancho_barra", "espesor",
-                    "peso", "cantidad_x", "cantidad_z", "no_carro"
+                    "long_caja", "ancho_caja", "altura_caja", "long_barra", "ancho_barra", "espesor",
+                    "peso", "cantidad_x", "cantidad_z", "no_carro", "w1", "w2"
                 ]
             }
         elif type_str == "bridge":

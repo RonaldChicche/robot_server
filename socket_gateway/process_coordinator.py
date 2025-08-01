@@ -20,7 +20,7 @@ logger = logging.getLogger("ProcessCoordinator")
 redis_client = None
 kafka_producer = None
 
-def handle_process(redis_client, keys, process_trama):
+def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     """ 
     process: {
         "order_id": 1,
@@ -29,13 +29,16 @@ def handle_process(redis_client, keys, process_trama):
         "params": {
             "long_caja": 1100    #### interno de la caja
             "ancho_caja": 150.0,
+            "altura_caja" : 350,  # new
             "long_barra": 1000.0,
             "ancho_barra": 50.0,
             "espesor": 10.0,
             "peso": 10.0,
             "cantidad_x": 1,
             "cantidad_z": 1,
-            "no_carro": 1
+            "no_carro": 1,
+            "w1" : 0.5, # new
+            "w2" : 0.5  # new
         }
     }
     trama a generar: 
@@ -58,15 +61,15 @@ def handle_process(redis_client, keys, process_trama):
     ancho_gripper = 121
 
     # esquina de barra solo para este caso
-    tope_x0 = 1648.570
+    tope_x0 = 1653.106
     tope_y0 = -1859.776
-    tope_z0 = 367.032 - 5
+    tope_z0 = 352.951 - 2
 
     # calibracion pick
     x_0 = tope_x0 + ancho_gripper/2
     y_0 = tope_y0 - largo_gripper/2
     z_0 = tope_z0 + 300 # prueba y error
-    u_0 = -179.479
+    u_0 = -179.729
     v_0 = -0.657
     w_0 = -149.757
 
@@ -86,11 +89,15 @@ def handle_process(redis_client, keys, process_trama):
     pick_v = v_0
     pick_w = w_0
 
-    # esquina de caja
-    tope_x1_1 = 1980.422 - 4  
-    tope_x1_2 = 2652.369 + 4 - 5 
-    tope_y1 = y_0   # irrelevante ya no tanto
-    tope_z1 = 191.987
+    # esquina de caja ????????????????????????  
+    tope_x1_1 = 1976.422 
+    tope_x1_2 = 2651.369 
+    tope_y1 = y_0   
+    tope_z1 = 191.987 
+
+    # comparacion con altura de caja
+    if abs(tope_z1 - parametros.get("altura_caja", 0)) > 1 : 
+        tope_z1 = parametros.get("altura_caja", 0)
 
     ## X_1_1 : (Ubicacion de Tope de guia en mesa 1 con gripper - Largo de gripper/2)
     ## X_1_2 : (Ubicacion de Tope de guia en mesa 2 con gripper - Largo de gripper/2)
@@ -110,18 +117,23 @@ def handle_process(redis_client, keys, process_trama):
     ## Z : Z_1 + espesor
     ## U, V, W : U_0, V_0, W_0
 
-    # ajuste de carro
+    # ajuste de carro ------ VALORES ACTUALES FUNCIONALES
     if int(parametros["no_carro"]) == 1:
         x_1 = x_1_1 
         u_1 = -179.658
         v_1 = -0.761
         w_1 = -149.885
+        if abs(w_1 - parametros.get("w1", 0)) > 0.1:
+            w_1 = parametros.get("w1", 0)
 
     elif parametros["no_carro"] == 2:
         x_1 = x_1_2 
         u_1 = -179.987
         v_1 = -0.757
         w_1 = -149.880
+        if abs(w_1 - parametros.get("w2", 0)) > 0.1:
+            w_1 = parametros.get("w2", 0)
+
 
     put_x = x_1 + float(parametros["ancho_caja"])/2 - (parametros["ancho_barra"] * (parametros["cantidad_x"] - 1))
     put_y = y_1 + float(parametros["long_caja"])/2
