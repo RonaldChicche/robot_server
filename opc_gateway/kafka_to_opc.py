@@ -54,9 +54,15 @@ def parsear_status(status_dict):
     pos_x = status_dict["status"]["status"]["world_position"][0]
     pos_y = status_dict["status"]["status"]["world_position"][1]
     pos_z = status_dict["status"]["status"]["world_position"][2]
+    pos_u = status_dict["status"]["status"]["world_position"][3]
+    pos_v = status_dict["status"]["status"]["world_position"][4]
+    pos_w = status_dict["status"]["status"]["world_position"][5]
     status_data["pos_x"] = pos_x
     status_data["pos_y"] = pos_y
     status_data["pos_z"] = pos_z
+    status_data["ang_u"] = pos_u
+    status_data["ang_v"] = pos_v
+    status_data["ang_w"] = pos_w
 
     torq_J1 = status_info["axis_torque"][0]
     torq_J2 = status_info["axis_torque"][1]

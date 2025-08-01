@@ -192,6 +192,7 @@ export default function ProcesoView() {
           <Button onClick={() => sendButton("clear_alarm_button")} variant="secondary">Clear Alarm</Button>
           <Button onClick={() => sendMethod("proceso_04")} variant="secondary">Rel Z+</Button>
           <Button onClick={() => sendMethod("proceso_05")} variant="secondary">HOME</Button>
+          <Button onClick={() => sendMethod("proceso_03")} variant="secondary">Test</Button>
 
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between">

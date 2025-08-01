@@ -96,8 +96,10 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     tope_z1 = 191.987 
 
     # comparacion con altura de caja
-    if abs(tope_z1 - parametros.get("altura_caja", 0)) > 1 : 
-        tope_z1 = parametros.get("altura_caja", 0)
+    altura_compe = parametros.get("altura_caja", 0)
+    if abs(tope_z1 - altura_compe) > 1 and altura_compe != 0 : 
+        logger.info(f"🟢 Compensacion de altura || {altura_compe}")
+        tope_z1 = altura_compe
 
     ## X_1_1 : (Ubicacion de Tope de guia en mesa 1 con gripper - Largo de gripper/2)
     ## X_1_2 : (Ubicacion de Tope de guia en mesa 2 con gripper - Largo de gripper/2)
@@ -123,17 +125,20 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         u_1 = -179.658
         v_1 = -0.761
         w_1 = -149.885
-        if abs(w_1 - parametros.get("w1", 0)) > 0.1:
-            w_1 = parametros.get("w1", 0)
+        w_compe = parametros.get("w1", 0)
+        if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
+            logger.info(f"🟢 Compensacion de giro || {w_compe}")
+            w_1 = w_compe
 
     elif parametros["no_carro"] == 2:
         x_1 = x_1_2 
         u_1 = -179.987
         v_1 = -0.757
         w_1 = -149.880
-        if abs(w_1 - parametros.get("w2", 0)) > 0.1:
-            w_1 = parametros.get("w2", 0)
-
+        w_compe = parametros.get("w2", 0)
+        if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
+            logger.info(f"🟢 Compensacion de giro || {w_compe}")
+            w_1 = w_compe
 
     put_x = x_1 + float(parametros["ancho_caja"])/2 - (parametros["ancho_barra"] * (parametros["cantidad_x"] - 1))
     put_y = y_1 + float(parametros["long_caja"])/2
