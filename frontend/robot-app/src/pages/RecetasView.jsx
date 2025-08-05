@@ -99,7 +99,7 @@ export default function RecetasView() {
               <strong>{r.titulo}</strong> – Caja: {r.long_caja}×{r.ancho_caja}×{r.altura_caja}, Barra: {r.long_barra}×{r.ancho_barra}, Peso: {r.peso} kg
             </div>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => handleEdit(r)}>
+              <Button size="sm" variant="outline" className="bg-white text-black hover:bg-gray-200" onClick={() => handleEdit(r)}>
                 <Pencil size={16} />
               </Button>
               <Button size="sm" variant="destructive" onClick={() => handleDelete(r.id)}>

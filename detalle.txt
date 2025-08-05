@@ -1,216 +1,44 @@
-2025-07-31 calibracion y limitacion de cpu para kafka
-backend/src/services/statusConsumer.js
-docker-compose.yml
-socket_gateway/process_coordinator.py
+# eejcuta esto y luego reinica la PC }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+# 1. Mata todos los procesos de Docker Desktop
+Stop-Process -Name "Docker Desktop" -Force -ErrorAction SilentlyContinue
+Stop-Process -Name "com.docker.backend" -Force -ErrorAction SilentlyContinue
+Stop-Process -Name "vmmem" -Force -ErrorAction SilentlyContinue
 
-2025-07-30 calibracion y load Config de kafaka
-backend/src/services/kafkaService.js
-socket_gateway/process_coordinator.py
+# 2. Reinicia la VM interna
+Restart-VM -Name "DockerDesktopVM" -Force
 
-2025-07-29 calibraciones
-frontend/robot-app/src/lib/socket.js
-frontend/robot-app/src/pages/FormView.jsx
-frontend/robot-app/src/pages/ProcessView.jsx
-opc_gateway/OpcClientPLC.py
-opc_gateway/config.yaml
-opc_gateway/kafka_to_opc.py
-socket_gateway/gateway_robot.py
-socket_gateway/process_coordinator.py
+# 3. Espera 15 segundos y relanza la GUI (opcional)
+Start-Sleep -Seconds 15
+Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
 
-2025-07-25 correccion e inclusion de /lib
-.gitignore
-frontend/robot-app/src/lib/socket.js
-frontend/robot-app/src/lib/utils.js
+# 4. Setea el socket correcto si usarás la CLI
+$env:DOCKER_HOST = "npipe:////./pipe/docker_engine"
+docker ps
 
-2025-07-25 escritura de posiciones de  memoria en opc ... adaptacion en frontend
-docker-compose.yml
-frontend/robot-app/src/pages/ProcessView.jsx
-opc_gateway/config.yaml
-opc_gateway/kafka_to_opc.py
-socket_gateway/JsonBorunteClient.py
-socket_gateway/common/redis_keys.yaml
-socket_gateway/gateway_robot.py
-socket_gateway/process_coordinator.py
-socket_gateway/status_listener.py
 
-2025-07-24 Nueva calibracion
-backend/src/index.js
-backend/src/services/kafkaPayloadBuilder.js
-frontend/robot-app/src/pages/ProcessView.jsx
-socket_gateway/gateway_robot.py
-socket_gateway/process_coordinator.py
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Opción 2: Reinicio selectivo desde el task scheduler (más seguro)
+Si no puedes o no quieres abrir GUI, crea un .bat o .ps1 con:
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+taskkill /f /im "Docker Desktop.exe"
+taskkill /f /im "com.docker.backend"
+timeout /t 10
+net stop com.docker.service
+net start com.docker.service
+start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
 
-2025-07-23 adaptacion de lectura de estados desde redis para OPC y reporte
-backend/src/index.js
-frontend/robot-app/src/pages/ControllerView.jsx
-frontend/robot-app/src/pages/ProcessView.jsx
-opc_gateway/OpcClientPLC.py
-opc_gateway/config.yaml
-opc_gateway/kafka_to_opc.py
-opc_gateway/opc_to_kafka.py
-opc_gateway/requirements.txt
-socket_gateway/JsonBorunteClient.py
-socket_gateway/common/redis_keys.yaml
-socket_gateway/gateway_robot.py
-socket_gateway/process_coordinator.py
-socket_gateway/status_listener.py
 
-2025-07-22 arreglo de kafaka to opc y socket de web
-backend/package-lock.json
-backend/package.json
-backend/src/index.js
-backend/src/services/statusConsumer.js
-frontend/robot-app/package-lock.json
-frontend/robot-app/package.json
-frontend/robot-app/src/pages/FormView.jsx
-frontend/robot-app/src/pages/ProcessView.jsx
-opc_gateway/kafka_to_opc.py
-opc_gateway/opc.ipynb
-socket_gateway/common/redis_keys.yaml
-socket_gateway/gateway_robot.py
-socket_gateway/process_coordinator.py
-socket_gateway/status_listener.py
+########################
+Posible script de Reinicio de docker
+try {
+    $env:DOCKER_HOST="npipe:////./pipe/docker_engine"
+    docker info | Out-Null
+    Write-Host "✅ Docker OK"
+} catch {
+    Write-Host "❌ Docker roto — reiniciando..."
+    # aquí podrías lanzar el script de reinicio
+}
 
-2025-07-21 cambios de opc y mejora de  interfas paa proceso
-backend/src/controllers/kafkaController.js
-backend/src/index.js
-backend/src/routes/kafkaRoutes.js
-backend/src/services/kafkaPayloadBuilder.js
-backend/src/services/statusConsumer.js
-backend/src/websockets/socketServer.js
-docker-compose.yml
-frontend/robot-app/package-lock.json
-frontend/robot-app/package.json
-frontend/robot-app/src/App.jsx
-frontend/robot-app/src/components/Sidebar.jsx
-frontend/robot-app/src/components/ui/collapsible.jsx
-frontend/robot-app/src/pages/ControllerView.jsx
-frontend/robot-app/src/pages/ProcessView.jsx
-opc_gateway/OpcClientPLC.py
-opc_gateway/config.yaml
-opc_gateway/kafka_to_opc.py
-opc_gateway/opc_to_kafka.py
-opc_gateway/requirements.txt
-socket_gateway/command_listener.py
-socket_gateway/process_coordinator.py
-
-2025-07-19 refinamiento de coordinador
-opc_gateway/OpcClientPLC.py
-opc_gateway/config.yaml
-socket_gateway/process_coordinator.py
-test.py
-
-2025-07-18 process coordinator
-backend/src/controllers/methodsController.js
-backend/src/routes/methodsRoutes.js
-docker-compose.yml
-frontend/robot-app/package-lock.json
-frontend/robot-app/package.json
-frontend/robot-app/src/App.jsx
-frontend/robot-app/src/components/Sidebar.jsx
-frontend/robot-app/src/components/ui/checkbox.jsx
-frontend/robot-app/src/components/ui/slider.jsx
-frontend/robot-app/src/pages/ControllerView.jsx
-postgress/querys.sql
-socket_gateway/common/redis_keys.yaml
-socket_gateway/entrypoint.sh
-socket_gateway/process_coodinator.py
-socket_gateway/process_coordinator.py
-
-2025-07-18 Actualizacion de descripciones
-README.md
-docs/images/robot_server.png
-test.py
-
-2025-07-17 querys de data, arreglo de trama en frontend, adaptacion de OPC
-ahh.txt
-backend/src/controllers/methodsController.js
-docker-compose.yml
-frontend/robot-app/src/pages/FormView.jsx
-opc_gateway/OpcClientPLC.py
-opc_gateway/config.yaml
-opc_gateway/opc_to_kafka.py
-postgress/querys.sql
-socket_gateway/JsonBorunteClient.py
-socket_gateway/command_listener.py
-socket_gateway/common/redis_keys.yaml
-socket_gateway/gateway_robot.py
-socket_gateway/process_coodinator.py
-socket_gateway/status_listener.py
-
-2025-07-17 backend y frontend v1, adapatacion en OPC y gateway para aceptar bridge object
-ahh.txt
-backend/.nodemon.json
-backend/Dockerfile
-backend/package-lock.json
-backend/package.json
-backend/src/config/db.js
-backend/src/controllers/kafkaController.js
-backend/src/controllers/methodsController.js
-backend/src/index.js
-backend/src/routes/kafkaRoutes.js
-backend/src/routes/methodsRoutes.js
-backend/src/services/kafkaService.js
-backend/src/services/redisService.js
-docker-compose.yml
-frontend/h.txt
-frontend/robot-app/.gitignore
-frontend/robot-app/Dockerfile
-frontend/robot-app/README.md
-frontend/robot-app/components.json
-frontend/robot-app/eslint.config.js
-frontend/robot-app/index.html
-frontend/robot-app/jsconfig.json
-frontend/robot-app/package-lock.json
-frontend/robot-app/package.json
-frontend/robot-app/public/vite.svg
-frontend/robot-app/src/App.css
-frontend/robot-app/src/App.jsx
-frontend/robot-app/src/assets/react.svg
-frontend/robot-app/src/components/Sidebar.jsx
-frontend/robot-app/src/components/ui/button.jsx
-frontend/robot-app/src/components/ui/card.jsx
-frontend/robot-app/src/components/ui/input.jsx
-frontend/robot-app/src/components/ui/label.jsx
-frontend/robot-app/src/components/ui/select.jsx
-frontend/robot-app/src/components/ui/separator.jsx
-frontend/robot-app/src/components/ui/switch.jsx
-frontend/robot-app/src/index.css
-frontend/robot-app/src/main.jsx
-frontend/robot-app/src/pages/AboutView.jsx
-frontend/robot-app/src/pages/FormView.jsx
-frontend/robot-app/src/pages/TableView.jsx
-frontend/robot-app/vite.config.js
-modbus_bridge/comandos.ipynb
-opc_gateway/OpcClientPLC.py
-opc_gateway/config.yaml
-socket_gateway/JsonBorunteClient.py
-socket_gateway/command_listener.py
-socket_gateway/gateway_robot.py
-socket_gateway/process_coodinator.py
-web/Dockerfile
-web/app.py
-web/config/redis_keys/core.json
-web/config/redis_keys/maintenance.json
-web/config/redis_keys/modbus.json
-web/config/redis_keys/robot.json
-web/helper/influx_helper.py
-web/helper/redis_helper.py
-web/helper/redis_keys.py
-web/requirements.txt
-web/routes/__init__.py
-web/routes/influx_routes.py
-web/routes/modbus_routes.py
-web/routes/opc_routes.py
-web/routes/redis_routes.py
-web/services/config.py
-web/services/extensions.py
-
-2025-07-14 Correccion de .env y parametros de escritura EN BORUNTE
-docker-compose.yml
-opc_gateway/Dockerfile
-opc_gateway/kafka_to_opc.py
-socket_gateway/JsonBorunteClient.py
 
 
 
