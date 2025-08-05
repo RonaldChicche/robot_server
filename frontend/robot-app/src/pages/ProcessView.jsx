@@ -17,12 +17,13 @@ const statusColors = {
 
 export default function ProcesoView() {
   const [form, setForm] = useState({
-    long_caja: 1100,
-    ancho_caja: 150.0,
-    long_barra: 1000.0,
-    ancho_barra: 50.0,
-    espesor: 10.0,
-    peso: 10.0,
+    long_caja: 3819,
+    ancho_caja: 297.0,
+    altura_caja: 95.0,
+    long_barra: 3657.0,
+    ancho_barra: 101.0,
+    espesor: 6.5,
+    peso: 20.80,
     cantidad_x: 1,
     cantidad_z: 1,
     no_carro: 1
@@ -218,6 +219,7 @@ export default function ProcesoView() {
             {[
               ["long_caja", "Longitud Caja"],
               ["ancho_caja", "Ancho Caja"],
+              ["altura_caja", "Alto Caja"],
               ["long_barra", "Longitud Barra"],
               ["ancho_barra", "Ancho Barra"],
               ["espesor", "Espesor"],

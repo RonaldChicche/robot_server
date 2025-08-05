@@ -117,3 +117,7 @@ UPDATE parameters t
 SET param_order = o.new_order
 FROM ordered_params o
 WHERE t.id = o.id;
+
+-- Recetas 
+
+-- Alarmas

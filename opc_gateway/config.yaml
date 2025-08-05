@@ -76,12 +76,12 @@ opc_nodes:
       val: 0
     cantidad_x: 
       # node_id: "ns=2;s=Cantidad_x"
-      node_id: "ns=4;i=17"
+      node_id: "ns=4;i=12"
       type: "data"
       val: 0
     cantidad_z: 
       # node_id: "ns=2;s=Cantidad_z"
-      node_id: "ns=4;i=12"
+      node_id: "ns=4;i=17"
       type: "data"
       val: 0
     no_carro:

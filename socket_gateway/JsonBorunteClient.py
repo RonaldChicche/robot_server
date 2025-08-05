@@ -145,7 +145,7 @@ class JSONBorunteClient:
     def clear_alarm_and_continue(self):
         return self.send_command(["clearAlarmAndContinue"])
 
-    def proceso_01(self, pick: list, put: list, cantidad_z: int, cantidad_x: int, dx: float, dy: float, espesor: float, ancho: float, velocidad: int, bit_coordinador: int):
+    def proceso_01(self, pick: list, put: list, cantidad_z: int, cantidad_x: int, dx: float, dy: float, espesor: float, ancho: float, velocidad: int, bit_coordinador: int, bit_compensacion: int, compenzacion_desfase: float):
         """
         Proceso 1: paletizado frontal con ajuste XY, cantidad, altura de stack y velocidad.
         Args:
@@ -160,6 +160,8 @@ class JSONBorunteClient:
                 "ancho" : float,
                 "velocidad": int,
                 "bit_coordinador": int,
+                "bit_compensacion": bit_compensacion,
+                "compenzacion_desfase": compenza_desfase
                 "compensacion_x": float
             }
         Returns:
@@ -186,6 +188,12 @@ class JSONBorunteClient:
             int(bit_coordinador),
             int(compensacion_x*1000)
         ])
+
+        
+        bit_compensacion = int(bit_compensacion)
+        compenzacion_desfase = int(compenzacion_desfase*1000)
+        
+        self.write_data_block(851, [bit_compensacion, compenzacion_desfase])
 
         #self.modify_global_velocity(velocidad)
         return True
