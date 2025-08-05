@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { cn } from "@/lib/utils" 
-import { BookText, Settings, Info, Atom, Gamepad2, ChevronLeft, ChevronRight, Layers } from "lucide-react"
+import { BookText, BookOpen , Settings, Info, Atom, Gamepad2, ChevronLeft, ChevronRight, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const tabs = [
@@ -8,6 +8,7 @@ const tabs = [
   { key: "form", label: "Formulario", icon: Settings },
   { key: "controller", label: "Controlador", icon: Gamepad2 },
   { key: "process", label: "Proceso", icon: Layers },
+  { key: "recetas", label: "Recetas", icon: BookOpen },
   { key: "about", label: "Acerca de", icon: Info },
 ]
 

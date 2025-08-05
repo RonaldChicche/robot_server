@@ -161,6 +161,7 @@ services:
     environment:
       - VITE_PORT=5173
       - CHOKIDAR_USEPOLLING=true
+      - VITE_API_BASE_URL=${API_BASE_URL}
     command: sh -c "npm install && npm run dev -- --host"
 
   redis:

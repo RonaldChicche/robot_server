@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef  } from "react"
+import { API_BASE_URL } from "@/config"
 import socket from "@/lib/socket"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,8 +18,8 @@ const statusColors = {
 
 export default function ProcesoView() {
   const [form, setForm] = useState({
-    long_caja: 3819,
-    ancho_caja: 297.0,
+    long_caja: 3752,
+    ancho_caja: 245.0,
     altura_caja: 95.0,
     long_barra: 3657.0,
     ancho_barra: 101.0,
@@ -26,12 +27,16 @@ export default function ProcesoView() {
     peso: 20.80,
     cantidad_x: 1,
     cantidad_z: 1,
-    no_carro: 1
+    no_carro: 1,
+    w1: 0,
+    w2: 0
   })
 
   const [consoleOutput, setConsoleOutput] = useState([])
   const [open, setOpen] = useState(false)
   const [estado, setEstado] = useState("")
+  const [recetas, setRecetas] = useState([])
+  const [selectedRecetaId, setSelectedRecetaId] = useState("")
   const [monitor, setMonitor] = useState({
     conteo_stack_x: 0,
     conteo_stack_z: 0,
@@ -51,8 +56,40 @@ export default function ProcesoView() {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/recetas`)
+      .then((res) => res.json())
+      .then((data) => setRecetas(data))
+      .catch((err) => setConsoleOutput(prev => [...prev, `❌ Error cargando recetas: ${err.message}`]))
+  }, [])
+
+  const handleRecetaChange = (e) => {
+    const id = e.target.value
+    setSelectedRecetaId(id)
+
+    if (!id) return
+
+    fetch(`${API_BASE_URL}/api/recetas/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setForm(prev => ({
+          ...prev,
+          long_caja: data.long_caja,
+          ancho_caja: data.ancho_caja,
+          altura_caja: data.altura_caja,
+          long_barra: data.long_barra,
+          ancho_barra: data.ancho_barra,
+          espesor: data.espesor,
+          peso: data.peso,
+        }))
+        setConsoleOutput(prev => [...prev, `✅ Receta cargada: ${data.titulo}`])
+      })
+      .catch((err) => setConsoleOutput(prev => [...prev, `❌ Error al cargar receta: ${err.message}`]))
+  }
+
+
   const sendButton = (nameButton) => {
-    fetch(`http://190.168.10.102:5000/api/kafka/01/${nameButton}`, {
+    fetch(`${API_BASE_URL}/api/kafka/01/${nameButton}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" }
     })
@@ -67,7 +104,7 @@ export default function ProcesoView() {
   }
 
   const sendMethod = (nameMethod) => {
-    fetch(`http://190.168.10.102:5000/api/kafka/send-method`, {
+    fetch(`${API_BASE_URL}/api/kafka/send-method`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ "params": {}, "name": nameMethod, "robot_id": "01" })
@@ -87,7 +124,7 @@ export default function ProcesoView() {
       name: "send_data",
       params: form,
     }
-    fetch("http://190.168.10.102:5000/api/kafka/send-process", {
+    fetch(`${API_BASE_URL}/api/kafka/send-process`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -103,7 +140,7 @@ export default function ProcesoView() {
   }
 
   const toggleBit = (bit, value) => {
-    fetch(`http://190.168.10.102:5000/api/kafka/01/${bit}`, {
+    fetch(`${API_BASE_URL}/api/kafka/01/${bit}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ "value": value })
@@ -138,7 +175,7 @@ export default function ProcesoView() {
       setMonitor((prev) => {
         if (alarma !== prevAlarmaRef.current) {
           prevAlarmaRef.current = alarma
-          fetch(`http://190.168.10.102:5000/api/alarm/${alarma}`)
+          fetch(`${API_BASE_URL}/api/alarmas/${alarma}`)
             .then((res) => res.json())
             .then((alarm) => {
               setMonitor((m) => ({
@@ -215,6 +252,21 @@ export default function ProcesoView() {
 
         <div className="bg-slate-800 rounded-xl p-4 sm:p-6 space-y-6 md:col-span-2">
           <h2 className="text-xl font-bold text-white">Parámetros del Proceso</h2>
+          <div className="mb-4">
+            <label className="block font-semibold text-white mb-1">Receta:</label>
+            <select
+              className="w-full px-2 py-1 rounded bg-white text-black"
+              value={selectedRecetaId}
+              onChange={handleRecetaChange}
+            >
+              <option value="">Seleccionar receta</option>
+              {recetas.map((receta) => (
+                <option key={receta.id} value={receta.id}>
+                  {receta.titulo}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               ["long_caja", "Longitud Caja"],
@@ -267,9 +319,9 @@ export default function ProcesoView() {
               </thead>
               <tbody>
                 {Array.isArray(monitor.torque_j) && monitor.torque_j.map((torque, idx) => {
-                  const torqueOver = torque > 80
+                  const torqueOver = torque > 500
                   const velocidad = Array.isArray(monitor.velocidad_j) ? monitor.velocidad_j[idx] ?? 0 : 0
-                  const velOver = velocidad > 100
+                  const velOver = velocidad > 300
                   return (
                     <tr key={idx}>
                       <td>J{idx + 1}</td>

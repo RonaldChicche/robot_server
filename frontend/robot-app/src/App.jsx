@@ -4,6 +4,7 @@ import TableView from '@/pages/TableView'
 import FormView from '@/pages/FormView'
 import ControllerView from '@/pages/ControllerView'
 import ProcessView from '@/pages/ProcessView'
+import RecetasView from "@/pages/RecetasView"
 import AboutView from '@/pages/AboutView'
 
 function App() {
@@ -19,6 +20,8 @@ function App() {
         return <ControllerView />
       case 'process':
         return <ProcessView />
+      case 'recetas':
+        return <RecetasView />
       case 'about':
         return <AboutView />
       default:

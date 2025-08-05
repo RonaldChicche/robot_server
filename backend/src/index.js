@@ -6,6 +6,8 @@ const http = require("http");
 const pool = require("./config/db");
 const kafkaRoutes = require("./routes/kafkaRoutes");
 const methodsRoutes = require("./routes/methodsRoutes");
+const recetasRoutes = require("./routes/recetasRoutes");
+const alarmasRoutes = require("./routes/alarmasRoutes");
 
 const { initSocketServer } = require("./websockets/socketServer");
 const { startStatusConsumer } = require("./services/statusConsumer");
@@ -20,6 +22,8 @@ app.use(express.json());
 
 app.use("/api/kafka", kafkaRoutes);
 app.use("/api/methods", methodsRoutes);
+app.use("/api/recetas", recetasRoutes);
+app.use("/api/alarmas", alarmasRoutes);
 
 app.get("/", async (req, res) => {
   const result = await pool.query("SELECT current_database()");

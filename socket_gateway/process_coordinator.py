@@ -86,7 +86,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     pick_x = x_0 - float(parametros["ancho_barra"]) / 2
     if pick_x > tope_x0:
         pick_x = tope_x0
-        compenza_desfase = ancho_gripper - parametros["ancho_barra"]
+        compenza_desfase = ancho_gripper - float(parametros["ancho_barra"])
         bit_compensacion = True
 
     pick_y = y_0 + float(parametros["long_barra"]) / 2
@@ -124,7 +124,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     # ajuste de carro ------ VALORES ACTUALES FUNCIONALES
     if int(parametros["no_carro"]) == 1:
         x_1 = x_1_1 
-        z_1 = tope_z1_1 + parametros.get("altura_caja") + 300 # prueba y error
+        z_1 = tope_z1_1 + float(parametros.get("altura_caja")) + 300 # prueba y error
         u_1 = -179.658
         v_1 = -0.761
         w_1 = -149.939
@@ -135,7 +135,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
 
     elif parametros["no_carro"] == 2:
         x_1 = x_1_2 
-        z_1 = tope_z1_2 + parametros.get("altura_caja") + 300 # prueba y error
+        z_1 = tope_z1_2 + float(parametros.get("altura_caja")) + 300 # prueba y error
         u_1 = -179.987
         v_1 = -0.757
         w_1 = -149.880
@@ -144,7 +144,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
             logger.info(f"🟢 Compensacion de giro || {w_compe}")
             w_1 = w_compe
 
-    put_x = x_1 + float(parametros["ancho_caja"])/2 - (parametros["ancho_barra"]/2 * (parametros["cantidad_x"] - 1)) - compenza_desfase/2
+    put_x = x_1 + float(parametros["ancho_caja"])/2 - (float(parametros["ancho_barra"])/2 * (float(parametros["cantidad_x"]) - 1)) - compenza_desfase/2
     put_y = y_1 + float(parametros["long_caja"])/2
     if bit_compensacion:
         put_y = put_y + compenza_desfase_y
@@ -158,12 +158,12 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     data = {
         "pick": [pick_x, pick_y, pick_z, pick_u, pick_v, pick_w],
         "put": [put_x, put_y, put_z, put_u, put_v, put_w],
-        "cantidad_z": parametros["cantidad_z"],
-        "cantidad_x": parametros["cantidad_x"],
+        "cantidad_z": int(parametros["cantidad_z"]),
+        "cantidad_x": int(parametros["cantidad_x"]),
         "dx": 0,
         "dy": 0,
-        "espesor": parametros["espesor"],
-        "ancho" : parametros["ancho_barra"],
+        "espesor": float(parametros["espesor"]),
+        "ancho" : float(parametros["ancho_barra"]),
         "velocidad": 200,
         "bit_coordinador": False,
         "bit_compensacion": bit_compensacion,

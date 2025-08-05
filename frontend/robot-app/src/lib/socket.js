@@ -1,7 +1,8 @@
 // src/lib/socket.js
 import { io } from "socket.io-client"
+import { API_BASE_URL } from "@/config"
 
-const socket = io("http://190.168.10.102:5000", {
+const socket = io(API_BASE_URL, {
   transports: ["websocket"], // opcional, fuerza websocket
   autoConnect: true,
 })
