@@ -145,6 +145,14 @@ class JSONBorunteClient:
     def clear_alarm_and_continue(self):
         return self.send_command(["clearAlarmAndContinue"])
 
+    def update_process(self, proceso: int):
+        # Aumentar si habran mas metodos
+        if proceso in [1, 2, 3, 4, 5, 6]:
+            self.write_data_single(850, proceso)
+            self.proceso = proceso
+        else:
+            raise ValueError("Este valor no es válido para esta operación.")
+
     def proceso_01(self, pick: list, put: list, cantidad_z: int, cantidad_x: int, dx: float, dy: float, espesor: float, ancho: float, velocidad: int, bit_coordinador: int, bit_compensacion: int, compenzacion_desfase: float):
         """
         Proceso 1: paletizado frontal con ajuste XY, cantidad, altura de stack y velocidad.
@@ -199,60 +207,91 @@ class JSONBorunteClient:
         return True
 
     def proceso_02(self):
+        self.action_stop()
         response = self.write_data_single(850, 2)
         self.proceso = 2
+        self.modify_global_velocity(self.vel_test)
 
         time.sleep(1)
         self.start_button()
 
         time.sleep(1)
         self.modify_global_velocity(self.vel_test)
-        self.write_data_single(850, 1)
-        self.proceso = 1
+        self.modify_output_y(45, False)
+        #self.write_data_single(850, 1)
+        #self.proceso = 1
 
         return response
 
     def proceso_03(self):
         ###### TEST 
+        self.action_stop()
         response = self.write_data_single(850, 3)
         self.proceso = 3
+        self.modify_global_velocity(self.vel_test)
 
         time.sleep(1)
         self.start_button()
 
         time.sleep(1)
         self.modify_global_velocity(self.vel_test)
-        self.write_data_single(850, 1)
-        self.proceso = 1
+        self.modify_output_y(45, False)
+        #self.write_data_single(850, 1)
+        #self.proceso = 1
 
         return response
     
     def proceso_04(self):
         #### rel z
+        self.action_stop()
         response = self.write_data_single(850, 4)
         self.proceso = 4
+        self.modify_global_velocity(self.vel_test)
 
         time.sleep(1)
         self.start_button()
 
         time.sleep(1)
         self.modify_global_velocity(self.vel_test)
-        self.write_data_single(850, 1)
-        self.proceso = 1
+        self.modify_output_y(45, False)
+        #self.write_data_single(850, 1)
+        #self.proceso = 1
         
         return response
+
     def proceso_05(self):
         #### HOME
+        self.action_stop()
         response = self.write_data_single(850, 5)
         self.proceso = 5
+        self.modify_global_velocity(self.vel_test)
 
         time.sleep(1)
         self.start_button()
         
         time.sleep(1)
         self.modify_global_velocity(self.vel_test)
-        self.write_data_single(850, 1)
-        self.proceso = 1
+        self.modify_output_y(45, False)
+        #self.write_data_single(850, 1)
+        #self.proceso = 1
+        
+        return response
+
+    def proceso_06(self):
+        #### Actuador off
+        self.action_stop()
+        response = self.write_data_single(850, 6)
+        self.proceso = 6
+        self.modify_global_velocity(self.vel_test)
+
+        time.sleep(1)
+        self.start_button()
+        
+        time.sleep(1)
+        self.modify_global_velocity(self.vel_test)
+        self.modify_output_y(45, False)
+        #self.write_data_single(850, 1)
+        #self.proceso = 1
         
         return response
 

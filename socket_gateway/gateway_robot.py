@@ -71,7 +71,8 @@ def main():
         "proceso_02": robot.proceso_02,
         "proceso_03": robot.proceso_03,
         "proceso_04": robot.proceso_04,
-        "proceso_05": robot.proceso_05
+        "proceso_05": robot.proceso_05,
+        "proceso_06": robot.proceso_06
     }
 
     logger.info("🔄 Iniciando bucle principal...")
@@ -98,7 +99,7 @@ def main():
                     logger.info(f"🚀 Ejecutando '{cmd_type}' → {cmd_name} con parámetros: {params}")
                     result = method(**params)
 
-                    if cmd_name in ["write_data_single", "write_data_block", "proceso_01", "proceso_02", "proceso_03"]:
+                    if cmd_name in ["write_data_single", "write_data_block", "proceso_01", "proceso_02", "proceso_03", "proceso_04", "proceso_05", "proceso_06"]:
                         # encender bit y45 ON:
                         robot.modify_output_y(45, True)
 
@@ -106,8 +107,9 @@ def main():
                         new_state = fsm.handle_command(cmd_name)
                         robot.modify_output_y(45, False)
                         logger.info(f"🔄 Estado FSM → {new_state}")
-                        if cmd_name == "start_button" and robot.proceso == 1:
+                        if cmd_name == "start_button":
                             time.sleep(1)
+                            robot.update_process(1)
                             robot.modify_global_velocity(robot.vel_prod)
                     elif cmd_name in ["stop_button"]:
                         new_state = fsm.handle_command(cmd_name)

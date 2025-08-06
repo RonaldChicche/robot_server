@@ -64,7 +64,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     compenza_desfase_y = 0
 
     # esquina de barra solo para este caso
-    tope_x0 = 1641.327
+    tope_x0 = 1650.350
     tope_y0 = -1859.776
     tope_z0 = 352.951 - 2
 
@@ -72,9 +72,9 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     x_0 = tope_x0 + ancho_gripper/2
     y_0 = tope_y0 - largo_gripper/2
     z_0 = tope_z0 + 300 # prueba y error
-    u_0 = -179.729
-    v_0 = -0.657
-    w_0 = -149.515
+    u_0 = -179.714
+    v_0 = -0.744
+    w_0 = -149.716
 
     # calculo de pick
     ## Calculo inicial de Pick 
@@ -99,7 +99,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     pick_w = w_0
 
     # esquina de caja ????????????????????????  
-    tope_x1_1 = 1976.422 + 4.5
+    tope_x1_1 = 1976.422 + 4.5 + 4 + 10.1 - 17
     tope_x1_2 = 2651.369 
     tope_y1 = y_0 + 5 ###### QUITAR CUANDO HAGAN OTRO TOPE +++++++++++++++++++++++++++++++++++++++++++++++++++++
     tope_z1_1 = 127   ## nivel de la mesa
@@ -127,7 +127,8 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         z_1 = tope_z1_1 + float(parametros.get("altura_caja")) + 300 # prueba y error
         u_1 = -179.658
         v_1 = -0.761
-        w_1 = -149.939
+        w_1 = -149.716
+        #w_1 = -149.939
         w_compe = parametros.get("w1", 0)
         if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
             logger.info(f"🟢 Compensacion de giro || {w_compe}")
@@ -138,7 +139,8 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         z_1 = tope_z1_2 + float(parametros.get("altura_caja")) + 300 # prueba y error
         u_1 = -179.987
         v_1 = -0.757
-        w_1 = -149.880
+        # w_1 = -149.880
+        w_1 = -149.716
         w_compe = parametros.get("w2", 0)
         if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
             logger.info(f"🟢 Compensacion de giro || {w_compe}")
@@ -330,7 +332,8 @@ if __name__ == "__main__":
 
 ##     No es parametro es algo que la misma funcion hara como parte de su logica
 ##     - selector                     || 850
-
+##     - compensacion(barras delgadas)|| 851
+##     - cantidad a compenzar         || 852
 
 
 ## Salidas:
