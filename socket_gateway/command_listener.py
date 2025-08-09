@@ -61,12 +61,21 @@ def main():
         # {'order_id': 'ORD_20250707T202743Z_borunte', 'type': 'proceso', 'name': 'send_data', 'params': {'ancho_caja': 150.0, 'long_barra': '3658', 'ancho_barra': 101.6, 'espesor': 6.35, 'peso': 21.0, 'cantidad': 4, 'no_carro': 1}, 'timestamp': '20250707T202743Z'}
         try:
             cmd_type = data.get("type")
+            cmd_name = data.get("name")
             if cmd_type in ["method"]:
+                # re - send values to calculate
+                current_process_key = keys["process_coordinator"]["process_current"]
+                current_process = redis_client.get(current_process_key)
+                if cmd_name in ["start_button", "proceso_03"] and current_process is not None:
+                    redis_key = keys["command_listener"]["robot_process_template"]
+                    logger.info(f" -> RE insercion '{current_process}' almacenado en Redis: {redis_key}")
+                    redis_client.set(redis_key, current_process)
                 # linea de distribucion de comando si no se especifica solo aplica a method ++++++++++++++++++++++++++++++++++
                 target_ids = [data.get("robot_id")] if data.get("robot_id") else DEFAULT_ROBOT_IDS
                 for robot_id in target_ids:
                     redis_key = keys["command_listener"]["robot_cmd_template"].format(id=robot_id)
-                    redis_client.set(redis_key, json.dumps(data), ex=2)
+                    redis_client.lpush(redis_key, json.dumps(data))
+                    redis_client.expire(redis_key, 5)
                     logger.info(f"📤 Comando '{cmd_type}' almacenado en Redis: {redis_key}")
 
             elif cmd_type == "proceso":

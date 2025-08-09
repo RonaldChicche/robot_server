@@ -82,7 +82,7 @@ def main():
     while True:
         command = None
         try:
-            cmd_raw = redis.get(gateway_keys["cmd_buffer"])
+            cmd_raw = redis.lpop(gateway_keys["cmd_buffer"])
             if cmd_raw:
                 command = json.loads(cmd_raw)
                 logger.info(f"📥 Recibido para ejecutar: {command}")
@@ -95,11 +95,8 @@ def main():
 
                     if not isinstance(params, dict):
                         raise ValueError(f"⚠️ Los parámetros deben ser un dict válido: {params}")
-                    
-                    logger.info(f"🚀 Ejecutando '{cmd_type}' → {cmd_name} con parámetros: {params}")
-                    result = method(**params)
 
-                    if cmd_name in ["write_data_single", "write_data_block", "proceso_01", "proceso_02", "proceso_03", "proceso_04", "proceso_05", "proceso_06"]:
+                    if cmd_name in ["proceso_01"]:
                         # encender bit y45 ON:
                         robot.modify_output_y(45, True)
 
@@ -111,6 +108,7 @@ def main():
                             time.sleep(1)
                             robot.update_process(1)
                             robot.modify_global_velocity(robot.vel_prod)
+                            
                     elif cmd_name in ["stop_button"]:
                         new_state = fsm.handle_command(cmd_name)
                         # Limpia bits de estado
@@ -122,6 +120,10 @@ def main():
                         robot.modify_counter("counter-2", 0, 1000)
                         robot.modify_counter("counter-1", 0, 0)
                         robot.modify_counter("counter-0", 0, 0)
+
+                    
+                    logger.info(f"🚀 Ejecutando '{cmd_type}' → {cmd_name} con parámetros: {params}")
+                    result = method(**params)
 
                 else:
                     logger.warning(f"⛔ Método no permitido: {cmd_name}")
@@ -135,7 +137,7 @@ def main():
                     "result": result,
                     "timestamp": time.time()
                 }))
-                redis.delete(gateway_keys["cmd_buffer"])
+                #redis.delete(gateway_keys["cmd_buffer"])
                 logger.info(f"✅ Comando '{cmd_name}' ejecutado con éxito.")
             
             # Leer estado del robot siempre

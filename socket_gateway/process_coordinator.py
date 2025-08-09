@@ -64,17 +64,17 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     compenza_desfase_y = 0
 
     # esquina de barra solo para este caso
-    tope_x0 = 1650.350
-    tope_y0 = -1859.776
+    tope_x0 = 1650.350 + 18 - 11 + 3 -7
+    tope_y0 = -1864.266
     tope_z0 = 352.951 - 2
 
     # calibracion pick
     x_0 = tope_x0 + ancho_gripper/2
     y_0 = tope_y0 - largo_gripper/2
-    z_0 = tope_z0 + 300 # prueba y error
-    u_0 = -179.714
-    v_0 = -0.744
-    w_0 = -149.716
+    z_0 = tope_z0 + 100 # prueba y error
+    u_0 = -179.693
+    v_0 = -0.997
+    w_0 = -149.737
 
     # calculo de pick
     ## Calculo inicial de Pick 
@@ -99,8 +99,9 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     pick_w = w_0
 
     # esquina de caja ????????????????????????  
-    tope_x1_1 = 1976.422 + 4.5 + 4 + 10.1 - 17
-    tope_x1_2 = 2651.369 
+    tope_x1_1 = 1976.422 + 4.5 + 4 + 10.1 - 17 + 2
+    # 2817.6
+    tope_x1_2 = 2651.369 + 139.1 + 7
     tope_y1 = y_0 + 5 ###### QUITAR CUANDO HAGAN OTRO TOPE +++++++++++++++++++++++++++++++++++++++++++++++++++++
     tope_z1_1 = 127   ## nivel de la mesa
     tope_z1_2 = 127
@@ -124,10 +125,10 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     # ajuste de carro ------ VALORES ACTUALES FUNCIONALES
     if int(parametros["no_carro"]) == 1:
         x_1 = x_1_1 
-        z_1 = tope_z1_1 + float(parametros.get("altura_caja")) + 300 # prueba y error
-        u_1 = -179.658
-        v_1 = -0.761
-        w_1 = -149.716
+        z_1 = tope_z1_1 + float(parametros.get("altura_caja")) + 450 # prueba y error
+        u_1 = -179.953
+        v_1 = -0.997
+        w_1 = -149.737
         #w_1 = -149.939
         w_compe = parametros.get("w1", 0)
         if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
@@ -136,11 +137,11 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
 
     elif parametros["no_carro"] == 2:
         x_1 = x_1_2 
-        z_1 = tope_z1_2 + float(parametros.get("altura_caja")) + 300 # prueba y error
-        u_1 = -179.987
-        v_1 = -0.757
+        z_1 = tope_z1_2 + float(parametros.get("altura_caja")) + 450 # prueba y error
+        u_1 = -179.953
+        v_1 = -0.997
         # w_1 = -149.880
-        w_1 = -149.716
+        w_1 = -149.737
         w_compe = parametros.get("w2", 0)
         if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
             logger.info(f"🟢 Compensacion de giro || {w_compe}")
@@ -150,6 +151,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     put_y = y_1 + float(parametros["long_caja"])/2
     if bit_compensacion:
         put_y = put_y + compenza_desfase_y
+    put_y = put_y - 100 # desfase por linea
     put_z = z_1 + float(parametros["espesor"])
     put_u = u_1
     put_v = v_1
@@ -183,8 +185,8 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     }
 
     # get redis key
-    redis_key = keys["process_coordinator"]["robot_cmd_template"].format(id="01")
-    redis_client.set(redis_key, json.dumps(trama))
+    # redis_key = keys["process_coordinator"]["robot_cmd_template"].format(id="01")
+    # redis_client.set(redis_key, json.dumps(trama))
     
     return trama
 
@@ -233,13 +235,14 @@ def main():
 
                 # Envia trama a robot 01
                 redis_key = keys["process_coordinator"]["robot_cmd_template"].format(id="01")
-                redis_client.set(redis_key, json.dumps(trama))
+                redis_client.lpush(redis_key, json.dumps(trama))
+                redis_client.expire(redis_key, 5)
                 logger.info(f"🟢 Trama enviada a robot 01: {trama}")
 
-                # Envia trama a robot 02
-                redis_key = keys["process_coordinator"]["robot_cmd_template"].format(id="02")
-                redis_client.set(redis_key, json.dumps(trama))
-                logger.info(f"🟢 Trama enviada a robot 02: {trama}")
+                # # Envia trama a robot 02
+                # redis_key = keys["process_coordinator"]["robot_cmd_template"].format(id="02")
+                # redis_client.lpush(redis_key, json.dumps(trama))
+                # logger.info(f"🟢 Trama enviada a robot 02: {trama}")
 
             # Verifica estado del proceso en ejecucion
 
