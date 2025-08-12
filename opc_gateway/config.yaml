@@ -22,7 +22,7 @@ opc_nodes:
       name: "clear_alarm_button"
     test_bit: 
       # node_id: "ns=2;s=CleanAlarm"
-      node_id: "ns=4;i=37"
+      node_id: "ns=4;i=27"
       type: "method"
       name: "proceso_03"
     jog_z: 
@@ -35,6 +35,11 @@ opc_nodes:
       node_id: "ns=4;i=37"
       type: "method"
       name: "proceso_05"
+    gripper_off: 
+      # node_id: "ns=2;s=CleanAlarm"
+      node_id: "ns=4;i=50"
+      type: "method"
+      name: "proceso_06"
     send_data: 
       # node_id: "ns=2;s=SendData"
       node_id: "ns=4;i=24"
@@ -130,6 +135,7 @@ opc_nodes:
       # running: "ns=2;s=01_Running"
       running: "ns=4;i=29"
       terminado: "ns=4;i=41"
+      set_ok: "ns=4;i=28"
       # stack_count: "ns=2;s=01_StackCount"
       stack_count: "ns=4;i=32"
       # alarm_code: "ns=2;s=01_AlarmCode"
