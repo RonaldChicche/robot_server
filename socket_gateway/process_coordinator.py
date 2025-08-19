@@ -74,7 +74,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     z_0 = tope_z0 + 100 # prueba y error
     u_0 = -179.693
     v_0 = -0.997
-    w_0 = -149.737
+    w_0 = -149.875
 
     # calculo de pick
     ## Calculo inicial de Pick 
@@ -101,7 +101,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     # esquina de caja ????????????????????????  
     tope_x1_1 = 1976.422 + 4.5 + 4 + 10.1 - 17 + 2
     # 2817.6
-    tope_x1_2 = 2651.369 + 139.1 + 7
+    tope_x1_2 = 2651.369 + 139.1 + 7 - 62.56
     tope_y1 = y_0 + 5 ###### QUITAR CUANDO HAGAN OTRO TOPE +++++++++++++++++++++++++++++++++++++++++++++++++++++
     tope_z1_1 = 127   ## nivel de la mesa
     tope_z1_2 = 127
@@ -124,11 +124,15 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
 
     # ajuste de carro ------ VALORES ACTUALES FUNCIONALES
     if int(parametros["no_carro"]) == 1:
+        # relativos 
+        dz_pick = 200
+        dz_p = 250 - 150
+        dz_n = -dz_p
         x_1 = x_1_1 
-        z_1 = tope_z1_1 + float(parametros.get("altura_caja")) + 450 # prueba y error
+        z_1 = tope_z1_1 + float(parametros.get("altura_caja")) + 250 # prueba y error
         u_1 = -179.953
         v_1 = -0.997
-        w_1 = -149.737
+        w_1 = -149.875
         #w_1 = -149.939
         w_compe = parametros.get("w1", 0)
         if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
@@ -136,12 +140,16 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
             w_1 = w_compe
 
     elif parametros["no_carro"] == 2:
+        # relativos 
+        dz_pick = 600
+        dz_p = 550 + 100 - 150
+        dz_n = -dz_p + 100
         x_1 = x_1_2 
-        z_1 = tope_z1_2 + float(parametros.get("altura_caja")) + 450 # prueba y error
+        z_1 = tope_z1_2 + float(parametros.get("altura_caja")) + 550 # prueba y error
         u_1 = -179.953
         v_1 = -0.997
         # w_1 = -149.880
-        w_1 = -149.737
+        w_1 = -149.875
         w_compe = parametros.get("w2", 0)
         if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
             logger.info(f"🟢 Compensacion de giro || {w_compe}")
@@ -151,7 +159,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     put_y = y_1 + float(parametros["long_caja"])/2
     if bit_compensacion:
         put_y = put_y + compenza_desfase_y
-    put_y = put_y - 100 # desfase por linea
+    put_y = put_y - 150 # desfase por linea
     put_z = z_1 + float(parametros["espesor"])
     put_u = u_1
     put_v = v_1
@@ -164,11 +172,11 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         "put": [put_x, put_y, put_z, put_u, put_v, put_w],
         "cantidad_z": int(parametros["cantidad_z"]),
         "cantidad_x": int(parametros["cantidad_x"]),
-        "dx": 0,
-        "dy": 0,
+        "dz_p": dz_p,
+        "dz_n": dz_n,
+        "dz_pick": dz_pick,
         "espesor": float(parametros["espesor"]),
         "ancho" : float(parametros["ancho_barra"]),
-        "velocidad": 200,
         "bit_coordinador": False,
         "bit_compensacion": bit_compensacion,
         "compenzacion_desfase": compenza_desfase

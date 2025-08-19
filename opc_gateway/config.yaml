@@ -138,6 +138,8 @@ opc_nodes:
       set_ok: "ns=4;i=28"
       # stack_count: "ns=2;s=01_StackCount"
       stack_count: "ns=4;i=32"
+      stack_ready: "ns=4;i=51"
+      layer_ready: "ns=4;i=52"
       # alarm_code: "ns=2;s=01_AlarmCode"
       alarm_code: "ns=4;i=33"
       pos_x: "ns=5;i=8"

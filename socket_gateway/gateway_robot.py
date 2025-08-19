@@ -100,6 +100,18 @@ def main():
                         # encender bit y45 ON:
                         robot.modify_output_y(45, True)
 
+                    if cmd_name in ["stop_button", "proceso_02", "proceso_03", "proceso_04", "proceso_05", "proceso_06"]:
+                        robot.modify_output_y(30, False)
+                        robot.modify_output_y(32, False)
+                        robot.modify_output_y(33, False)
+                        robot.modify_output_y(35, False)
+                        robot.modify_output_y(36, False)
+                        robot.modify_output_y(45, False)
+
+                        robot.modify_counter("counter-0", 0, 0)
+                        robot.modify_counter("counter-1", 0, 0)
+                        robot.modify_counter("counter-2", 0, 1000)
+
                     if cmd_name in ["start_button", "pause_button"]:
                         new_state = fsm.handle_command(cmd_name)
                         robot.modify_output_y(45, False)
@@ -111,16 +123,6 @@ def main():
                             
                     elif cmd_name in ["stop_button"]:
                         new_state = fsm.handle_command(cmd_name)
-                        # Limpia bits de estado
-                        robot.modify_output_y(30, False)
-                        robot.modify_output_y(32, False)
-                        robot.modify_output_y(33, False)
-                        robot.modify_output_y(45, False)
-                        # Limpia contadores
-                        robot.modify_counter("counter-2", 0, 1000)
-                        robot.modify_counter("counter-1", 0, 0)
-                        robot.modify_counter("counter-0", 0, 0)
-
                     
                     logger.info(f"🚀 Ejecutando '{cmd_type}' → {cmd_name} con parámetros: {params}")
                     result = method(**params)

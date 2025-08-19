@@ -153,7 +153,7 @@ class JSONBorunteClient:
         else:
             raise ValueError("Este valor no es válido para esta operación.")
 
-    def proceso_01(self, pick: list, put: list, cantidad_z: int, cantidad_x: int, dx: float, dy: float, espesor: float, ancho: float, velocidad: int, bit_coordinador: int, bit_compensacion: int, compenzacion_desfase: float):
+    def proceso_01(self, pick: list, put: list, cantidad_z: int, cantidad_x: int, dz_p: float, dz_n: float, dz_pick: float, espesor: float, ancho: float, bit_coordinador: int, bit_compensacion: int, compenzacion_desfase: float):
         """
         Proceso 1: paletizado frontal con ajuste XY, cantidad, altura de stack y velocidad.
         Args:
@@ -162,11 +162,11 @@ class JSONBorunteClient:
                 "put": [x, y, z, rx, ry, rz],
                 "cantidad_x": int,
                 "cantidad_z": int,
-                "dx": float,
-                "dy": float,
+                "dz_p": float,
+                "dz_n": float,
+                "dz_pick": float,
                 "espesor": float,
                 "ancho" : float,
-                "velocidad": int,
                 "bit_coordinador": int,
                 "bit_compensacion": bit_compensacion,
                 "compenzacion_desfase": compenza_desfase
@@ -183,20 +183,25 @@ class JSONBorunteClient:
         
         pick_scaled = [int(i * 1000) for i in pick]
         put_scaled = [int(i * 1000) for i in put]
+        up_scaled = [0, 0, int(dz_p * 1000), 0, 0, 0]
+        down_scaled = [0, 0, int(dz_n * 1000), 0, 0, 0]
+        pick_up_scaled = [0, 0, int(dz_pick * 1000), 0, 0, 0]
 
         self.write_data_block(800, pick_scaled)
         self.write_data_block(810, put_scaled)
+        self.write_data_block(830, up_scaled)
+        self.write_data_block(840, down_scaled)
+        self.write_data_block(860, pick_up_scaled)
 
         self.write_data_block(820, [
             int(cantidad_z),
             int(cantidad_x),
-            int(dx*1000), int(dy*1000),
+            int(dz_p*1000), int(dz_n*1000),
             int(espesor*1000), int(ancho*1000),
-            int(velocidad), 
+            int(dz_pick*1000), # antes velocidad
             int(bit_coordinador),
             int(compensacion_x*1000)
         ])
-
         
         bit_compensacion = int(bit_compensacion)
         compenzacion_desfase = int(compenzacion_desfase*1000)
