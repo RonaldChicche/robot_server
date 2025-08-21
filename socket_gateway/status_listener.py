@@ -199,9 +199,13 @@ def main():
                                 "process_status": process_status,
                                 "process_current": process_current
                             }
+                            if report["complete"] and len(report["bars"]) == 0:
+                                continue
+
                             kafka_producer.send(KAFKA_TOPIC_RESPONSE, value=report)
                             logger.info(f"Robot {robot_id}: Reporte consolidado publicado en topic response: {report}")
                             timers[robot_id]["reported"] = True
+                            redis_client.set("process:result", json.dumps(report))
 
                         # Enviar status normal sin timing adicional
                         kafka_producer.send(KAFKA_TOPIC_STATUS, value=raw_status)

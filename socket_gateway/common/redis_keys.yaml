@@ -53,6 +53,7 @@ process_coordinator:
   process_state: "process:state"
   process_current: "process:current"
   process_log: "process:log"
+  process_result: "process:result"
 
   # Process content
   process_order_id: "process:order_id"

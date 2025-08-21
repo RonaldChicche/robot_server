@@ -45,6 +45,11 @@ class JSONBorunteClient:
         self.proceso_num = 1
         self.vel_prod = 200
         self.vel_test = 100
+        self.state_ini = False
+        self.state_stack = False
+        self.state_end = False
+        self.x_pick = 0
+        self.x_place = 0
 
     def connect(self):
         self.sock = socket.create_connection((self.host, self.port), self.timeout)
@@ -153,6 +158,27 @@ class JSONBorunteClient:
         else:
             raise ValueError("Este valor no es válido para esta operación.")
 
+    def resume_proceso_01(self):
+        """ Continua un proceso parado por error o stop """
+        if self.state_ini == False and self.state_end == False:
+            self.action_stop()
+            self.write_data_single(850, 1)
+            self.write_data_single(855, 1)   
+            
+            # time.sleep(1)        
+            # self.write_data_single(800, int(self.x_pick))
+            # self.write_data_single(810, int(self.x_place))
+
+            time.sleep(1)        
+            self.start_button()
+
+            time.sleep(1)
+            self.modify_global_velocity(self.vel_prod)
+            self.modify_output_y(45, False)
+            return "Executed"
+        else:
+            return "Ignored"
+
     def proceso_01(self, pick: list, put: list, cantidad_z: int, cantidad_x: int, dz_p: float, dz_n: float, dz_pick: float, espesor: float, ancho: float, bit_coordinador: int, bit_compensacion: int, compenzacion_desfase: float):
         """
         Proceso 1: paletizado frontal con ajuste XY, cantidad, altura de stack y velocidad.
@@ -177,6 +203,7 @@ class JSONBorunteClient:
         """
         # Establecimiento de selector de funcion
         self.write_data_single(850, 1)
+        self.write_data_single(855, 0)   
         self.proceso = 1
 
         compensacion_x = cantidad_x * ancho
@@ -188,7 +215,9 @@ class JSONBorunteClient:
         pick_up_scaled = [0, 0, int(dz_pick * 1000), 0, 0, 0]
 
         self.write_data_block(800, pick_scaled)
+        self.x_pick = pick_scaled[0]
         self.write_data_block(810, put_scaled)
+        self.x_place = put_scaled[0]
         self.write_data_block(830, up_scaled)
         self.write_data_block(840, down_scaled)
         self.write_data_block(860, pick_up_scaled)
@@ -367,6 +396,11 @@ class JSONBorunteClient:
         y_bits = format(int(self.read_query("output-0")["queryData"][0]), '032b')[::-1]
         y_keys = [f"y{r}{c}" for r in range(1, 5) for c in range(8)]
         y_dict = {k: int(b) for k, b in zip(y_keys, y_bits)}
+
+        # asignar estados
+        self.state_ini = y_dict["y30"]
+        self.state_stack = y_dict["y32"]
+        self.state_end = y_dict["y33"] 
 
         # 4. Memoria M
         m_bits = format(int(self.read_query("M-0")["queryData"][0]), '032b')[::-1]

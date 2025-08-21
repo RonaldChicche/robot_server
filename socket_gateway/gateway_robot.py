@@ -48,6 +48,7 @@ def main():
     try:
         redis = create_redis_client(REDIS_HOST, REDIS_PORT)
         robot = JSONBorunteClient(host=BORUNTE_IP, robot_id=ROBOT_ID, port=BORUNTE_PORT, timeout=5)
+        robot.modify_output_y(33, True)
     except Exception as e:
         logger.error(f"❌ Error crítico al inicializar: {e}", exc_info=True)
         graceful_shutdown()
@@ -67,6 +68,7 @@ def main():
         "write_data_single": robot.write_data_single,
         "write_data_block": robot.write_data_block,
         "modify_output_y": robot.modify_output_y,
+        "resume_proceso_01": robot.resume_proceso_01,
         "proceso_01": robot.proceso_01,
         "proceso_02": robot.proceso_02,
         "proceso_03": robot.proceso_03,
@@ -103,28 +105,33 @@ def main():
                     if cmd_name in ["stop_button", "proceso_02", "proceso_03", "proceso_04", "proceso_05", "proceso_06"]:
                         robot.modify_output_y(30, False)
                         robot.modify_output_y(32, False)
-                        robot.modify_output_y(33, False)
+                        #robot.modify_output_y(33, True)
                         robot.modify_output_y(35, False)
                         robot.modify_output_y(36, False)
                         robot.modify_output_y(45, False)
+                        
+                        robot.write_data_single(855, 0)   
 
-                        robot.modify_counter("counter-0", 0, 0)
-                        robot.modify_counter("counter-1", 0, 0)
-                        robot.modify_counter("counter-2", 0, 1000)
+                        # robot.modify_counter("counter-0", 0, 0)
+                        # robot.modify_counter("counter-1", 0, 0)
+                        # robot.modify_counter("counter-2", 0, 1000)
 
                     if cmd_name in ["start_button", "pause_button"]:
                         new_state = fsm.handle_command(cmd_name)
                         robot.modify_output_y(45, False)
                         logger.info(f"🔄 Estado FSM → {new_state}")
+                        robot.write_data_single(855, 0)  
                         if cmd_name == "start_button":
+                            robot.modify_output_y(33, False)
                             time.sleep(1)
                             robot.update_process(1)
                             robot.modify_global_velocity(robot.vel_prod)
+
                             
                     elif cmd_name in ["stop_button"]:
                         new_state = fsm.handle_command(cmd_name)
                     
-                    logger.info(f"🚀 Ejecutando '{cmd_type}' → {cmd_name} con parámetros: {params}")
+                    logger.info(f"🚀 Ejecutando '{cmd_type}' → {cmd_name} con parámetros: {params} {robot.state_ini} -> {robot.state_end} || {robot.x_pick} -> {robot.x_place}")
                     result = method(**params)
 
                 else:
@@ -153,9 +160,17 @@ def main():
             if time.time() - last_query_time >= 0.2:
                 response = robot.query_all_borunte_data()
                 redis.set(gateway_keys["sensor_data"], json.dumps(response))
-                fsm.evaluate_termination(response["status"]["outputs"]["y"])
+                new_state = fsm.evaluate_termination(response["status"]["outputs"]["y"])
+                logger.info(f"🔄 Estado FSM → {new_state}")
                 if response["status"]["status"]["alarm_code"][0] != 0:
                     fsm.handle_command("stop_button")
+                    robot.action_stop()
+                    robot.modify_output_y(30, False)
+                    robot.modify_output_y(32, False)
+                    #robot.modify_output_y(33, False)
+                    robot.modify_output_y(35, False)
+                    robot.modify_output_y(36, False)
+                    robot.modify_output_y(45, False)
                 last_query_time = time.time()   
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as known_error:

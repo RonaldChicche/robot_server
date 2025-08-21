@@ -25,7 +25,7 @@ taskkill /f /im "com.docker.backend"
 timeout /t 10
 net stop com.docker.service
 net start com.docker.service
-start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+start "C:\Program Files\Docker\Docker\Docker Desktop.exe"
 
 
 ########################

@@ -64,7 +64,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     compenza_desfase_y = 0
 
     # esquina de barra solo para este caso
-    tope_x0 = 1650.350 + 18 - 11 + 3 -7
+    tope_x0 = 1650.350 + 18 - 11 + 3 -7 - 10
     tope_y0 = -1864.266
     tope_z0 = 352.951 - 2
 
@@ -73,8 +73,8 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     y_0 = tope_y0 - largo_gripper/2
     z_0 = tope_z0 + 100 # prueba y error
     u_0 = -179.693
-    v_0 = -0.997
-    w_0 = -149.875
+    v_0 = -0.218
+    w_0 = -150.205
 
     # calculo de pick
     ## Calculo inicial de Pick 
@@ -101,7 +101,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     # esquina de caja ????????????????????????  
     tope_x1_1 = 1976.422 + 4.5 + 4 + 10.1 - 17 + 2
     # 2817.6
-    tope_x1_2 = 2651.369 + 139.1 + 7 - 62.56
+    tope_x1_2 = 2651.369 + 139.1 + 7 - 62.56 - 7 + 16 + 9 -21
     tope_y1 = y_0 + 5 ###### QUITAR CUANDO HAGAN OTRO TOPE +++++++++++++++++++++++++++++++++++++++++++++++++++++
     tope_z1_1 = 127   ## nivel de la mesa
     tope_z1_2 = 127
@@ -131,8 +131,8 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         x_1 = x_1_1 
         z_1 = tope_z1_1 + float(parametros.get("altura_caja")) + 250 # prueba y error
         u_1 = -179.953
-        v_1 = -0.997
-        w_1 = -149.875
+        v_1 = -0.218
+        w_1 = -150.205
         #w_1 = -149.939
         w_compe = parametros.get("w1", 0)
         if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
@@ -147,9 +147,9 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         x_1 = x_1_2 
         z_1 = tope_z1_2 + float(parametros.get("altura_caja")) + 550 # prueba y error
         u_1 = -179.953
-        v_1 = -0.997
+        v_1 = -0.218
         # w_1 = -149.880
-        w_1 = -149.875
+        w_1 = -150.205
         w_compe = parametros.get("w2", 0)
         if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
             logger.info(f"🟢 Compensacion de giro || {w_compe}")

@@ -90,6 +90,7 @@ def escribir_variables_opc(client, robot_key, values, node_map):
     write_values = []
 
     for key, val in values.items():
+        #logger.warning(f"Analizando clave -> {key} || {val}")
         node_id_str = node_map[robot_key].get(key)
         if not node_id_str:
             logger.debug(f"⏭️ Clave {key} no definida en YAML para {robot_key}")
@@ -169,6 +170,16 @@ def main():
             opc.write_node("ns=4;i=34", bit_green)
             opc.write_node("ns=4;i=36", bit_yellow)
             opc.write_node("ns=4;i=35", bit_red)
+
+            # tiempo:
+            time_status = redis_client.get("process:result")
+            if time_status is not None:
+                process_time = json.loads(time_status)
+                if process_time["complete"]:
+                    per_stack = process_time["bars"][-1]["duration"]
+                else:
+                    per_stack = -1
+                opc.write_node("ns=5;i=43", per_stack)
 
             time.sleep(0.2)
 

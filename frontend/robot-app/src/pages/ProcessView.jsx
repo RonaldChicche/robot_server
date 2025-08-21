@@ -225,6 +225,7 @@ export default function ProcesoView() {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 sm:gap-6">
         <div className="flex flex-col gap-3">
           <Button onClick={() => sendButton("start_button")} className="bg-cyan-600 hover:bg-cyan-700">Start</Button>
+          <Button onClick={() => sendMethod("resume_proceso_01")} className="bg-cyan-600 hover:bg-cyan-700">Resume</Button>
           <Button onClick={() => sendButton("pause_button")} variant="secondary">Pause</Button>
           <Button onClick={() => sendButton("stop_button")} variant="destructive">Stop</Button>
           <Button onClick={() => sendButton("clear_alarm_button")} variant="secondary">Clear Alarm</Button>
