@@ -161,7 +161,7 @@ def main():
                 response = robot.query_all_borunte_data()
                 redis.set(gateway_keys["sensor_data"], json.dumps(response))
                 new_state = fsm.evaluate_termination(response["status"]["outputs"]["y"])
-                logger.info(f"🔄 Estado FSM → {new_state}")
+                #logger.info(f"🔄 Estado FSM → {new_state}")
                 if response["status"]["status"]["alarm_code"][0] != 0:
                     fsm.handle_command("stop_button")
                     robot.action_stop()

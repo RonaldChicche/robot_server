@@ -50,6 +50,7 @@ def parsear_status(status_dict):
     status_data["set_ok"] = True if status["outputs"]["y"]["y45"] else False
     status_data["stack_ready"] = True if status["outputs"]["y"]["y35"] else False
     status_data["layer_ready"] = True if status["outputs"]["y"]["y36"] else False
+    status_data["gripper_state"] = True if status["outputs"]["y"]["y23"] else False
     status_data["alarm_code"] = int(status_info.get("alarm_code", [0])[0])
     count = status.get("counters")
     count_total = int(count["counter-2"]["current"])
@@ -167,16 +168,16 @@ def main():
                 raw_status["process_status"] = {"bit_green": False, "bit_yellow": False, "bit_red": False}
 
             logger.info(f"Process status: {process_status}")
-            opc.write_node("ns=4;i=34", bit_green)
-            opc.write_node("ns=4;i=36", bit_yellow)
-            opc.write_node("ns=4;i=35", bit_red)
+            opc.write_node("ns=4;i=77", bit_green)
+            opc.write_node("ns=4;i=79", bit_yellow)
+            opc.write_node("ns=4;i=78", bit_red)
 
             # tiempo:
             time_status = redis_client.get("process:result")
             if time_status is not None:
                 process_time = json.loads(time_status)
                 if process_time["complete"]:
-                    per_stack = process_time["bars"][-1]["duration"]
+                    per_stack = int(process_time["bars"][-1]["duration"])
                 else:
                     per_stack = -1
                 opc.write_node("ns=5;i=43", per_stack)

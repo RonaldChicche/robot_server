@@ -43,7 +43,7 @@ class JSONBorunteClient:
         self.robot_id = robot_id
         self.sock = None
         self.proceso_num = 1
-        self.vel_prod = 200
+        self.vel_prod = 1000
         self.vel_test = 100
         self.state_ini = False
         self.state_stack = False

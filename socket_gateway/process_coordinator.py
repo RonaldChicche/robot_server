@@ -60,6 +60,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     largo_gripper = 2069
     ancho_gripper = 121
     bit_compensacion = False
+    bit_delgados = False
     compenza_desfase = 0
     compenza_desfase_y = 0
 
@@ -83,16 +84,22 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     ## Z : Z_0 + espesor
     ## U, V, W : U_0, V_0, W_0
 
-    pick_x = x_0 - float(parametros["ancho_barra"]) / 2
-    if pick_x > tope_x0:
+    if float(parametros["ancho_barra"]) > 70:
+        pick_x = x_0 - float(parametros["ancho_barra"]) / 2
+    else:
+        pick_x = x_0 - float(parametros["ancho_barra"])
+        bit_delgados = True
+
+    if pick_x > tope_x0 and float(parametros["ancho_barra"]) > 70:
         pick_x = tope_x0
         compenza_desfase = ancho_gripper - float(parametros["ancho_barra"])
         bit_compensacion = True
 
     pick_y = y_0 + float(parametros["long_barra"]) / 2
-    if bit_compensacion:
+    if bit_compensacion: # or bit_delgados
         compenza_desfase_y = -1240 - pick_y
         pick_y = -1240
+    
     pick_z = z_0 + float(parametros["espesor"])
     pick_u = u_0
     pick_v = v_0
@@ -134,10 +141,10 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         v_1 = -0.218
         w_1 = -150.205
         #w_1 = -149.939
-        w_compe = parametros.get("w1", 0)
-        if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
-            logger.info(f"🟢 Compensacion de giro || {w_compe}")
-            w_1 = w_compe
+        # w_compe = parametros.get("w1", 0)
+        # if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
+        #     logger.info(f"🟢 Compensacion de giro || {w_compe}")
+        #     w_1 = w_compe
 
     elif parametros["no_carro"] == 2:
         # relativos 
@@ -150,14 +157,17 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         v_1 = -0.218
         # w_1 = -149.880
         w_1 = -150.205
-        w_compe = parametros.get("w2", 0)
-        if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
-            logger.info(f"🟢 Compensacion de giro || {w_compe}")
-            w_1 = w_compe
+        # w_compe = parametros.get("w2", 0)
+        # if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
+        #     logger.info(f"🟢 Compensacion de giro || {w_compe}")
+        #     w_1 = w_compe
 
-    put_x = x_1 + float(parametros["ancho_caja"])/2 - (float(parametros["ancho_barra"])/2 * (float(parametros["cantidad_x"]) - 1)) - compenza_desfase/2
+    if bit_delgados:
+        put_x = x_1 + float(parametros["ancho_caja"])/2 - (float(parametros["ancho_barra"]) * ((int(parametros["cantidad_x"]) + 1)//2 - 1))
+    else:
+        put_x = x_1 + float(parametros["ancho_caja"])/2 - (float(parametros["ancho_barra"])/2 * (float(parametros["cantidad_x"]) - 1)) - compenza_desfase/2
     put_y = y_1 + float(parametros["long_caja"])/2
-    if bit_compensacion:
+    if bit_compensacion: # or bit_delgados: 
         put_y = put_y + compenza_desfase_y
     put_y = put_y - 150 # desfase por linea
     put_z = z_1 + float(parametros["espesor"])
@@ -166,17 +176,26 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     put_w = w_1
 
 
+    ancho = 0
+    if bit_delgados:
+        bit_compensacion = 2
+        ancho = float(parametros["ancho_barra"]) * 2
+        compenza_desfase = float(parametros["ancho_barra"])
+        ct_x = (int(parametros["cantidad_x"]) + 1)//2
+    else:
+        ancho = float(parametros["ancho_barra"])
+        ct_x = int(parametros["cantidad_x"])
     # generacion de trama data(dict)
     data = {
         "pick": [pick_x, pick_y, pick_z, pick_u, pick_v, pick_w],
         "put": [put_x, put_y, put_z, put_u, put_v, put_w],
         "cantidad_z": int(parametros["cantidad_z"]),
-        "cantidad_x": int(parametros["cantidad_x"]),
+        "cantidad_x": ct_x,
         "dz_p": dz_p,
         "dz_n": dz_n,
         "dz_pick": dz_pick,
         "espesor": float(parametros["espesor"]),
-        "ancho" : float(parametros["ancho_barra"]),
+        "ancho" : ancho,
         "bit_coordinador": False,
         "bit_compensacion": bit_compensacion,
         "compenzacion_desfase": compenza_desfase
