@@ -1,0 +1,176 @@
+modbus:
+  # Modo TCP o RTU
+  mode: "tcp"            # "tcp" | "rtu"
+  host: "192.168.1.50"   # TCP
+  port: 502              # TCP (por defecto)
+  serial_port: "/dev/ttyUSB0"  # RTU (si usas RTU, ignora host/port)
+  baudrate: 115200       # RTU
+  parity: "N"            # RTU: N/E/O
+  stopbits: 1            # RTU
+  bytesize: 8            # RTU
+  unit_id: 1             # Station ID (slave/unit)
+
+  # Convención de palabra/byte (muy importante para 32/64 bits)
+  # En muchos robots Borunte el "word order" típico es High-word en menor dirección.
+  word_order: "high_low"   # "high_low" | "low_high"
+  byte_order: "big"        # "big" | "little"
+
+opc_nodes:                # Conservo tu raíz para no romper nada en tu app
+  read:                   # se respeta el orden declarado
+    start_button:
+      type: "method"
+      name: "start_button"
+      modbus: { kind: "coil", fc: 1, addr: 57, length: 1, dtype: "bool" }
+
+    pause_button:
+      type: "method"
+      name: "pause_button"
+      modbus: { kind: "coil", fc: 1, addr: 59, length: 1, dtype: "bool" }
+
+    stop_button:
+      type: "method"
+      name: "stop_button"
+      modbus: { kind: "coil", fc: 1, addr: 58, length: 1, dtype: "bool" }
+
+    clear_alarm_button:
+      type: "method"
+      name: "clear_alarm_button"
+      modbus: { kind: "coil", fc: 1, addr: 60, length: 1, dtype: "bool" }
+
+    resume_button:
+      type: "method"
+      name: "resume_proceso_01"
+      modbus: { kind: "coil", fc: 1, addr: 67, length: 1, dtype: "bool" }
+
+    test_bit:
+      type: "method"
+      name: "proceso_03"
+      modbus: { kind: "coil", fc: 1, addr: 62, length: 1, dtype: "bool" }
+
+    jog_z:
+      type: "method"
+      name: "proceso_04"
+      modbus: { kind: "coil", fc: 1, addr: 63, length: 1, dtype: "bool" }
+
+    standby:
+      type: "method"
+      name: "proceso_05"
+      modbus: { kind: "coil", fc: 1, addr: 64, length: 1, dtype: "bool" }
+
+    gripper_off:
+      type: "method"
+      name: "proceso_06"
+      modbus: { kind: "coil", fc: 1, addr: 65, length: 1, dtype: "bool" }
+
+    send_data:
+      type: "proceso"
+      val: 0
+      # Aquí normalmente leerías un coil/registro que detona el envío.
+      modbus: { kind: "coil", fc: 1, addr: 66, length: 1, dtype: "bool" }
+
+    long_caja:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 3, length: 1, dtype: "uint16", scale: 1 }
+
+    ancho_caja:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 2, length: 1, dtype: "uint16", scale: 1 }
+
+    altura_caja:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 14, length: 1, dtype: "uint16" }
+
+    long_barra:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 8, length: 1, dtype: "uint16" }
+
+    ancho_barra:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 7, length: 1, dtype: "uint16" }
+
+    espesor:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 9, length: 1, dtype: "uint16" }
+
+    peso:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 13, length: 1, dtype: "uint16" }
+
+    cantidad_x:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 12, length: 1, dtype: "uint16" }
+
+    cantidad_z:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 17, length: 1, dtype: "uint16" }
+
+    no_carro:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 18, length: 1, dtype: "uint16" }
+
+    w1:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 13, length: 1, dtype: "uint16" }
+
+    w2:
+      type: "data"
+      val: 0
+      modbus: { kind: "holding", fc: 3, addr: 13, length: 1, dtype: "uint16" }
+
+    bit_stack:
+      type: "bridge"
+      name: "modify_output_y"
+      param: { output_id: "42", value: false }
+      # Lo leemos como coil y disparamos en flanco (cambio)
+      modbus: { kind: "coil", fc: 1, addr: 61, length: 1, dtype: "bool" }
+
+  write:
+    robot1:
+      running:        { kind: "holding", fc: 6, addr: 76, dtype: "uint16" }
+      terminado:      { kind: "holding", fc: 6, addr: 81, dtype: "uint16" }
+      set_ok:         { kind: "holding", fc: 6, addr: 85, dtype: "uint16" }
+      stack_count:    { kind: "holding", fc: 6, addr: 42, dtype: "uint16" }     # ejemplo
+      stack_ready:    { kind: "holding", fc: 6, addr: 80, dtype: "uint16" }
+      layer_ready:    { kind: "holding", fc: 6, addr: 82, dtype: "uint16" }
+      gripper_state:  { kind: "holding", fc: 6, addr: 84, dtype: "uint16" }
+      alarm_code:     { kind: "holding", fc: 6, addr: 83, dtype: "uint16" }
+      pos_x:          { kind: "holding", fc: 16, addr: 47, dtype: "int32" }     # 32-bit = 2 regs
+      pos_y:          { kind: "holding", fc: 16, addr: 48, dtype: "int32" }
+      pos_z:          { kind: "holding", fc: 16, addr: 49, dtype: "int32" }
+      ang_u:          { kind: "holding", fc: 16, addr: 50, dtype: "int32" }
+      ang_v:          { kind: "holding", fc: 16, addr: 51, dtype: "int32" }
+      ang_w:          { kind: "holding", fc: 16, addr: 52, dtype: "int32" }
+      j1:             { kind: "holding", fc: 16, addr: 56, dtype: "int32" }
+      j2:             { kind: "holding", fc: 16, addr: 57, dtype: "int32" }
+      j3:             { kind: "holding", fc: 16, addr: 58, dtype: "int32" }
+      j4:             { kind: "holding", fc: 16, addr: 59, dtype: "int32" }
+      j5:             { kind: "holding", fc: 16, addr: 60, dtype: "int32" }
+      j6:             { kind: "holding", fc: 16, addr: 61, dtype: "int32" }
+
+    robot2:
+      running:        { kind: "holding", fc: 6,  addr: 200, dtype: "uint16" }   # ejemplo
+      stack_count:    { kind: "holding", fc: 6,  addr: 201, dtype: "uint16" }
+      alarm_code:     { kind: "holding", fc: 6,  addr: 202, dtype: "uint16" }
+      pos_x:          { kind: "holding", fc: 16, addr: 203, dtype: "int32" }
+      pos_y:          { kind: "holding", fc: 16, addr: 205, dtype: "int32" }
+      pos_z:          { kind: "holding", fc: 16, addr: 207, dtype: "int32" }
+      ang_u:          { kind: "holding", fc: 16, addr: 209, dtype: "int32" }
+      ang_v:          { kind: "holding", fc: 16, addr: 211, dtype: "int32" }
+      ang_w:          { kind: "holding", fc: 16, addr: 213, dtype: "int32" }
+      j1:             { kind: "holding", fc: 16, addr: 215, dtype: "int32" }
+      j2:             { kind: "holding", fc: 16, addr: 217, dtype: "int32" }
+      j3:             { kind: "holding", fc: 16, addr: 219, dtype: "int32" }
+      j4:             { kind: "holding", fc: 16, addr: 221, dtype: "int32" }
+      j5:             { kind: "holding", fc: 16, addr: 223, dtype: "int32" }
+      j6:             { kind: "holding", fc: 16, addr: 225, dtype: "int32" }
