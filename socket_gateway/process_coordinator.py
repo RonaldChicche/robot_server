@@ -73,9 +73,9 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     x_0 = tope_x0 + ancho_gripper/2
     y_0 = tope_y0 - largo_gripper/2
     z_0 = tope_z0 + 100 # prueba y error
-    u_0 = -179.693
-    v_0 = -0.218
-    w_0 = -150.205
+    u_0 = -178.133
+    v_0 = -1.084
+    w_0 = -151.072
 
     # calculo de pick
     ## Calculo inicial de Pick 
@@ -137,9 +137,9 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         dz_n = -dz_p
         x_1 = x_1_1 
         z_1 = tope_z1_1 + float(parametros.get("altura_caja")) + 250 # prueba y error
-        u_1 = -179.953
-        v_1 = -0.218
-        w_1 = -150.205
+        # u_1 = -178.133
+        # v_1 = -1.084
+        # w_1 = -151.072
         #w_1 = -149.939
         # w_compe = parametros.get("w1", 0)
         # if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
@@ -153,14 +153,15 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         dz_n = -dz_p + 100
         x_1 = x_1_2 
         z_1 = tope_z1_2 + float(parametros.get("altura_caja")) + 550 # prueba y error
-        u_1 = -179.953
-        v_1 = -0.218
-        # w_1 = -149.880
-        w_1 = -150.205
+        
         # w_compe = parametros.get("w2", 0)
         # if abs(w_1 - w_compe) > 0.1 and w_compe != 0:
         #     logger.info(f"🟢 Compensacion de giro || {w_compe}")
         #     w_1 = w_compe
+
+    u_1 = -178.133
+    v_1 = -1.084
+    w_1 = -151.072
 
     if bit_delgados:
         put_x = x_1 + float(parametros["ancho_caja"])/2 - (float(parametros["ancho_barra"]) * ((int(parametros["cantidad_x"]) + 1)//2 - 1))
