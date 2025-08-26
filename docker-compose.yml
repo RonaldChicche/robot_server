@@ -152,6 +152,7 @@ services:
       context: ./frontend/robot-app
       dockerfile: Dockerfile
     container_name: frontend
+    init: true
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT}:5173"
@@ -162,7 +163,7 @@ services:
       - VITE_PORT=5173
       - CHOKIDAR_USEPOLLING=true
       - VITE_API_BASE_URL=${API_BASE_URL}
-    command: sh -c "npm install && npm run dev -- --host"
+    #command: sh -c "npm install && npm run dev -- --host"
 
   redis:
     image: redis:7.2-alpine

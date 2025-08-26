@@ -1,11 +1,19 @@
 #!/bin/bash
-if [ "$MODE" = "kafka_to_opc" ]
-then
-    python kafka_to_opc.py
-elif [ "$MODE" = "opc_to_kafka" ]
-then
-    python opc_to_kafka.py
-else
-    echo "⚠️ Variable MODE no reconocida: $MODE"
+set -Eeuo pipefail
+
+echo "🟢 Entrando a entrypoint.sh con MODE=${MODE:-<no definido>}"
+
+case "${MODE:-}" in
+  kafka_to_opc)
+    echo "▶️ Ejecutando kafka_to_opc.py"
+    exec python -u kafka_to_opc.py
+    ;;
+  opc_to_kafka)
+    echo "▶️ Ejecutando opc_to_kafka.py"
+    exec python -u opc_to_kafka.py
+    ;;
+  *)
+    echo "❌ MODE no reconocido: '${MODE:-<no definido>}'"
     exit 1
-fi
+    ;;
+esac

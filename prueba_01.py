@@ -1,89 +1,41 @@
-from kafka import KafkaProducer
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import json
+import uuid
 from datetime import datetime
+from kafka import KafkaProducer
 
-# Configura los parámetros
-KAFKA_BROKER = "192.168.101.20:9092"  # Cambia si estás usando docker o red externa
+# Configuración del broker Kafka
+KAFKA_BROKER = "190.168.10.102:9092"
 TOPIC = "robot.commands"
-CMD = "send_data"
-#CMD = "start"
 
-# Crea el productor
+# Mensaje base reproducible
+address = 811
+value = -1160266
+permanent = 0
+
+# Construcción del mensaje
+payload = {
+    "order_id": f"ORD_{datetime.now().strftime('%Y%m%dT%H%M%SZ')}_{uuid.uuid4().hex[:8]}",
+    "type": "method",
+    "name": "write_data_single",
+    "params": {
+        "addres": address,
+        "value": value,
+        "permanent": permanent
+    },
+    "timestamp": datetime.now().strftime('%Y%m%dT%H%M%SZ')
+}
+
+# Inicializar productor Kafka
 producer = KafkaProducer(
     bootstrap_servers=[KAFKA_BROKER],
-    value_serializer=lambda v: json.dumps(v).encode("utf-8")
+    value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+    key_serializer=lambda k: k.encode("utf-8")
 )
 
-timestamp = datetime.now().isoformat()
-# Mensaje de comando
-data_msg = {
-    "order_id": f"ORD_{timestamp}_borunte_test_01",
-    "robot_id" : "01",
-    "type": "method",
-    "name": "proceso_01",
-    "params": {
-        "pick": [1591.237, 1033.584, 429.415, -179.725, -0.057, -148.847],
-        "put": [2686.084, 1033.584, 306.190, 179.728, -0.093, -148.850],
-        "cantidad_z": 5,
-        "cantidad_x": 1,
-        "dx": 0,
-        "dy": 0,
-        "espesor": 5,
-        "ancho": 100,
-        "velocidad": 1000,
-        "bit_coordinador": 0,
-        "compensacion_x": 1*100
-    },
-    "timestamp": timestamp + "Z"
-}
+# Enviar mensaje
+producer.send(TOPIC, key=payload["order_id"], value=payload)
+producer.flush()
 
-data_msg_2 = {
-    "order_id": f"ORD_{timestamp}_borunte_test_01",
-    "robot_id" : "01",
-    "type": "method",
-    "name": "proceso_02",
-    "params": {},
-    "timestamp": timestamp + "Z"
-}
-
-data_msg_3 = {
-    "order_id": f"ORD_{timestamp}_borunte_test_01",
-    "robot_id" : "01",
-    "type": "method",
-    "name": "proceso_03",
-    "params": {},
-    "timestamp": timestamp + "Z"
-}
-
-
-start_msg = {
-    "order_id": f"ORD_{timestamp}_borunte_test_01",
-    "robot_id" : "01",
-    "type": "method",
-    "name": "start_button",
-    "params": {},
-    "timestamp": timestamp + "Z"
-}
-
-# Envía el mensaje con robot_id como key
-if CMD == "send_data":
-    mensaje = data_msg
-else: 
-    mensaje = start_msg
-
-future = producer.send(
-    TOPIC,
-    value=mensaje
-)
-
-# Espera confirmación de envío
-try:
-    result = future.get(timeout=5)
-    print(f"✅ Mensaje enviado: {result}")
-except Exception as e:
-    print(f"❌ Error al enviar mensaje: {e}")
-
-producer.close()
-
-
-#  450.667
+print(f"✅ Mensaje enviado a '{TOPIC}':\n{json.dumps(payload, indent=2)}")
