@@ -1,178 +1,191 @@
 opc_nodes:
-  read:                                 # importante manteenr el orden de estos elementos ya que asi empieza la suscripcion de nodos
+  read:   # SOLO lectura
     start_button:
-      #node_id: "ns=2;s=StartBit"
-      node_id: "ns=4;i=57"
       type: "method"
       name: "start_button"
-    pause_button: 
-      # node_id: "ns=2;s=PauseBit"
-      node_id: "ns=4;i=59"
+      kind: coil        # comando => coil
+      unit: 1
+      addr: 50
+
+    pause_button:
       type: "method"
       name: "pause_button"
-    stop_button: 
-      # node_id: "ns=2;s=StopBit"
-      node_id: "ns=4;i=58"
+      kind: coil
+      unit: 1
+      addr: 51
+
+    stop_button:
       type: "method"
       name: "stop_button"
-    clear_alarm_button: 
-      # node_id: "ns=2;s=CleanAlarm"
-      node_id: "ns=4;i=60"
+      kind: coil
+      unit: 1
+      addr: 52
+
+    clear_alarm_button:
       type: "method"
       name: "clear_alarm_button"
-    resume_button: 
-      # node_id: "ns=2;s=CleanAlarm"
-      node_id: "ns=4;i=67"
+      kind: coil
+      unit: 1
+      addr: 53
+
+    resume_button:
       type: "method"
       name: "resume_proceso_01"
-    test_bit: 
-      # node_id: "ns=2;s=CleanAlarm"
-      node_id: "ns=4;i=62"
+      kind: coil
+      unit: 1
+      addr: 54
+
+    test_bit:
       type: "method"
       name: "proceso_03"
-    jog_z: 
-      # node_id: "ns=2;s=CleanAlarm"
-      node_id: "ns=4;i=63"
+      kind: coil
+      unit: 1
+      addr: 55
+
+    jog_z:
       type: "method"
       name: "proceso_04"
-    standby: 
-      # node_id: "ns=2;s=CleanAlarm"
-      node_id: "ns=4;i=64"
+      kind: coil
+      unit: 1
+      addr: 56
+
+    standby:
       type: "method"
       name: "proceso_05"
-    gripper_off: 
-      # node_id: "ns=2;s=CleanAlarm"
-      node_id: "ns=4;i=65"
+      kind: coil
+      unit: 1
+      addr: 57
+
+    gripper_off:
       type: "method"
       name: "proceso_06"
-    send_data: 
-      # node_id: "ns=2;s=SendData"
-      node_id: "ns=4;i=66"
+      kind: coil
+      unit: 1
+      addr: 58
+
+    send_data:
       type: "proceso"
-      val: 0
-    long_caja: 
-      # node_id: "ns=2;s=LongCaja"
-      node_id: "ns=4;i=3"
+      kind: coil
+      unit: 1
+      addr: 59
+
+    long_caja:
       type: "data"
-      val: 0
-    ancho_caja: 
-      # node_id: "ns=2;s=AnchoCaja"
-      node_id: "ns=4;i=2"
+      unit: 1
+      addr: 10       # holding (por defecto)
+      dtype: uint16
+
+    ancho_caja:
       type: "data"
-      val: 0
+      unit: 1
+      addr: 11
+      dtype: uint16
+
     altura_caja:
-      node_id: "ns=4;i=14"
       type: "data"
-      val: 0
+      unit: 1
+      addr: 12
+      dtype: uint16
+
     long_barra:
-      # node_id: "ns=2;s=LongBarra"
-      node_id: "ns=4;i=8"
       type: "data"
-      val: 0
-    ancho_barra: 
-      # node_id: "ns=2;s=AnchoBarra"
-      node_id: "ns=4;i=7"
+      unit: 1
+      addr: 13
+      dtype: uint16
+
+    ancho_barra:
       type: "data"
-      val: 0
-    espesor: 
-      # node_id: "ns=2;s=Espesor"
-      node_id: "ns=4;i=9"
+      unit: 1
+      addr: 14
+      dtype: uint16
+
+    espesor:
       type: "data"
-      val: 0
+      unit: 1
+      addr: 15
+      dtype: uint16
+
     peso:
-      # node_id: "ns=2;s=Peso"
-      node_id: "ns=4;i=13"
       type: "data"
-      val: 0
-    cantidad_x: 
-      # node_id: "ns=2;s=Cantidad_x"
-      node_id: "ns=4;i=12"
+      unit: 1
+      addr: 16
+      dtype: uint16
+
+    cantidad_x:
       type: "data"
-      val: 0
-    cantidad_z: 
-      # node_id: "ns=2;s=Cantidad_z"
-      node_id: "ns=4;i=17"
+      unit: 1
+      addr: 17
+      dtype: uint16
+
+    cantidad_z:
       type: "data"
-      val: 0
+      unit: 1
+      addr: 18
+      dtype: uint16
+
     no_carro:
-      # node_id: "ns=2;s=NoCarro"
-      node_id: "ns=4;i=18"
       type: "data"
-      val: 0
+      unit: 1
+      addr: 19
+      dtype: uint16
+
     w1:
-      node_id: "ns=4;i=13"
       type: "data"
-      val: 0
+      unit: 1
+      addr: 20
+      dtype: uint16
+
     w2:
-      node_id: "ns=4;i=13"
       type: "data"
-      val: 0
-    # velocidad: 
-    #   # node_id: "ns=2;s=Velocidad"
-    #   node_id: "ns=4;i=18"
-    #   type: "data"
-    #   val: 0
-    # bit_voltear:
-    #   # node_id: "ns=2;s=bit_voltear"
-    #   node_id: "ns=4;i=25"
-    #   type: "bridge"
-    #   name: "modify_output_y"
-    #   param: 
-    #     output_id: "40"
-    #     value: false
+      unit: 1
+      addr: 21
+      dtype: uint16
+
     bit_stack:
-      # node_id: "ns=2;s=bit_stack"
-      node_id: "ns=4;i=61"
       type: "bridge"
       name: "modify_output_y"
-      param: 
-        output_id: "42"
-        value: false
-    # bit_libre:
-    #   node_id: "ns=2;s=bit_libre"
-    #   type: "bridge"
-    #   name: "modify_output_y"
-    #   param: 
-    #     output_id: "43"
-    #     value: false
-  write:
+      param: { output_id: "42", value: false }
+      kind: coil
+      unit: 1
+      addr: 50
+
+  write:  # Escritura + confirmación de lectura
     robot1:
-      # running: "ns=2;s=01_Running"
-      running: "ns=4;i=76"
-      terminado: "ns=4;i=81"
-      set_ok: "ns=4;i=85"
-      # stack_count: "ns=2;s=01_StackCount"
-      stack_count: "ns=5;i=42"
-      stack_ready: "ns=4;i=80"
-      layer_ready: "ns=4;i=82"
-      gripper_state: "ns=4;i=84"
-      # alarm_code: "ns=2;s=01_AlarmCode"
-      alarm_code: "ns=4;i=83"
-      pos_x: "ns=5;i=47"
-      pos_y: "ns=5;i=48"
-      pos_z: "ns=5;i=49"
-      ang_u: "ns=5;i=50"
-      ang_v: "ns=5;i=51"
-      ang_w: "ns=5;i=52"
-      j1: "ns=5;i=56"
-      j2: "ns=5;i=57"
-      j3: "ns=5;i=58"
-      j4: "ns=5;i=59"
-      j5: "ns=5;i=60"
-      j6: "ns=5;i=61"
+      running:        { unit: 1, addr: 76, dtype: uint16, confirm: true }
+      terminado:      { unit: 1, addr: 81, dtype: uint16, confirm: true }
+      set_ok:         { unit: 1, addr: 85, dtype: uint16, confirm: true }
+      stack_count:    { unit: 1, addr: 42, dtype: uint16, confirm: true }
+      stack_ready:    { unit: 1, addr: 80, dtype: uint16, confirm: true }
+      layer_ready:    { unit: 1, addr: 82, dtype: uint16, confirm: true }
+      gripper_state:  { unit: 1, addr: 84, dtype: uint16, confirm: true }
+      alarm_code:     { unit: 1, addr: 83, dtype: uint16, confirm: true }
+
+      pos_x: { unit: 1, addr: 47, dtype: int32,  confirm: true }  # 2 registros
+      pos_y: { unit: 1, addr: 48, dtype: int32,  confirm: true }
+      pos_z: { unit: 1, addr: 49, dtype: int32,  confirm: true }
+      ang_u: { unit: 1, addr: 50, dtype: int32,  confirm: true }
+      ang_v: { unit: 1, addr: 51, dtype: int32,  confirm: true }
+      ang_w: { unit: 1, addr: 52, dtype: int32,  confirm: true }
+      j1:    { unit: 1, addr: 56, dtype: int32,  confirm: true }
+      j2:    { unit: 1, addr: 57, dtype: int32,  confirm: true }
+      j3:    { unit: 1, addr: 58, dtype: int32,  confirm: true }
+      j4:    { unit: 1, addr: 59, dtype: int32,  confirm: true }
+      j5:    { unit: 1, addr: 60, dtype: int32,  confirm: true }
+      j6:    { unit: 1, addr: 61, dtype: int32,  confirm: true }
+
     robot2:
-      running: "ns=2;s=02_Running"
-      stack_count: "ns=2;s=02_StackCount"
-      alarm_code: "ns=2;s=02_AlarmCode"
-      pos_x: "ns=2;s=02_PosX"
-      pos_y: "ns=2;s=02_PosY"
-      pos_z: "ns=2;s=02_PosZ"
-      ang_u: "ns=2;s=02_AngU"
-      ang_v: "ns=2;s=02_AngV"
-      ang_w: "ns=2;s=02_AngW"
-      j1: "ns=2;s=02_J1"
-      j2: "ns=2;s=02_J2"
-      j3: "ns=2;s=02_J3"
-      j4: "ns=2;s=02_J4"
-      j5: "ns=2;s=02_J5"
-      j6: "ns=2;s=02_J6"
+      running:      { unit: 1, addr: 200, dtype: uint16, confirm: true }
+      stack_count:  { unit: 1, addr: 201, dtype: uint16, confirm: true }
+      alarm_code:   { unit: 1, addr: 202, dtype: uint16, confirm: true }
+      pos_x:        { unit: 1, addr: 203, dtype: int32,  confirm: true }
+      pos_y:        { unit: 1, addr: 205, dtype: int32,  confirm: true }
+      pos_z:        { unit: 1, addr: 207, dtype: int32,  confirm: true }
+      ang_u:        { unit: 1, addr: 209, dtype: int32,  confirm: true }
+      ang_v:        { unit: 1, addr: 211, dtype: int32,  confirm: true }
+      ang_w:        { unit: 1, addr: 213, dtype: int32,  confirm: true }
+      j1:           { unit: 1, addr: 215, dtype: int32,  confirm: true }
+      j2:           { unit: 1, addr: 217, dtype: int32,  confirm: true }
+      j3:           { unit: 1, addr: 219, dtype: int32,  confirm: true }
+      j4:           { unit: 1, addr: 221, dtype: int32,  confirm: true }
+      j5:           { unit: 1, addr: 223, dtype: int32,  confirm: true }
+      j6:           { unit: 1, addr: 225, dtype: int32,  confirm: true }
