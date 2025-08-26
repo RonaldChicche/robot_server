@@ -241,7 +241,7 @@ services:
   socket_gateway_01:
     build: ./socket_gateway
     container_name: socket_gateway_01
-    init: true
+    #init: true
     network_mode: "host"
     restart: unless-stopped
     environment:
