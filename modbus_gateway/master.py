@@ -4,7 +4,7 @@ import random
 import time
 from datetime import datetime
 
-client = ModbusTcpClient("127.0.0.1", port=5020)
+client = ModbusTcpClient("190.168.10.108", port=5020)
 client.connect()
 
 unit = 1
