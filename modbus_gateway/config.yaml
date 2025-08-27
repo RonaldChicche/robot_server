@@ -1,167 +1,127 @@
 modbus:
   mode: "tcp"            
-  host: "190.168.10.108"   
+  host: "190.168.10.106"   
   port: 5020              
   unit_id: 1             
 
   word_order: "high_low"   # "high_low" | "low_high"
   byte_order: "BIG"        # "big" | "little"
 
-opc_nodes:               
-  read:                  
+opc_nodes:
+  read:
     start_button:
       type: "method"
-      name: "start_button"
+      name: "start_button" 
       debounce_ms: 50
-      modbus: { kind: "coil", fc: 1, addr: 10, length: 1, dtype: "bool" }
+      modbus: { kind: "holding", addr: 39, bit: 0, dtype: "uint16" }   # CTW.bit0
 
     pause_button:
       type: "method"
       name: "pause_button"
       debounce_ms: 50
-      modbus: { kind: "coil", fc: 1, addr: 11, length: 1, dtype: "bool" }
+      modbus: { kind: "holding", addr: 39, bit: 2, dtype: "uint16" }   # CTW.bit1
 
     stop_button:
       type: "method"
       name: "stop_button"
       debounce_ms: 50
-      modbus: { kind: "coil", fc: 1, addr: 12, length: 1, dtype: "bool" }
+      modbus: { kind: "holding", addr: 39, bit: 1, dtype: "uint16" }   # CTW.bit2
 
     clear_alarm_button:
       type: "method"
       name: "clear_alarm_button"
       debounce_ms: 50
-      modbus: { kind: "coil", fc: 1, addr: 13, length: 1, dtype: "bool" }
+      modbus: { kind: "holding", addr: 39, bit: 3, dtype: "uint16" }   # CTW.bit3
 
-    resume_button:
-      type: "method"
-      name: "resume_proceso_01"
-      debounce_ms: 50
-      modbus: { kind: "coil", fc: 1, addr: 14, length: 1, dtype: "bool" }
-
-    test_bit:
-      type: "method"
-      name: "proceso_03"
-      debounce_ms: 50
-      modbus: { kind: "coil", fc: 1, addr: 15, length: 1, dtype: "bool" }
-
-    jog_z:
-      type: "method"
-      name: "proceso_04"
-      debounce_ms: 50
-      modbus: { kind: "coil", fc: 1, addr: 16, length: 1, dtype: "bool" }
-
-    standby:
-      type: "method"
-      name: "proceso_05"
-      debounce_ms: 50
-      modbus: { kind: "coil", fc: 1, addr: 17, length: 1, dtype: "bool" }
-
-    gripper_off:
-      type: "method"
-      name: "proceso_06"
-      debounce_ms: 50
-      modbus: { kind: "coil", fc: 1, addr: 18, length: 1, dtype: "bool" }
-
-    send_data:
-      type: "proceso"
-      name: "send_data" 
-      debounce_ms: 50
-      modbus: { kind: "coil", fc: 1, addr: 19, length: 1, dtype: "bool" }
-    
     bit_stack:
       type: "bridge"
       name: "modify_output_y"
       debounce_ms: 50
       param: { output_id: "42", value: false }
-      modbus: { kind: "coil", fc: 1, addr: 61, length: 1, dtype: "bool" }
+      modbus: { kind: "holding", addr: 39, bit: 4, dtype: "uint16" }   # CTW.bit3
 
-    long_caja:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 10, length: 1, dtype: "uint16" }
+    resume_button:
+      type: "method"
+      name: "resume_proceso_01"
+      debounce_ms: 50
+      modbus: { kind: "holding", addr: 39, bit: 10, dtype: "uint16" }   # CTW.bit4
 
-    ancho_caja:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 11, length: 1, dtype: "uint16" }
+    send_data:
+      type: "proceso"
+      name: "send_data"
+      debounce_ms: 50
+      modbus: { kind: "holding", addr: 39, bit: 9, dtype: "uint16" }   # CTW.bit6 (ejemplo)
+    
+    test:
+      type: "method"
+      name: "proceso_03"
+      debounce_ms: 50
+      modbus: { kind: "holding", addr: 39, bit: 5, dtype: "uint16" }   # CTW.bit6 (ejemplo)    
+    
+    jog_z:
+      type: "method"
+      name: "proceso_04"
+      debounce_ms: 50
+      modbus: { kind: "holding", addr: 39, bit: 6, dtype: "uint16" }   # CTW.bit6 (ejemplo)
+    
+    home:
+      type: "method"
+      name: "proceso_05"
+      debounce_ms: 50
+      modbus: { kind: "holding", addr: 39, bit: 7, dtype: "uint16" }   # CTW.bit6 (ejemplo)
+    
+    gripper_off:
+      type: "method"
+      name: "proceso_06"
+      debounce_ms: 50
+      modbus: { kind: "holding", addr: 39, bit: 8, dtype: "uint16" }   # CTW.bit6 (ejemplo)
 
-    altura_caja:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 12, length: 1, dtype: "uint16" }
-
-    long_barra:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 13, length: 1, dtype: "uint16" }
-
-    ancho_barra:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 14, length: 1, dtype: "uint16" }
-
-    espesor:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 15, length: 1, dtype: "uint16" }
-
-    peso:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 16, length: 1, dtype: "uint16" }
-
-    cantidad_x:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 17, length: 1, dtype: "uint16" }
-
-    cantidad_z:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 18, length: 1, dtype: "uint16" }
-
-    no_carro:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 19, length: 1, dtype: "uint16" }
-
-    w1:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 20, length: 1, dtype: "uint16" }
-
-    w2:
-      type: "data"
-      val: 0
-      modbus: { kind: "holding", fc: 3, addr: 21, length: 1, dtype: "uint16" }
-
+    # data (float32)
+    ancho_barra:  { type: "data", modbus: { kind: "holding", fc: 3, addr: 40,  length: 2, dtype: "float32" } }
+    long_barra:   { type: "data", modbus: { kind: "holding", fc: 3, addr: 42,  length: 2, dtype: "float32" } }
+    espesor:      { type: "data", modbus: { kind: "holding", fc: 3, addr: 44,  length: 2, dtype: "float32" } }
+    peso:         { type: "data", modbus: { kind: "holding", fc: 3, addr: 46,  length: 2, dtype: "float32" } }
+    ancho_caja:   { type: "data", modbus: { kind: "holding", fc: 3, addr: 48,  length: 2, dtype: "float32" } }
+    long_caja:    { type: "data", modbus: { kind: "holding", fc: 3, addr: 50, length: 2, dtype: "float32" } }
+    altura_caja:  { type: "data", modbus: { kind: "holding", fc: 3, addr: 52, length: 2, dtype: "float32" } }
+    # desfase y
+    w1:           { type: "data", modbus: { kind: "holding", fc: 3, addr: 54, length: 1, dtype: "int16"   } }
+    # libre para uso
+    w2:           { type: "data", modbus: { kind: "holding", fc: 3, addr: 54, length: 1, dtype: "int16"   } }
+    cantidad_x:   { type: "data", modbus: { kind: "holding", fc: 3, addr: 55, length: 1, dtype: "int16"   } }
+    cantidad_z:   { type: "data", modbus: { kind: "holding", fc: 3, addr: 56, length: 1, dtype: "int16"   } }
+    no_carro:     { type: "data", modbus: { kind: "holding", fc: 3, addr: 57, length: 1, dtype: "int16"   } }
   write:
     robot1:
-      state_green:      { kind: "holding", fc: 6, addr: 100, dtype: "uint16" }
-      state_yellow:    { kind: "holding", fc: 6, addr: 101, dtype: "uint16" }
-      state_red:     { kind: "holding", fc: 6, addr: 102, dtype: "uint16" }
-      running:        { kind: "holding", fc: 6, addr: 103, dtype: "uint16" }
-      terminado:      { kind: "holding", fc: 6, addr: 104, dtype: "uint16" }
-      set_ok:         { kind: "holding", fc: 6, addr: 105, dtype: "uint16" }
-      stack_count:    { kind: "holding", fc: 6, addr: 106, dtype: "uint16" }     
-      stack_ready:    { kind: "holding", fc: 6, addr: 107, dtype: "uint16" }
-      layer_ready:    { kind: "holding", fc: 6, addr: 108, dtype: "uint16" }
-      gripper_state:  { kind: "holding", fc: 6, addr: 109, dtype: "uint16" }
-      alarm_code:     { kind: "holding", fc: 6, addr: 110, dtype: "uint16" }
+      # STW bits (rellena los bit IDs correctos)
+      running:        { kind: "holding", addr: 0, bit: 0, dtype: "uint16" }
+      state_green:    { kind: "holding", addr: 0, bit: 1, dtype: "uint16" }
+      state_red:      { kind: "holding", addr: 0, bit: 2, dtype: "uint16" }
+      state_yellow:   { kind: "holding", addr: 0, bit: 3, dtype: "uint16" }
+      stack_ready:    { kind: "holding", addr: 0, bit: 4, dtype: "uint16" }
+      terminado:      { kind: "holding", addr: 0, bit: 5, dtype: "uint16" }
+      layer_ready:    { kind: "holding", addr: 0, bit: 6, dtype: "uint16" }
+      # REspuesta de grabado de datos
+      set_ok:         { kind: "holding", addr: 0, bit: 7, dtype: "uint16" }
+      gripper_state:  { kind: "holding", addr: 0, bit: 8, dtype: "uint16" }
 
-      pos_x:          { kind: "holding", fc: 16, addr: 150, dtype: "int16" }     
-      pos_y:          { kind: "holding", fc: 16, addr: 151, dtype: "int16" }
-      pos_z:          { kind: "holding", fc: 16, addr: 152, dtype: "int16" }
-      ang_u:          { kind: "holding", fc: 16, addr: 153, dtype: "int16" }
-      ang_v:          { kind: "holding", fc: 16, addr: 154, dtype: "int16" }
-      ang_w:          { kind: "holding", fc: 16, addr: 155, dtype: "int16" }
-      j1:             { kind: "holding", fc: 16, addr: 156, dtype: "int16" }
-      j2:             { kind: "holding", fc: 16, addr: 157, dtype: "int16" }
-      j3:             { kind: "holding", fc: 16, addr: 158, dtype: "int16" }
-      j4:             { kind: "holding", fc: 16, addr: 159, dtype: "int16" }
-      j5:             { kind: "holding", fc: 16, addr: 160, dtype: "int16" }
-      j6:             { kind: "holding", fc: 16, addr: 161, dtype: "int16" }
+      alarm_code:     { kind: "holding", addr: 1, dtype: "int16" }
+      stack_count:    { kind: "holding", addr: 2, dtype: "int16" }
+      stack_time:     { kind: "holding", addr: 3, dtype: "int16" }
+
+      pos_x: { kind: "holding", addr: 4,  dtype: "float32" }
+      pos_y: { kind: "holding", addr: 6,  dtype: "float32" }
+      pos_z: { kind: "holding", addr: 8,  dtype: "float32" }
+      ang_u: { kind: "holding", addr: 10, dtype: "float32" }
+      ang_v: { kind: "holding", addr: 12, dtype: "float32" }
+      ang_w: { kind: "holding", addr: 14, dtype: "float32" }
+
+      j1: { kind: "holding", addr: 16, dtype: "float32" }
+      j2: { kind: "holding", addr: 18, dtype: "float32" }
+      j3: { kind: "holding", addr: 20, dtype: "float32" }
+      j4: { kind: "holding", addr: 22, dtype: "float32" }
+      j5: { kind: "holding", addr: 24, dtype: "float32" }
+      j6: { kind: "holding", addr: 26, dtype: "float32" }
 
     robot2:
       state_green:      { kind: "holding", fc: 6, addr: 200, dtype: "uint16" }

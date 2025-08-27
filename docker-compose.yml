@@ -278,3 +278,85 @@ services:
   #       condition: service_healthy
   #     redis:
   #       condition: service_healthy
+
+  modbus:
+    build: ./modbus_slave
+    container_name: modbus-slave
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "5020"
+      LOG_LEVEL: "ERROR"  # INFO/DEBUG si lo necesitas
+      LOG_DATA: "0"       # 1 para ver RX/TX
+      HR_SIZE: "1000"
+    ports:
+      - "5020:5020"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 128m
+    cpus: "0.50"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket,os; s=socket.socket(); s.settimeout(2); s.connect((os.getenv('HOST','127.0.0.1'), int(os.getenv('PORT','5020')))); s.close()"]
+      interval: 20s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+    logging:
+      driver: "local"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  modbus-runner:
+    build: ./modbus_gateway
+    container_name: modbus-runner
+    environment:
+      LOG_LEVEL: "INFO"
+      # Redis
+      REDIS_HOST: "${REDIS_HOST}"     # o IP
+      REDIS_PORT: "${REDIS_PORT}"
+      REDIS_DB: "0"
+      REDIS_KEY_STATUS: "robot:01:sensor_data"
+      REDIS_KEY_PROCESS: "process:state"
+      # Kafka
+      KAFKA_ENABLE: "1"
+      KAFKA_BOOTSTRAP: "${KAFKA_BROKER}"
+      KAFKA_TOPIC: "${KAFKA_TOPIC_COMMANDS}"
+      KAFKA_ACKS: "all"
+      KAFKA_LINGER_MS: "5"
+      KAFKA_CLIENT_ID: "modbus-runner"
+      ENABLE_WRITE_FROM_REDIS: "1"
+      ENABLE_STACK_LIGHTS: "1"
+      SLEEP_SEC: "0.2"
+      ROBOT_KEY: "robot1"
+      CONFIG_PATH: "/app/config.yaml"
+    depends_on:
+      - kafka
+      - redis
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=64m
+    cap_drop: [ "ALL" ]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 256m
+    logging:
+      driver: "local"
+      options:
+        max-size: "5m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket,sys;import os;import time;import json; sys.exit(0)"]  # simple: proceso vivo
+      interval: 20s
+      timeout: 3s
+      retries: 3
+      start_period: 10s

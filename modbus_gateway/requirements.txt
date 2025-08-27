@@ -1,0 +1,4 @@
+confluent-kafka
+pymodbus
+redis
+pyyaml

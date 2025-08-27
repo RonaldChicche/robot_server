@@ -1,40 +1,67 @@
-import os, json, time, signal, sys, logging, redis
-from ModbusClient import ModbusGateway
+import os, json, time, signal, sys, logging, threading
+from typing import Optional
+import redis
+from confluent_kafka import Producer
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+from ModbusClient import ModbusGateway  # asegúrate del nombre de archivo/clase
+
+# ---------- Config ----------
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO),
+                    format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
 log = logging.getLogger("runner")
 
-REDIS_HOST = os.getenv("REDIS_HOST","190.168.10.107")
-REDIS_PORT = int(os.getenv("REDIS_PORT","6379"))
-REDIS_KEY_STATUS  = os.getenv("REDIS_KEY_STATUS","robot:01:sensor_data")
-REDIS_KEY_PROCESS = os.getenv("REDIS_KEY_PROCESS","process:state")
+# Redis
+REDIS_HOST = os.getenv("REDIS_HOST", "190.168.10.102")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_DB   = int(os.getenv("REDIS_DB", "0"))
+REDIS_KEY_STATUS  = os.getenv("REDIS_KEY_STATUS", "robot:01:sensor_data")
+REDIS_KEY_PROCESS = os.getenv("REDIS_KEY_PROCESS", "process:state")
 
-gw = None
-rd = None
-running = True
+# Kafka
+KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "localhost:9092")
+KAFKA_TOPIC     = os.getenv("KAFKA_TOPIC", "robot_events")
+KAFKA_ACKS      = os.getenv("KAFKA_ACKS", "all")
+KAFKA_LINGER_MS = int(os.getenv("KAFKA_LINGER_MS", "5"))
+KAFKA_CLIENT_ID = os.getenv("KAFKA_CLIENT_ID", "modbus-runner")
+KAFKA_ENABLE    = os.getenv("KAFKA_ENABLE", "1").lower() in ("1","true","yes")
 
+# Opcionales
+ENABLE_WRITE_FROM_REDIS = os.getenv("ENABLE_WRITE_FROM_REDIS", "0").lower() in ("1","true","yes")
+ENABLE_STACK_LIGHTS     = os.getenv("ENABLE_STACK_LIGHTS", "0").lower() in ("1","true","yes")
+SLEEP_SEC = float(os.getenv("SLEEP_SEC", "0.2"))
+ROBOT_KEY = os.getenv("ROBOT_KEY", "robot1")
+CONFIG_PATH = os.getenv("CONFIG_PATH", "config.yaml")
+
+# ---------- Globals ----------
+stop_event = threading.Event()
+gw: Optional[ModbusGateway] = None
+rd: Optional[redis.Redis] = None
+kafka: Optional[Producer] = None
+
+# ---------- Helpers ----------
 def shutdown(*_):
-    global running, gw
-    running = False
-    if gw:
-        try: gw.disconnect()
-        except: pass
-    log.info("bye")
-    try: sys.exit(0)
-    except SystemExit: pass
-
-def i16(x):
-    v = int(x)
-    return max(-32768, min(32767, v))
+    log.info("Recibida señal de parada...")
+    stop_event.set()
+    try:
+        if gw:
+            gw.close()
+    except Exception as e:
+        log.warning(f"Error cerrando ModbusGateway: {e}")
+    try:
+        if kafka:
+            kafka.flush(3.0)  # fuerza envío restante
+    except Exception as e:
+        log.warning(f"Error en flush Kafka: {e}")
+    log.info("Bye")
+    # No sys.exit aquí; dejamos que main retorne limpiamente
 
 def parse_status(payload: dict) -> dict:
-    """Mapea el JSON de estado → claves del YAML 'write.robot1'."""
     st = {}
     s   = payload.get("status", {})
     sin = s.get("status", {})
 
-    st["running"] = bool(payload.get("movement_status"))
-
+    st["running"] = 1 if payload.get("movement_status") else 0
     y = s.get("outputs", {}).get("y", {})
     st["terminado"]     = 1 if y.get("y33") else 0
     st["set_ok"]        = 1 if y.get("y45") else 0
@@ -43,61 +70,115 @@ def parse_status(payload: dict) -> dict:
     st["gripper_state"] = 1 if y.get("y23") else 0
 
     st["alarm_code"] = int((sin.get("alarm_code") or [0])[0])
-
     cnt = s.get("counters", {})
     st["stack_count"] = int(cnt.get("counter-2", {}).get("current", 0))
 
     wp = sin.get("world_position", [0,0,0,0,0,0])
     st.update({
-        "pos_x": i16(wp[0]), "pos_y": i16(wp[1]), "pos_z": i16(wp[2]),
-        "ang_u": i16(wp[3]), "ang_v": i16(wp[4]), "ang_w": i16(wp[5]),
+        "pos_x": float(wp[0]), "pos_y": float(wp[1]), "pos_z": float(wp[2]),
+        "ang_u": float(wp[3]), "ang_v": float(wp[4]), "ang_w": float(wp[5]),
     })
 
     tq = sin.get("axis_torque", [0,0,0,0,0,0])
-    st.update({f"j{i+1}": i16(tq[i]) for i in range(6)})
+    for i in range(6):
+        st[f"j{i+1}"] = float(tq[i] if i < len(tq) else 0.0)
 
-    # normaliza booleans a 0/1 (uint16)
-    for k, v in list(st.items()):
-        if isinstance(v, bool):
-            st[k] = 1 if v else 0
     return st
 
-if __name__ == "__main__":
+def delivery_report(err, msg):
+    if err is not None:
+        log.error(f"Kafka delivery failed: {err}")
+    else:
+        # Debug reducido; deja INFO para cosas importantes
+        log.debug(f"Kafka delivered to {msg.topic()} [{msg.partition()}] at {msg.offset()}")
+
+def make_kafka() -> Optional[Producer]:
+    if not KAFKA_ENABLE:
+        log.info("Kafka deshabilitado (KAFKA_ENABLE=0)")
+        return None
+    conf = {
+        "bootstrap.servers": KAFKA_BOOTSTRAP,
+        "client.id": KAFKA_CLIENT_ID,
+        "enable.idempotence": True,
+        "acks": KAFKA_ACKS,
+        "linger.ms": KAFKA_LINGER_MS,
+        "compression.type": "lz4",
+        "message.timeout.ms": 30000,
+        "retry.backoff.ms": 100,
+        "retries": 5,
+        "socket.keepalive.enable": True,
+    }
+    return Producer(conf)
+
+def kafka_send(topic: str, value: dict, key: Optional[str] = None):
+    if not kafka:
+        return
+    payload = json.dumps(value, ensure_ascii=False).encode("utf-8")
+    try:
+        kafka.produce(topic=topic, key=key, value=payload, on_delivery=delivery_report)
+        kafka.poll(0)  # sirve el callback
+    except BufferError:
+        # Cola llena: fuerza vaciado y reintenta rápido
+        kafka.poll(0.5)
+        kafka.produce(topic=topic, key=key, value=payload, on_delivery=delivery_report)
+
+def main():
+    global gw, rd, kafka
     signal.signal(signal.SIGINT, shutdown)
-    try: signal.signal(signal.SIGTERM, shutdown)
-    except Exception: pass  # Windows
+    try:
+        signal.signal(signal.SIGTERM, shutdown)
+    except Exception:
+        pass
 
-    gw = ModbusGateway(config_path="config.yaml", kafka_producer=None)
-    rd = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+    # Conexiones
+    kafka = make_kafka()
+    rd = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
 
-    robot_key = "robot1"
+    gw = ModbusGateway(config_path=CONFIG_PATH, kafka_producer=kafka)  # tu clase lo usará internamente
 
+    backoff = 0.5
+    backoff_max = 5.0
     log.info("loop...")
-    while running:
+    while not stop_event.is_set():
         try:
             # 1) Estados desde Redis → Modbus (solo difs, con confirmación)
-            raw = rd.get(REDIS_KEY_STATUS)
-            if raw:
-                data = json.loads(raw)
-                if data.get("robot_id") in ("01", "1"):
-                    st = parse_status(data)
-                    gw.write_status_diff(robot_key, st, confirm=True)
+            if ENABLE_WRITE_FROM_REDIS:
+                raw = rd.get(REDIS_KEY_STATUS)
+                if raw:
+                    try:
+                        data = json.loads(raw)
+                        if data.get("robot_id") in ("01","1"):
+                            st = parse_status(data)
+                            gw.write_status_diff(ROBOT_KEY, st, confirm=True)
+                    except Exception as e:
+                        log.warning(f"payload Redis inválido: {e}")
 
-            # 2) process:state → luces (si no hay valor, apaga todo)
-            ps = rd.get(REDIS_KEY_PROCESS) or ""
-            lights = {
-                "state_green":  1 if ps == "Running" else 0,
-                "state_yellow": 1 if ps == "Paused"  else 0,
-                "state_red":    1 if ps == "Stopped" else 0,
-            }
-            gw.write_status_diff(robot_key, lights, confirm=False)
+            # 2) process:state → luces
+            if ENABLE_STACK_LIGHTS:
+                ps = rd.get(REDIS_KEY_PROCESS) or ""
+                lights = {
+                    "state_green":  1 if ps == "Running" else 0,
+                    "state_yellow": 1 if ps == "Paused"  else 0,
+                    "state_red":    1 if ps == "Stopped" else 0,
+                }
+                gw.write_status_diff(ROBOT_KEY, lights, confirm=False)
 
-            # 3) Eventos (READ/coils) → Kafka (si configuraste producer en ModbusGateway)
-            gw.poll_events_once()
+            # 3) Eventos (READ) → Kafka (tu gateway envía usando kafka_producer)
+            ev = gw.poll_events_once()  # si retorna eventos, también los publicamos directo
+            if ev:
+                # Por si tu gateway no los publica internamente:
+                kafka_send(KAFKA_TOPIC, ev, key=ev.get("robot_id","unknown"))
 
-            time.sleep(0.2)
+            backoff = 0.5  # reset backoff al operar OK
+            # espera corta pero interrumpible
+            stop_event.wait(SLEEP_SEC)
+
         except Exception as e:
             log.exception(f"loop error: {e}")
-            time.sleep(0.5)
+            stop_event.wait(backoff)
+            backoff = min(backoff * 2, backoff_max)
 
     shutdown()
+
+if __name__ == "__main__":
+    main()
