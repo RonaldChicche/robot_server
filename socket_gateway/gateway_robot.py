@@ -58,10 +58,10 @@ def main():
     try:
         redis = create_redis_client(REDIS_HOST, REDIS_PORT)
         robot = JSONBorunteClient(host=BORUNTE_IP, robot_id=ROBOT_ID, port=BORUNTE_PORT, timeout=5)
-        robot.action_stop()
-        robot.modify_output_y(33, False)
-        robot.modify_counter("counter-2", 0, 1000)
-        robot.modify_global_velocity(robot.vel_test)
+        #robot.action_stop()
+        #robot.modify_output_y(33, False)
+        #robot.modify_counter("counter-2", 0, 1000)
+        #robot.modify_global_velocity(robot.vel_test)
         clean_registry(robot)
     except Exception as e:
         logger.error(f"❌ Error crítico al inicializar: {e}", exc_info=True)

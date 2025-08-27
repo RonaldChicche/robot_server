@@ -100,11 +100,11 @@ opc_nodes:
       type: "data"
       val: 0
     w1:
-      node_id: "ns=4;i=13"
+      node_id: "ns=4;i=18"
       type: "data"
       val: 0
     w2:
-      node_id: "ns=4;i=13"
+      node_id: "ns=4;i=18"
       type: "data"
       val: 0
     # velocidad: 
