@@ -20,6 +20,8 @@ docker ps
 Opción 2: Reinicio selectivo desde el task scheduler (más seguro)
 Si no puedes o no quieres abrir GUI, crea un .bat o .ps1 con:
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+$env:DOCKER_HOST = "npipe:////./pipe/docker_engine"
 taskkill /f /im "Docker Desktop.exe"
 taskkill /f /im "com.docker.backend"
 timeout /t 10

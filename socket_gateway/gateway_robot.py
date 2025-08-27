@@ -36,6 +36,16 @@ def format_gateway_keys(template: dict, robot_id: str) -> dict:
     """Devuelve un dict con todas las claves Redis formateadas para un robot específico."""
     return {k: v.format(id=robot_id) for k, v in template.items()}
 
+def clean_registry(robot: JSONBorunteClient):
+    robot.modify_output_y(30, False)
+    robot.modify_output_y(32, False)
+    #robot.modify_output_y(33, False)
+    robot.modify_output_y(35, False)
+    robot.modify_output_y(36, False)
+    robot.modify_output_y(45, False)
+    
+    robot.write_data_single(855, 0) 
+
 def main():
     global redis_client, robot, gateway_keys
     signal.signal(signal.SIGINT, graceful_shutdown)
@@ -48,7 +58,11 @@ def main():
     try:
         redis = create_redis_client(REDIS_HOST, REDIS_PORT)
         robot = JSONBorunteClient(host=BORUNTE_IP, robot_id=ROBOT_ID, port=BORUNTE_PORT, timeout=5)
-        robot.modify_output_y(33, True)
+        robot.action_stop()
+        robot.modify_output_y(33, False)
+        robot.modify_counter("counter-2", 0, 1000)
+        robot.modify_global_velocity(robot.vel_test)
+        clean_registry(robot)
     except Exception as e:
         logger.error(f"❌ Error crítico al inicializar: {e}", exc_info=True)
         graceful_shutdown()
@@ -122,6 +136,7 @@ def main():
                         logger.info(f"🔄 Estado FSM → {new_state}")
                         robot.write_data_single(855, 0)  
                         if cmd_name == "start_button":
+                            robot.action_stop()
                             robot.modify_output_y(33, False)
                             time.sleep(1)
                             robot.update_process(1)
