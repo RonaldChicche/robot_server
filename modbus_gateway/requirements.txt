@@ -1,0 +1,4 @@
+pymodbus==3.9.2
+redis
+pyyaml
+kafka-python==2.2.15
