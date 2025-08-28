@@ -170,7 +170,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     put_y = y_1 + float(parametros["long_caja"])/2
     if bit_compensacion: # or bit_delgados: 
         put_y = put_y + compenza_desfase_y
-    put_y = put_y - 150 # desfase por linea
+    put_y = put_y - 190 # desfase por linea
     put_z = z_1 + float(parametros["espesor"])
     put_u = u_1
     put_v = v_1
