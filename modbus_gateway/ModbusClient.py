@@ -20,7 +20,7 @@ class ModbusGateway(ModbusTcpClient):
     
     - Usa convert_to_registers / convert_from_registers (sin BinaryPayload*).
     """
-    def __init__(self, config_path="config.yaml", kafka_producer=None, kafka_topic="orders.to_robots"):
+    def __init__(self,modbus_host="127.0.0.1", modbus_port=5020, config_path="config.yaml", kafka_producer=None, kafka_topic="orders.to_robots"):
         # ---- Cargar YAML ----
         with open(config_path, "r") as f:
             cfg = yaml.safe_load(f)
@@ -35,9 +35,8 @@ class ModbusGateway(ModbusTcpClient):
         # ---- Cliente (TCP o Serial-RTU) ----
         mode = str(mb.get("mode","tcp")).lower()
         if mode == "tcp":
-            super().__init__(mb["host"], port=int(mb.get("port", 5020)), name="MB-Gateway")
+            super().__init__(host=modbus_host, port=modbus_port, name="MB-Gateway")
         else:
-            # Si necesitas RTU, usa composición: ModbusSerialClient, pero mantenemos interfaz
             raise RuntimeError("Solo TCP en esta clase. (RTU: crear variante específica)")
 
         if not self.connect():
@@ -261,6 +260,7 @@ class ModbusGateway(ModbusTcpClient):
 
         payload = {
             "order_id": f"ORD_{ts}_borunte",
+            "robot_id": '01',
             "type": t,
             "name": cfg.get("name", name),
             "params": params,

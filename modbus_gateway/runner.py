@@ -1,7 +1,7 @@
 import os, json, time, signal, sys, logging, threading
 from typing import Optional
 import redis
-from confluent_kafka import Producer
+from kafka import KafkaProducer
 
 from ModbusClient import ModbusGateway  # asegúrate del nombre de archivo/clase
 
@@ -20,11 +20,15 @@ REDIS_KEY_PROCESS = os.getenv("REDIS_KEY_PROCESS", "process:state")
 
 # Kafka
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "localhost:9092")
-KAFKA_TOPIC     = os.getenv("KAFKA_TOPIC", "robot_events")
+KAFKA_TOPIC     = os.getenv("KAFKA_TOPIC", "robot.commands")
 KAFKA_ACKS      = os.getenv("KAFKA_ACKS", "all")
 KAFKA_LINGER_MS = int(os.getenv("KAFKA_LINGER_MS", "5"))
 KAFKA_CLIENT_ID = os.getenv("KAFKA_CLIENT_ID", "modbus-runner")
 KAFKA_ENABLE    = os.getenv("KAFKA_ENABLE", "1").lower() in ("1","true","yes")
+
+# Modbus
+MODBUS_HOST = os.getenv("MODBUS_HOST", "0.0.0.0")
+MODBUS_PORT = os.getenv("MODBUS_PORT", "5020")
 
 # Opcionales
 ENABLE_WRITE_FROM_REDIS = os.getenv("ENABLE_WRITE_FROM_REDIS", "0").lower() in ("1","true","yes")
@@ -37,7 +41,7 @@ CONFIG_PATH = os.getenv("CONFIG_PATH", "config.yaml")
 stop_event = threading.Event()
 gw: Optional[ModbusGateway] = None
 rd: Optional[redis.Redis] = None
-kafka: Optional[Producer] = None
+kafka: Optional[KafkaProducer] = None
 
 # ---------- Helpers ----------
 def shutdown(*_):
@@ -54,7 +58,6 @@ def shutdown(*_):
     except Exception as e:
         log.warning(f"Error en flush Kafka: {e}")
     log.info("Bye")
-    # No sys.exit aquí; dejamos que main retorne limpiamente
 
 def parse_status(payload: dict) -> dict:
     st = {}
@@ -92,23 +95,13 @@ def delivery_report(err, msg):
         # Debug reducido; deja INFO para cosas importantes
         log.debug(f"Kafka delivered to {msg.topic()} [{msg.partition()}] at {msg.offset()}")
 
-def make_kafka() -> Optional[Producer]:
-    if not KAFKA_ENABLE:
-        log.info("Kafka deshabilitado (KAFKA_ENABLE=0)")
-        return None
-    conf = {
-        "bootstrap.servers": KAFKA_BOOTSTRAP,
-        "client.id": KAFKA_CLIENT_ID,
-        "enable.idempotence": True,
-        "acks": KAFKA_ACKS,
-        "linger.ms": KAFKA_LINGER_MS,
-        "compression.type": "lz4",
-        "message.timeout.ms": 30000,
-        "retry.backoff.ms": 100,
-        "retries": 5,
-        "socket.keepalive.enable": True,
-    }
-    return Producer(conf)
+def make_kafka() -> Optional[KafkaProducer]:
+    #def create_kafka_producer(broker):
+    producer = KafkaProducer(
+        bootstrap_servers=[KAFKA_BOOTSTRAP],
+        value_serializer=lambda v: json.dumps(v).encode("utf-8")
+        )
+    return producer
 
 def kafka_send(topic: str, value: dict, key: Optional[str] = None):
     if not kafka:
@@ -134,7 +127,7 @@ def main():
     kafka = make_kafka()
     rd = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
 
-    gw = ModbusGateway(config_path=CONFIG_PATH, kafka_producer=kafka)  # tu clase lo usará internamente
+    gw = ModbusGateway(modbus_host=MODBUS_HOST, modbus_port=MODBUS_PORT, config_path=CONFIG_PATH, kafka_producer=kafka, kafka_topic=KAFKA_TOPIC)  # tu clase lo usará internamente
 
     backoff = 0.5
     backoff_max = 5.0
@@ -165,12 +158,11 @@ def main():
 
             # 3) Eventos (READ) → Kafka (tu gateway envía usando kafka_producer)
             ev = gw.poll_events_once()  # si retorna eventos, también los publicamos directo
-            if ev:
-                # Por si tu gateway no los publica internamente:
-                kafka_send(KAFKA_TOPIC, ev, key=ev.get("robot_id","unknown"))
+            # if ev:
+            #     # Por si tu gateway no los publica internamente:
+            #     kafka_send(KAFKA_TOPIC, ev, key=ev.get("robot_id","unknown"))
 
             backoff = 0.5  # reset backoff al operar OK
-            # espera corta pero interrumpible
             stop_event.wait(SLEEP_SEC)
 
         except Exception as e:

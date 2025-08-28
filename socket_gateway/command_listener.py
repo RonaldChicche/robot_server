@@ -56,6 +56,8 @@ def main():
     for message in kafka_consumer:
         data = message.value
         logger.info(f"📥 Command received: {data}")
+        # print type of data, len, size, etc
+        #logger.info(f"📥 Command type: {type(data)}, len: {len(data)}, size: {sys.getsizeof(data)}")
         
         # {'order_id': 'ORD_20250707T202825Z_borunte', 'type': 'method', 'name': 'start_button', 'params': {}, 'timestamp': '20250707T202825Z'}
         # {'order_id': 'ORD_20250707T202743Z_borunte', 'type': 'proceso', 'name': 'send_data', 'params': {'ancho_caja': 150.0, 'long_barra': '3658', 'ancho_barra': 101.6, 'espesor': 6.35, 'peso': 21.0, 'cantidad': 4, 'no_carro': 1}, 'timestamp': '20250707T202743Z'}

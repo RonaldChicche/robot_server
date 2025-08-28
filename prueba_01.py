@@ -10,8 +10,8 @@ KAFKA_BROKER = "190.168.10.102:9092"
 TOPIC = "robot.commands"
 
 # Mensaje base reproducible
-address = 811
-value = -1196266
+address = 812
+value = 494000
 permanent = 0
 
 # Construcción del mensaje
