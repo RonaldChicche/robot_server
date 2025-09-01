@@ -43,6 +43,8 @@ try {
 
 
 
+docker run --rm -it -e LOG_LEVEL=INFO -e LOG_DATA=1 -e HOST=0.0.0.0 -e PORT=5020 -e HR_SIZE=1000 -p 5020:5020 modbus-slave-img
+
 
 
 docker run -d -p 9443:9443 -p 9000:9000 -p 8000:8000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:lts

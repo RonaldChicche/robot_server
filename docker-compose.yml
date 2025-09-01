@@ -288,13 +288,11 @@ services:
     environment:
       HOST: "0.0.0.0"
       PORT: "5020"
-      LOG_LEVEL: "ERROR"  # INFO/DEBUG si lo necesitas
-      LOG_DATA: "1"       # 1 para ver RX/TX
+      LOG_LEVEL: "INFO"   # cambia a DEBUG si necesitas trazas
+      LOG_DATA: "1"
       HR_SIZE: "1000"
     ports:
       - "5020:5020"
-    volumes:  
-      - ./modbus_slave:/app
     networks:
       - app-tier
     read_only: true
@@ -306,7 +304,7 @@ services:
       - no-new-privileges:true
     pids_limit: 128
     mem_limit: 128m
-    cpus: "0.50"
+    cpus: "1"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import socket,os; s=socket.socket(); s.settimeout(2); s.connect((os.getenv('HOST','127.0.0.1'), int(os.getenv('PORT','5020')))); s.close()"]
@@ -353,8 +351,8 @@ services:
         condition: service_healthy
       modbus:
         condition: service_healthy
-    volumes:
-      - ./modbus_gateway:/app
+    # volumes:
+    #   - ./modbus_gateway:/app
     networks: 
       - app-tier
     restart: unless-stopped
@@ -371,9 +369,3 @@ services:
       options:
         max-size: "5m"
         max-file: "3"
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket,sys;import os;import time;import json; sys.exit(0)"]  # simple: proceso vivo
-      interval: 20s
-      timeout: 3s
-      retries: 3
-      start_period: 10s

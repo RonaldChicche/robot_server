@@ -11,12 +11,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# COPY modbus_slave.py /app/modbus_slave.py
+COPY modbus_slave.py /app/modbus_slave.py
 
 RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
-EXPOSE 5020/tcp
+EXPOSE 5020
 ENTRYPOINT ["/usr/bin/tini","--"]
 CMD ["python","-u","/app/modbus_slave.py"]
