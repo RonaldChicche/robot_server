@@ -374,6 +374,9 @@ if __name__ == "__main__":
 ##     - y31 : Posicion de deposicion de barra
 ##     - y32 : (PALETIZADO) Confirmaacion de paletizado (despues de soltar la barra)
 ##     - y33 : (FIN) Posicion de reposo (Proceso terminado)
+##     - y35 :
+##     - y36 :
+##     - y37 : Confirmacion de home (se prende solo cuando ejecuta home en cualquier otra accion se apaga)
 ##     ------ Estos vienen de fuera de la logica del progrma interno del robot
 ##     - y40 : Bit de confirmacion de barra lista para VOLTEAR (viene de OPC)
 ##     - y41 : Bit de confirmacion de coordinacion (viene de Coordinador - DESHABILITADO)

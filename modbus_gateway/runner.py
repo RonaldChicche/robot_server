@@ -17,6 +17,7 @@ REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 REDIS_DB   = int(os.getenv("REDIS_DB", "0"))
 REDIS_KEY_STATUS  = os.getenv("REDIS_KEY_STATUS", "robot:01:sensor_data")
 REDIS_KEY_PROCESS = os.getenv("REDIS_KEY_PROCESS", "process:state")
+REDIS_KEY_RESULT = os.getenv("REDIS_KEY_RESULT", "process:result")
 
 # Kafka
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "localhost:9092")
@@ -59,9 +60,10 @@ def shutdown(*_):
         log.warning(f"Error en flush Kafka: {e}")
     log.info("Bye")
 
-def parse_status(payload: dict) -> dict:
+def parse_status(payload: dict, payload_result: dict) -> dict:
     st = {}
     s   = payload.get("status", {})
+    result_time_bar = payload_result.get("bars", 0)
     sin = s.get("status", {})
 
     st["running"] = 1 if payload.get("movement_status") else 0
@@ -71,10 +73,12 @@ def parse_status(payload: dict) -> dict:
     st["stack_ready"]   = 1 if y.get("y35") else 0
     st["layer_ready"]   = 1 if y.get("y36") else 0
     st["gripper_state"] = 1 if y.get("y23") else 0
+    st["home_done"]     = 1 if y.get("y37") else 0
 
     st["alarm_code"] = int((sin.get("alarm_code") or [0])[0])
     cnt = s.get("counters", {})
     st["stack_count"] = int(cnt.get("counter-2", {}).get("current", 0))
+    st["stack_time"] = int(result_time_bar * 1000)
 
     wp = sin.get("world_position", [0,0,0,0,0,0])
     st.update({
@@ -137,14 +141,20 @@ def main():
             # 1) Estados desde Redis → Modbus (solo difs, con confirmación)
             if ENABLE_WRITE_FROM_REDIS:
                 raw = rd.get(REDIS_KEY_STATUS)
+                raw_result = rd.get(REDIS_KEY_RESULT)
+                if raw_result is None:
+                    raw_result = {"bars": 0}
+                else: 
+                    data_result = json.loads(raw_result)
+
                 if raw:
                     try:
                         data = json.loads(raw)
                         if data.get("robot_id") in ("01","1"):
-                            st = parse_status(data)
+                            st = parse_status(data, data_result)
                             gw.write_status_diff(ROBOT_KEY, st, confirm=True)
                     except Exception as e:
-                        log.warning(f"payload Redis inválido: {e}")
+                        log.warning(f"payload Redis inválido: {e}", exc_info=True)
 
             # 2) process:state → luces
             if ENABLE_STACK_LIGHTS:

@@ -27,8 +27,9 @@ timers = {
     robot_id: {
         "total_start": None,
         "total_end": None,
-        "bars": [],          # lista de dicts {"start": float, "end": float, "duration": float}
-        "current_bar": None, # dict o None
+        "bars": 0,          # tiempo de paletizado por barra
+        "bars_done": False, # disparador de tiempo por barra   
+        "current_bar": None, # dict de valores
         "running": False,
         "complete": False,
         "prev_y42": False,   # para detectar flanco de subida
@@ -69,7 +70,8 @@ def update_timers(robot_id, raw_status, process_status):
         state["total_end"] = None
         state["running"] = True
         state["complete"] = False
-        state["bars"] = []
+        state["bars"] = 0
+        state["bars_done"] = False
         state["current_bar"] = None
         state["reported"] = False
         logger.info(f"Robot {robot_id}: Timer total iniciado")
@@ -78,14 +80,17 @@ def update_timers(robot_id, raw_status, process_status):
     prev_y42 = state["prev_y42"]
     if y42 and not prev_y42 and state["running"]:
         state["current_bar"] = {"start": now, "end": None, "duration": None}
+        #state["bars_done"] = False
         logger.info(f"Robot {robot_id}: Inicio barra nueva (flanco y42)")
 
     # Barra terminada con y32
     if y32 and state["current_bar"] is not None and state["current_bar"]["end"] is None:
         state["current_bar"]["end"] = now
         state["current_bar"]["duration"] = now - state["current_bar"]["start"]
-        state["bars"].append(state["current_bar"])
+        #state["bars"].append(state["current_bar"])
+        state["bars"] = state["current_bar"]["duration"]
         logger.info(f"Robot {robot_id}: Barra terminada, duración: {state['current_bar']['duration']:.2f} s")
+        state["bars_done"] = True
         state["current_bar"] = None
 
     # Fin timer total con y33
@@ -189,7 +194,7 @@ def main():
 
                         # Publicar reporte consolidado solo al finalizar proceso y solo una vez
                         state = timers[robot_id]
-                        if (state["complete"] or process_status == "Stopped") and not state["reported"]:
+                        if (state["complete"] or state["bars_done"] or process_status == "Stopped") and not state["reported"]:
                             report = {
                                 "robot_id": robot_id,
                                 "timestamp": timing_data["total_end"] or time.time(),
@@ -199,12 +204,13 @@ def main():
                                 "process_status": process_status,
                                 "process_current": process_current
                             }
-                            if report["complete"] and len(report["bars"]) == 0:
+                            if report["complete"]:
+                                timers[robot_id]["reported"] = True
                                 continue
 
                             kafka_producer.send(KAFKA_TOPIC_RESPONSE, value=report)
                             logger.info(f"Robot {robot_id}: Reporte consolidado publicado en topic response: {report}")
-                            timers[robot_id]["reported"] = True
+                            timers[robot_id]["bars_done"] = False
                             redis_client.set("process:result", json.dumps(report))
 
                         # Enviar status normal sin timing adicional

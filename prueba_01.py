@@ -11,7 +11,7 @@ TOPIC = "robot.commands"
 
 # Mensaje base reproducible
 address = 812
-value = 494000
+value = 763000
 permanent = 0
 
 # Construcción del mensaje

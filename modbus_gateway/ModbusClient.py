@@ -329,7 +329,7 @@ class ModbusGateway(ModbusTcpClient):
             try:
                 self._write_point(entry, v)
                 if confirm and not self._confirm_point(entry, v):
-                    logger.warning(f"⚠️ confirm {robot_key}.{k}@{entry.get('addr')} != {v}")
+                    logger.warning(f"⚠️ confirm {robot_key}.{k}@{entry.get('addr')} != {v}", exc_info=True)
                     continue
                 last[k] = v
             except Exception as e:

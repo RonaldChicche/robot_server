@@ -16,9 +16,10 @@ opc_nodes:
       modbus: { kind: "holding", addr: 39, bit: 0, dtype: "uint16" }   # CTW.bit0
 
     pause_button:
-      type: "method"
+      type: "bridge"
       name: "pause_button"
       debounce_ms: 50
+      param: { value: false }
       modbus: { kind: "holding", addr: 39, bit: 2, dtype: "uint16" }   # CTW.bit1
 
     stop_button:
@@ -75,6 +76,12 @@ opc_nodes:
       name: "proceso_06"
       debounce_ms: 50
       modbus: { kind: "holding", addr: 39, bit: 8, dtype: "uint16" }   # CTW.bit6 (ejemplo)
+    
+    cancel_button:
+      type: "method"
+      name: "cancel_button"
+      debounce_ms: 50
+      modbus: { kind: "holding", addr: 39, bit: 11, dtype: "uint16" }   # CTW.bit6 (ejemplo)
 
     # data (float32)
     ancho_barra:  { type: "data", modbus: { kind: "holding", fc: 3, addr: 40,  length: 2, dtype: "float32" } }
@@ -101,7 +108,8 @@ opc_nodes:
       stack_ready:    { kind: "holding", addr: 0, bit: 4, dtype: "uint16" }
       terminado:      { kind: "holding", addr: 0, bit: 5, dtype: "uint16" }
       layer_ready:    { kind: "holding", addr: 0, bit: 6, dtype: "uint16" }
-      # REspuesta de grabado de datos
+      home_done:      { kind: "holding", addr: 0, bit: 7, dtype: "uint16" }
+      # Respuesta de grabado de datos
       set_ok:         { kind: "holding", addr: 0, bit: 7, dtype: "uint16" }
       gripper_state:  { kind: "holding", addr: 0, bit: 8, dtype: "uint16" }
 

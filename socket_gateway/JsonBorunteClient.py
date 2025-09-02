@@ -45,11 +45,20 @@ class JSONBorunteClient:
         self.proceso_num = 1
         self.vel_prod = 1000
         self.vel_test = 100
+        self.state_running = False
         self.state_ini = False
         self.state_stack = False
         self.state_end = False
-        self.x_pick = 0
-        self.x_place = 0
+        self.ancho_scaled = 0
+        self.espesor_scaled = 0
+        self.pick_scaled = []
+        self.place_scaled = []
+        self.current_pos = []
+        self.counters = {}
+        self.robot_state = None
+
+    def asign_robotstate(self, robot_state: RobotStateMachine):
+        self.robot_state = robot_state
 
     def connect(self):
         self.sock = socket.create_connection((self.host, self.port), self.timeout)
@@ -132,6 +141,9 @@ class JSONBorunteClient:
     def start_button(self):
         return self.send_command(["startButton"], "0")
     
+    def cancel_button(self):
+        return self.send_command(["actionStop"])
+
     def stop_button(self):
         return self.send_command(["stopButton"])
     
@@ -140,6 +152,17 @@ class JSONBorunteClient:
     
     def action_pause(self):
         return self.send_command(["actionPause"])
+
+    def pause_button(self, value: bool):
+        currrent_state = self.robot_state.state
+        if value == True and (currrent_state == "Running" or self.state_running == True):
+            self.action_pause()
+            return True
+        elif currrent_state == "Paused" and value == False: 
+            self.start_button()
+            return False
+        else:
+            return False
     
     def clear_alarm(self):
         return self.send_command(["stopButton"])
@@ -160,14 +183,21 @@ class JSONBorunteClient:
 
     def resume_proceso_01(self):
         """ Continua un proceso parado por error o stop """
-        if self.state_ini == False and self.state_end == False:
+        if self.state_ini == True and self.state_end == False:
             self.action_stop()
+            # Salto de limpieza de counters
             self.write_data_single(850, 1)
             self.write_data_single(855, 1)   
-            
-            # time.sleep(1)        
-            # self.write_data_single(800, int(self.x_pick))
-            # self.write_data_single(810, int(self.x_place))
+
+            # Recuperacion  x place, x pick, z place
+            x_pick = self.pick_scaled[0]
+            x_place = self.place_scaled[0] + self.ancho_scaled * self.counters["counter-1"]["current"]
+            z_place = self.place_scaled[2] + self.espesor_scaled * self.counters["counter-0"]["current"]
+
+            # Reasignacion de lugares
+            self.write_data_single(800, int(x_pick))
+            self.write_data_single(810, int(x_place))
+            self.write_data_single(812, int(z_place))
 
             time.sleep(1)        
             self.start_button()
@@ -213,11 +243,14 @@ class JSONBorunteClient:
         up_scaled = [0, 0, int(dz_p * 1000), 0, 0, 0]
         down_scaled = [0, 0, int(dz_n * 1000), 0, 0, 0]
         pick_up_scaled = [0, 0, int(dz_pick * 1000), 0, 0, 0]
+        
+        self.pick_scaled = pick_scaled
+        self.place_scaled = put_scaled
+        self.ancho_scaled = ancho*1000
+        self.espesor_scaled = espesor*1000
 
         self.write_data_block(800, pick_scaled)
-        self.x_pick = pick_scaled[0]
         self.write_data_block(810, put_scaled)
-        self.x_place = put_scaled[0]
         self.write_data_block(830, up_scaled)
         self.write_data_block(840, down_scaled)
         self.write_data_block(860, pick_up_scaled)
@@ -299,6 +332,10 @@ class JSONBorunteClient:
         response = self.write_data_single(850, 5)
         self.proceso = 5
         self.modify_global_velocity(self.vel_test)
+        # altura objetivo:
+        high = 1000
+        compensacion_z = high - self.current_pos[2]
+        response = self.write_data_single(872, int(compensacion_z*1000))
 
         time.sleep(1)
         self.start_button()
@@ -397,11 +434,6 @@ class JSONBorunteClient:
         y_keys = [f"y{r}{c}" for r in range(1, 5) for c in range(8)]
         y_dict = {k: int(b) for k, b in zip(y_keys, y_bits)}
 
-        # asignar estados
-        self.state_ini = y_dict["y30"]
-        self.state_stack = y_dict["y32"]
-        self.state_end = y_dict["y33"] 
-
         # 4. Memoria M
         m_bits = format(int(self.read_query("M-0")["queryData"][0]), '032b')[::-1]
         m_keys = [f"m{r}{c}" for r in [1,2,3,4,11,12,13,14] for c in range(8)]
@@ -415,6 +447,15 @@ class JSONBorunteClient:
             counters[f"counter-{cid}"] = {
                 "id": cdata[0], "target": cdata[1], "current": cdata[2], "mode": 2
             }
+
+        
+        # 5.5 Asignar estados
+        self.state_running = y_dict["y10"]
+        self.state_ini = y_dict["y30"]
+        self.state_stack = y_dict["y32"]
+        self.state_end = y_dict["y33"] 
+        self.current_pos = [float(v) for v in responses[2]]
+        self.counters = counters
 
         # 6. Ensamblar
         return {
