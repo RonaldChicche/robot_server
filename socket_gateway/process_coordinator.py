@@ -56,6 +56,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
                 "compensacion_x": float
             }
     """
+    # tope piston = >>>>>> y tope -> 372.671
     parametros = process_trama["params"]
     largo_gripper = 2069
     ancho_gripper = 121
@@ -105,11 +106,12 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     pick_v = v_0
     pick_w = w_0
 
-    # esquina de caja ????????????????????????  
+    # esquina de caja
     tope_x1_1 = 1976.422 + 4.5 + 4 + 10.1 - 17 + 2
     # 2817.6
     tope_x1_2 = 2651.369 + 139.1 + 7 - 62.56 - 7 + 16 + 9 -21
-    tope_y1 = y_0 + 5 ###### QUITAR CUANDO HAGAN OTRO TOPE +++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # tope_y1 = y_0 
+    tope_y1 = -372.671 + largo_gripper/2  #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Nuevo calculo
     tope_z1_1 = 127   ## nivel de la mesa
     tope_z1_2 = 127
     ## X_1_1 : (Ubicacion de Tope de guia en mesa 1 con gripper - Largo de gripper/2)
@@ -120,12 +122,13 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
 
     x_1_1 = tope_x1_1 - ancho_gripper/2 + 2
     x_1_2 = tope_x1_2 - ancho_gripper/2
-    y_1 = y_0
-    
+    # y_1 = y_0
+    y_1 = tope_y1  #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Nuevo calculo
 
     # calculo de put 
     ## X : (if no_carro == 1,2) X_1_1, X_1_2 + ancho de caja/2 - (ancho de barra/2 x (cantidad_x - 1))
     ## Y : Y_1 + largo de caja/2 (ajuste por medio de largo de caja)
+    ## Y : Y_1 - largo de caja/2  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Nuevo calculo
     ## Z : Z_1 + espesor
     ## U, V, W : U_0, V_0, W_0
 
@@ -167,10 +170,15 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
         put_x = x_1 + float(parametros["ancho_caja"])/2 - (float(parametros["ancho_barra"]) * ((int(parametros["cantidad_x"]) + 1)//2 - 1))
     else:
         put_x = x_1 + float(parametros["ancho_caja"])/2 - (float(parametros["ancho_barra"])/2 * (float(parametros["cantidad_x"]) - 1)) - compenza_desfase/2
-    put_y = y_1 + float(parametros["long_caja"])/2
-    if bit_compensacion: # or bit_delgados: 
-        put_y = put_y + compenza_desfase_y
-    put_y = put_y - 190 # desfase por linea
+    
+    # put_y = y_1 + float(parametros["long_caja"])/2
+    # if bit_compensacion: # or bit_delgados: 
+    #     put_y = put_y + compenza_desfase_y
+    # put_y = put_y - 190 # desfase por linea
+    put_y = y_1 - float(parametros["long_caja"])/2       #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Nuevo calculo
+    if bit_compensacion:  
+        put_y = put_y + compenza_desfase_y  #### (SE mantiene el signo)
+    # ASUMIMOS SIN DESFASE
     put_z = z_1 + float(parametros["espesor"])
     put_u = u_1
     put_v = v_1
