@@ -49,43 +49,6 @@ services:
       kafka:
         condition: service_healthy
 
-  # opc-gateway:
-  #   build: ./opc_gateway
-  #   container_name: opc_gateway
-  #   network_mode: "host"
-  #   restart: unless-stopped
-  #   environment:
-  #     - MODE=${MODE_OPC_GATEWAY}
-  #     - OPC_ENDPOINT=${OPC_ENDPOINT}
-  #     - KAFKA_GROUP_ID=${KAFKA_GROUP_ID_OPC}
-  #     - KAFKA_BROKER=${KAFKA_BROKER}
-  #     - KAFKA_TOPIC_COMMANDS=${KAFKA_TOPIC_COMMANDS}
-  #     - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
-  #   volumes:
-  #     - ./opc_gateway:/app
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-
-  # opc-gateway-status:
-  #   build: ./opc_gateway
-  #   container_name: opc_gateway-status
-  #   network_mode: "host"
-  #   restart: unless-stopped
-  #   environment:
-  #     - MODE=${MODE_OPC_STATUS}
-  #     - REDIS_HOST=${REDIS_HOST}
-  #     - REDIS_PORT=${REDIS_PORT}
-  #     - OPC_ENDPOINT=${OPC_ENDPOINT}
-  #     - KAFKA_GROUP_ID=${KAFKA_GROUP_ID_OPC}
-  #     - KAFKA_BROKER=${KAFKA_BROKER}
-  #     - KAFKA_TOPIC_STATUS=${KAFKA_TOPIC_STATUS}
-  #   volumes:
-  #     - ./opc_gateway:/app
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-
   postgres-db:
     image: postgres:17.5
     container_name: postgres-db
@@ -126,9 +89,6 @@ services:
     restart: unless-stopped
     ports:
       - "${BACKEND_PORT}:5000"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
     environment:
       - PORT=5000
       - KAFKA_BROKER=${KAFKA_BROKER}
@@ -143,7 +103,6 @@ services:
       - DB_DATABASE=${POSTGRES_DB}
       - DB_PASSWORD=${POSTGRES_PASS}
       - DB_PORT=${POSTGRES_PORT}
-    command: ["npm", "run", "dev"]
     depends_on:
       kafka:
         condition: service_healthy
@@ -151,20 +110,13 @@ services:
   frontend:
     build:
       context: ./frontend/robot-app
-      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${API_BASE_URL}
     container_name: frontend
-    #init: true
+    init: true
     restart: unless-stopped
-    ports:
-      - "${FRONTEND_PORT}:5173"
-    volumes:
-      - ./frontend/robot-app:/app
-      - /app/node_modules
-    environment:
-      - VITE_PORT=5173
-      - CHOKIDAR_USEPOLLING=true
-      - VITE_API_BASE_URL=${API_BASE_URL}
-    #command: sh -c "npm install && npm run dev -- --host"
+    ports: 
+      - "80:80"
 
   redis:
     image: redis:7.2-alpine
@@ -184,6 +136,7 @@ services:
   socket_command:
     build: ./socket_gateway
     container_name: socket_command
+    init: true
     network_mode: "host"
     restart: unless-stopped
     environment:
@@ -204,6 +157,7 @@ services:
   socket_status:
     build: ./socket_gateway
     container_name: socket_status
+    init: true
     network_mode: "host"
     restart: unless-stopped
     environment:
@@ -224,6 +178,7 @@ services:
   socket_coordinator:
     build: ./socket_gateway
     container_name: socket_coordinator
+    init: true
     network_mode: "host"
     restart: unless-stopped
     environment:
@@ -241,37 +196,17 @@ services:
       redis:
         condition: service_healthy
 
-  socket_gateway_01:
-    build: ./socket_gateway
-    container_name: socket_gateway_01
-    #init: true
-    network_mode: "host"
-    restart: unless-stopped
-    environment:
-      - MODE=gateway_robot
-      - ROBOT_ID=${BORUNTE_01_ID}
-      - BORUNTE_IP=${BORUNTE_01_IP}
-      - BORUNTE_PORT=${BORUNTE_01_SOCKET_PORT}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-    volumes:
-      - ./socket_gateway:/app
-    depends_on:
-      kafka:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  # socket_gateway_02:
+  # socket_gateway_01:
   #   build: ./socket_gateway
-  #   container_name: socket_gateway_02
+  #   container_name: socket_gateway_01
+  #   init: true
   #   network_mode: "host"
-  #   #restart: always
+  #   restart: unless-stopped
   #   environment:
   #     - MODE=gateway_robot
-  #     - ROBOT_ID=${BORUNTE_02_ID}
-  #     - BORUNTE_IP=${BORUNTE_02_IP}
-  #     - BORUNTE_PORT=${BORUNTE_02_SOCKET_PORT}
+  #     - ROBOT_ID=${BORUNTE_01_ID}
+  #     - BORUNTE_IP=${BORUNTE_01_IP}
+  #     - BORUNTE_PORT=${BORUNTE_01_SOCKET_PORT}
   #     - REDIS_HOST=${REDIS_HOST}
   #     - REDIS_PORT=${REDIS_PORT}
   #   volumes:
@@ -281,6 +216,21 @@ services:
   #       condition: service_healthy
   #     redis:
   #       condition: service_healthy
+
+  nodered:
+    image: nodered/node-red:4.1.0-22
+    container_name: nodered
+    environment:
+      - TZ=America/Lima
+      - ROBOT_HOST=${BORUNTE_01_IP}     
+      - ROBOT_PORT=${BORUNTE_01_SOCKET_PORT}   
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    ports: 
+      - "1880:1880"
+    volumes:
+      - ./nodered:/data                
+    restart: unless-stopped
 
   modbus:
     build: ./modbus_slave
@@ -295,16 +245,19 @@ services:
       - "5020:5020"
     networks:
       - app-tier
-    read_only: true
-    tmpfs:
-      - /tmp:rw,nosuid,nodev,noexec,size=64m
-    cap_drop:
-      - ALL
     security_opt:
-      - no-new-privileges:true
-    pids_limit: 128
-    mem_limit: 128m
-    cpus: "1"
+      - seccomp:unconfined
+      - apparmor:unconfined
+    # read_only: true
+    # tmpfs:
+    #   - /tmp:rw,nosuid,nodev,noexec,size=64m
+    # cap_drop:
+    #   - ALL
+    # security_opt:
+    #   - no-new-privileges:true
+    # pids_limit: 128
+    # mem_limit: 128m
+    # cpus: "1"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import socket,os; s=socket.socket(); s.settimeout(2); s.connect((os.getenv('HOST','127.0.0.1'), int(os.getenv('PORT','5020')))); s.close()"]
@@ -355,13 +308,14 @@ services:
     #   - ./modbus_gateway:/app
     networks: 
       - app-tier
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
     restart: unless-stopped
     read_only: true
     tmpfs:
       - /tmp:rw,nosuid,nodev,noexec,size=64m
     cap_drop: [ "ALL" ]
-    security_opt:
-      - no-new-privileges:true
     pids_limit: 256
     mem_limit: 256m
     logging:

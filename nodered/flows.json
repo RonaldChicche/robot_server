@@ -1,0 +1,631 @@
+[
+    {
+        "id": "tab-borunte",
+        "type": "tab",
+        "label": "BORUNTE Status (tcp-client2)",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "30ce91f33a617534",
+        "type": "redis-config",
+        "name": "RedisBridge",
+        "options": "{\"host\":\"190.168.10.102\",\"port\":6379,\"db\":0,\"password\":\"\"}",
+        "cluster": false,
+        "optionsType": "json"
+    },
+    {
+        "id": "fn-build-requests",
+        "type": "function",
+        "z": "tab-borunte",
+        "name": "Requests de status (11)",
+        "func": "const req = (packID, addrs) => ({dsID:\"www.hc-system.com.RemoteMonitor\", reqType:\"query\", packID:String(packID), queryAddr:addrs});\nconst blocks = [\n  req(1000, ['isMoving','curAlarm','curMode','curCycle','lastCycle','curAccount','origin','RemoteCmdLen']),\n  req(1001, Array.from({length:8}, (_,i)=>`axis-${i}`)),\n  req(1002, Array.from({length:8}, (_,i)=>`world-${i}`)),\n  req(1003, Array.from({length:8}, (_,i)=>`curTorque-${i}`)),\n  req(1004, Array.from({length:8}, (_,i)=>`curSpeed-${i}`)),\n  req(1005, Array.from({length:50}, (_,i)=>`Addr-${800+i}`)),\n  req(1006, Array.from({length:39}, (_,i)=>`Addr-${851+i}`)),\n  req(1007, ['input-0']),\n  req(1008, ['output-0']),\n  req(1009, ['M-0']),\n  req(1010, ['counter-0', 'counter-1', 'counter-2'])\n];\nconst cycleId = (flow.get('cycleId')||0) + 1; flow.set('cycleId', cycleId);\nmsg.payload = blocks.map(b=>({cycle:cycleId, req:b}));\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 690,
+        "y": 840,
+        "wires": [
+            [
+                "split-reqs"
+            ]
+        ]
+    },
+    {
+        "id": "split-reqs",
+        "type": "split",
+        "z": "tab-borunte",
+        "name": "Split 1 req/msg",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 680,
+        "y": 880,
+        "wires": [
+            [
+                "fn-enqueue-write"
+            ]
+        ]
+    },
+    {
+        "id": "fn-assemble-status",
+        "type": "function",
+        "z": "tab-borunte",
+        "name": "Construir status final",
+        "func": "// --- helpers ---\nfunction bitsToDict(n, prefix) {\n  const bits = (Number(n) >>> 0).toString(2).padStart(32, '0').split('').reverse();\n  const out = {}; let i = 0;\n  for (let r = 1; r <= 4; r++) {\n    for (let c = 0; c < 8; c++) {\n      out[`${prefix}${r}${c}`] = Number(bits[i++] || 0);\n    }\n  }\n  return out;\n}\n\nfunction toObj(x) {\n  if (x == null) return null;\n  if (typeof x === 'string') {\n    try { return JSON.parse(x); }\n    catch (e) { node.warn(\"No es JSON válido (preview): \" + x.slice(0, 120)); return null; }\n  }\n  if (typeof x === 'object') return x;\n  return null;\n}\n\n// --- normaliza la entrada: array de 11 items (string u objeto) ---\nconst list = Array.isArray(msg.payload) ? msg.payload : [msg.payload];\n\n// indexa por packID\nconst byId = {};\nfor (const it of list) {\n  const o = toObj(it);\n  if (!o) continue;\n  const id = String(o.packID ?? (o.req && o.req.packID) ?? \"\");\n  if (!id) continue;\n  byId[id] = o;\n}\n\n// accesores seguros: devolvemos [] si no hay queryData\nconst byPack = (id) => {\n  const o = byId[String(id)] || {};\n  return Array.isArray(o.queryData) ? o.queryData : [];\n};\n\nfunction getQD(o){ return (o && Array.isArray(o.queryData)) ? o.queryData : []; }\nfunction unpackCounter(o){\n  const qd = getQD(o);\n  const c = Array.isArray(qd) && qd[0];\n  if (!Array.isArray(c) || c.length < 3) return null;\n  return { id: Number(c[0]), target: Number(c[1]), current: Number(c[2]), mode: 2 };\n}\n\n// extrae cada bloque\nconst b0 = byPack(1000);           // isMoving, curAlarm, curMode, ...\nconst axis = byPack(1001);\nconst world = byPack(1002);\nconst torque = byPack(1003);\nconst speed = byPack(1004);\nconst addrA = byPack(1005);           // 800..849 (50)\nconst addrB = byPack(1006);           // 851..889 (39)  (saltamos 850)\nconst x0 = (byPack(1007)[0] || 0);\nconst y0 = (byPack(1008)[0] || 0);\nconst m0 = (byPack(1009)[0] || 0);\n\n// counters\nconst countersArr = getQD(byId['1010']);           // p.ej. [[0,40,17],[1,2,1],[2,1000,35]]\nconst counters = {};\nconst counters_summary = [];\nfor (const c of countersArr){\n  if (Array.isArray(c) && c.length >= 3){\n    const id = Number(c[0]), target = Number(c[1]), current = Number(c[2]);\n    counters[`counter-${id}`] = { id, target, current, mode: 2 };\n    counters_summary.push(id);\n  }\n}\n\n// direcciones\nconst addrKeys = [...Array(50)].map((_, i) => String(800 + i))\n  .concat([...Array(39)].map((_, i) => String(851 + i)));\nconst addrVals = [...addrA, ...addrB];\nconst addresses = {};\naddrKeys.forEach((k, i) => addresses[k] = Number(addrVals[i] || 0));\n\n// construir payload final\nmsg.payload = {\n  robot_id: flow.get('robot_id') || \"01\",\n  ip: env.get('ROBOT_HOST') || msg.host || null,\n  online: true,\n  status: {\n    order_id: null,\n    addresses,\n    outputs: {\n      x: bitsToDict(x0, 'x'),\n      y: bitsToDict(y0, 'y'),\n      m: bitsToDict(m0, 'm'),\n      euy: {}\n    },\n    status: {\n      movement_status: [Number(b0[0] || 0)],\n      alarm_code: [Number(b0[1] || 0)],\n      cur_mode: [Number(b0[2] || 0)],\n      current_cycle_time: [Number(b0[3] || 0)],\n      last_cycle_time: [Number(b0[4] || 0)],\n      cur_account: [Number(b0[5] || 0)],\n      homed: [Number(b0[6] || 0)],\n      axis_position: (axis || []).map(Number),\n      world_position: (world || []).map(Number),\n      axis_torque: (torque || []).map(Number),\n      axis_velocity: (speed || []).map(Number)\n    },\n    counters\n  },\n  timestamp: new Date().toISOString()\n};\n\n// validación útil: avisa si llegaron requests (queryAddr) en vez de respuestas (queryData)\nfor (const id of [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010]) {\n  const o = byId[String(id)];\n  if (o && !Array.isArray(o.queryData) && Array.isArray(o.queryAddr)) {\n    node.warn(`Pack ${id}: llegó queryAddr (parece TX), no queryData (RX). Revisa que el Join esté conectado al lado de respuesta.`);\n  }\n}\n\n\nconst state_ini = Number(b0[6] || 0) === 1;   \nconst outY = msg.payload.status.outputs.y;    \nconst alarm = msg.payload?.status?.status?.alarm_code?.[0] ?? 0;\n\nmsg.payload = JSON.stringify(msg.payload);\n\nglobal.set(\"robot_flags\", {\n  state_ini: state_ini,\n  y10: Number(outY?.y10 || 0),\n  y33: Number(outY?.y33 || 0),\n  alarm: Number(alarm)\n});\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1420,
+        "y": 760,
+        "wires": [
+            [
+                "fef310b0841008c2",
+                "afb528f567462364"
+            ]
+        ]
+    },
+    {
+        "id": "dbg-status",
+        "type": "debug",
+        "z": "tab-borunte",
+        "name": "STATUS listo",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 1890,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "inj-connect",
+        "type": "inject",
+        "z": "tab-borunte",
+        "name": "connect on start",
+        "props": [
+            {
+                "p": "host",
+                "v": "ROBOT_HOST",
+                "vt": "env"
+            },
+            {
+                "p": "port",
+                "v": "ROBOT_PORT",
+                "vt": "env"
+            },
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.5",
+        "topic": "",
+        "x": 940,
+        "y": 500,
+        "wires": [
+            [
+                "tcpclient"
+            ]
+        ]
+    },
+    {
+        "id": "inj-close",
+        "type": "inject",
+        "z": "tab-borunte",
+        "name": "close (manual)",
+        "props": [
+            {
+                "p": "action",
+                "v": "close",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 940,
+        "y": 540,
+        "wires": [
+            [
+                "tcpclient"
+            ]
+        ]
+    },
+    {
+        "id": "inj-500",
+        "type": "inject",
+        "z": "tab-borunte",
+        "name": "trama status completa",
+        "props": [],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "2",
+        "topic": "",
+        "x": 530,
+        "y": 760,
+        "wires": [
+            [
+                "fn-build-requests"
+            ]
+        ]
+    },
+    {
+        "id": "delay-rate",
+        "type": "delay",
+        "z": "tab-borunte",
+        "name": "rate 1/50ms",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "0.05",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 970,
+        "y": 820,
+        "wires": [
+            [
+                "tcpclient"
+            ]
+        ]
+    },
+    {
+        "id": "fn-enqueue-write",
+        "type": "function",
+        "z": "tab-borunte",
+        "name": "enqueue + stringify + action=write",
+        "func": "let q = flow.get('pending') || [];\nconst {cycle, req} = msg.payload;\nq.push({cycle, req});\nflow.set('pending', q);\n\nmsg.payload = JSON.stringify(req);    \nmsg.action  = \"write\";                \nmsg.host    = env.get('ROBOT_HOST');\nmsg.port    = Number(env.get('ROBOT_PORT'));\nmsg.cycle   = cycle;                   \nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 920,
+        "wires": [
+            [
+                "delay-rate"
+            ]
+        ]
+    },
+    {
+        "id": "tcpclient",
+        "type": "tcp-client",
+        "z": "tab-borunte",
+        "action": "action",
+        "actionType": "msg",
+        "host": "host",
+        "hostType": "msg",
+        "port": "port",
+        "portType": "msg",
+        "datamode": "single",
+        "datatype": "utf8",
+        "newline": "\\n",
+        "write": "payload",
+        "writeType": "msg",
+        "maxRetries": "2",
+        "retryDelay": "2",
+        "indefiniteRetries": true,
+        "topic": "",
+        "name": "BORUNTE tcp-client (stream)",
+        "debug": "info",
+        "x": 1170,
+        "y": 620,
+        "wires": [
+            [
+                "6f22e2d4067a33af"
+            ]
+        ]
+    },
+    {
+        "id": "join-11",
+        "type": "join",
+        "z": "tab-borunte",
+        "name": "Join 11 por ciclo",
+        "mode": "custom",
+        "build": "array",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "cycle",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "",
+        "count": "11",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "num",
+        "reduceFixup": "",
+        "x": 1410,
+        "y": 700,
+        "wires": [
+            [
+                "fn-assemble-status"
+            ]
+        ]
+    },
+    {
+        "id": "6ddff57b70062556",
+        "type": "redis-in",
+        "z": "tab-borunte",
+        "server": "30ce91f33a617534",
+        "command": "blpop",
+        "name": "CmdLectura",
+        "topic": "robot:01:cmd_buffer",
+        "obj": true,
+        "timeout": 0,
+        "x": 490,
+        "y": 580,
+        "wires": [
+            [
+                "626f2a4a27c86ac5"
+            ]
+        ]
+    },
+    {
+        "id": "626f2a4a27c86ac5",
+        "type": "function",
+        "z": "tab-borunte",
+        "name": "fn-cmd-dispatch",
+        "func": "const ROBOT_ID = env.get('ROBOT_ID') || '01';\nconst HOST = env.get('ROBOT_HOST');\nconst PORT = Number(env.get('ROBOT_PORT') || 9760);\n\nconst VEL_TEST = Number(env.get('VEL_TEST') || 100);\n\nfunction nextPack() {\n    const n = (flow.get('packSeq') || 900000) + 1;\n    flow.set('packSeq', n);\n    return String(n);\n}\nconst cmdFrame = (a, pid) => ({ dsID: \"www.hc-system.com.RemoteMonitor\", reqType: \"command\", packID: pid, cmdData: a.map(String) });\nconst wr1 = (addr, val) => cmdFrame([\"rewriteData\", String(addr), String(val), \"0\"], nextPack());\nconst wrList = (start, arr) => cmdFrame([\"rewriteDataList\", String(start), arr.length, 0, ...arr.map(Number)].map(String), nextPack());\n\nfunction yIndex(y) {\n    y = Number(y);\n    if (10 <= y && y <= 17) return y - 10;\n    if (20 <= y && y <= 27) return y - 12;\n    if (30 <= y && y <= 37) return y - 14;\n    if (40 <= y && y <= 47) return y - 16;\n    throw new Error(\"indice invalido\");\n}\nconst mm = v => Math.trunc(Number(v) * 1000);\n\nconst cmd = msg.payload || {};\nconst name = cmd.name;\nconst p = cmd.params || {};\nconst corr = String(cmd.corr || ((flow.get('corrSeq') || 0) + 1));\nflow.set('corrSeq', Number(corr));\nconst order_id = cmd.order_id || null;\n\nlet frames = [];\n\n// ===================== COMANDOS =====================\nswitch (name) {\n    case \"start_button\":\n        frames.push(cmdFrame([\"startButton\"], nextPack()));\n        break;\n    case \"pause_button\":\n        const current_state = global.get(\"fsm\")?.state || null;\n        const is_running = global.get(\"fsm\")?.state_running || false;\n        const value = p.value; // valor del botón, true o false\n\n        if (value === true && (current_state === \"Running\" || is_running === true)) {\n            frames.push(cmdFrame([\"actionPause\"], nextPack()));\n        } else if (value === false && current_state === \"Paused\") {\n            frames.push(cmdFrame([\"startButton\"], nextPack()));\n        }\n        break;\n    case \"stop_button\":\n        frames.push(cmdFrame([\"stopButton\"], nextPack()));\n        break;\n    case \"action_stop\":\n        frames.push(cmdFrame([\"actionStop\"], nextPack()));\n        break;\n    case \"clear_alarm_button\":\n        frames.push(cmdFrame([\"stopButton\"], nextPack()));\n        break;\n    case \"cancel_button\":\n        [30, 32, 33, 35, 36, 45].forEach(y => frames.push(cmdFrame([\"modifyOutput\", 0, yIndex(y), 0], nextPack())));\n        frames.push(wr1(855, 0));\n        frames.push(cmdFrame([\"actionStop\"], nextPack()));\n        break;\n    case \"modify_output_y\":\n        frames.push(cmdFrame([\"modifyOutput\", 0, yIndex(p.output_id), Number(!!p.value)]), nextPack());\n        break;\n    case \"modify_counter\":\n        frames.push(cmdFrame([\n            \"modifyCounter\",\n            String(p.counter_id),\n            String(p.current),\n            String(p.target)\n        ], nextPack()));\n        break;\n    case \"modify_global_velocity\":\n        frames.push(cmdFrame([\"modifyGSPD\", Number(p.velocity)], nextPack()));\n        break;\n    case \"write_data_single\":\n        frames.push(wr1(p.address, p.value));\n        break;\n    case \"write_data_block\": {\n        const data = Array.isArray(p.data) ? p.data.map(Number) : [];\n        frames.push(cmdFrame([\"rewriteDataList\", Number(p.start_address), data.length, Number(p.permanent ?? 0), ...data], nextPack()));\n        break;\n    }\n}\n\n// ===================== PROCESOS =====================\nif (name === \"proceso_01\") {\n    // Args esperados en p: pick[], put[], cantidad_z, cantidad_x, dz_p, dz_n, dz_pick, espesor, ancho, bit_coordinador, bit_compensacion, compenzacion_desfase\n    const pick = (p.pick || []).map(mm);\n    const put = (p.put || []).map(mm);\n    const up = [0, 0, mm(p.dz_p || 0), 0, 0, 0];\n    const down = [0, 0, mm(p.dz_n || 0), 0, 0, 0];\n    const pick_up = [0, 0, mm(p.dz_pick || 0), 0, 0, 0];\n\n    const compensacion_x = Number(p.cantidad_x || 0) * Number(p.ancho || 0);\n\n    frames.push(wr1(850, 1));\n    frames.push(wr1(855, 0));\n\n    frames.push(wrList(800, pick));\n    frames.push(wrList(810, put));\n    frames.push(wrList(830, up));\n    frames.push(wrList(840, down));\n    frames.push(wrList(860, pick_up));\n\n    const cfg820 = [\n        Number(p.cantidad_z || 0),\n        Number(p.cantidad_x || 0),\n        mm(p.dz_p || 0), mm(p.dz_n || 0),\n        mm(p.espesor || 0), mm(p.ancho || 0),\n        mm(p.dz_pick || 0),\n        Number(p.bit_coordinador || 0),\n        mm(compensacion_x || 0)\n    ];\n    frames.push(cmdFrame([\"rewriteDataList\", 820, cfg820.length, 0, ...cfg820], nextPack()));\n\n    // Bloque 851 (bit_compensacion, compenzacion_desfase*1000)\n    frames.push(cmdFrame([\"rewriteDataList\", 851, 2, 0, Number(p.bit_compensacion || 0), mm(p.compenzacion_desfase || 0)], nextPack()));\n}\n\nif (name === \"proceso_02\" || name === \"proceso_03\" || name === \"proceso_04\" || name === \"proceso_06\") {\n    const code = Number(name.slice(-2)); // 2,3,4,6\n    frames.push(cmdFrame([\"actionStop\"], nextPack()));\n    frames.push(wr1(850, code));\n    frames.push(cmdFrame([\"modifyGSPD\", VEL_TEST], nextPack()));\n    frames.push(cmdFrame([\"startButton\"], nextPack()));\n    frames.push(cmdFrame([\"modifyGSPD\", VEL_TEST], nextPack()));\n    frames.push(cmdFrame([\"modifyOutput\", 0, yIndex(45), 0], nextPack())); // Y45 OFF\n}\n\nif (name === \"proceso_05\") {\n    const lastWorld = flow.get('last_world_position') || []; \n    const world_z = Number(lastWorld[2] || 0);\n    const high = 1000;\n    const compensacion_z = high - world_z;\n\n    frames.push(cmdFrame([\"actionStop\"], nextPack()));\n    frames.push(wr1(850, 5));\n    frames.push(cmdFrame([\"modifyGSPD\", VEL_TEST], nextPack()));\n    frames.push(wr1(872, mm(compensacion_z)));\n    frames.push(cmdFrame([\"startButton\"], nextPack()));\n    frames.push(cmdFrame([\"modifyGSPD\", VEL_TEST], nextPack()));\n    frames.push(cmdFrame([\"modifyOutput\", 0, yIndex(45), 0], nextPack())); // Y45 OFF\n}\n\nconst pids = frames.map(f => f.packID);\nlet p2c = flow.get('pack2corr') || {};\nlet agg = flow.get('rpcAgg') || {};\npids.forEach(pid => p2c[pid] = corr);\nagg[corr] = { expected: new Set(pids), collected: [], name, order_id, started: Date.now() };\nflow.set('pack2corr', p2c);\nflow.set('rpcAgg', agg);\n\nmsg.payload = frames.map(f => (JSON.stringify(f)));\nmsg.action = \"write\";\nmsg.host = HOST;\nmsg.port = PORT;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 660,
+        "wires": [
+            [
+                "f05ca24b91c29b59"
+            ]
+        ]
+    },
+    {
+        "id": "f05ca24b91c29b59",
+        "type": "split",
+        "z": "tab-borunte",
+        "name": "SplitCmd",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 620,
+        "y": 700,
+        "wires": [
+            [
+                "46d2a3ba22b33d59"
+            ]
+        ]
+    },
+    {
+        "id": "46d2a3ba22b33d59",
+        "type": "delay",
+        "z": "tab-borunte",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "0.05",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": true,
+        "outputs": 1,
+        "x": 790,
+        "y": 700,
+        "wires": [
+            [
+                "tcpclient",
+                "7dac2b45ce355171"
+            ]
+        ]
+    },
+    {
+        "id": "e3a4553d6b05dd03",
+        "type": "switch",
+        "z": "tab-borunte",
+        "name": "",
+        "property": "payload.reqType",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "command",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "query",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1510,
+        "y": 620,
+        "wires": [
+            [
+                "1d726db24feccb57",
+                "04165ea91c10b9aa"
+            ],
+            [
+                "join-11"
+            ]
+        ]
+    },
+    {
+        "id": "6f22e2d4067a33af",
+        "type": "json",
+        "z": "tab-borunte",
+        "name": "",
+        "property": "payload",
+        "action": "obj",
+        "pretty": false,
+        "x": 1390,
+        "y": 620,
+        "wires": [
+            [
+                "e3a4553d6b05dd03"
+            ]
+        ]
+    },
+    {
+        "id": "a9a0d72ec2eda54a",
+        "type": "debug",
+        "z": "tab-borunte",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1960,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "7dac2b45ce355171",
+        "type": "debug",
+        "z": "tab-borunte",
+        "name": "EntradaDEBUG",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 840,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "aa02da5942f202b8",
+        "type": "debug",
+        "z": "tab-borunte",
+        "name": "debugTCP",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1970,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "fef310b0841008c2",
+        "type": "redis-command",
+        "z": "tab-borunte",
+        "server": "30ce91f33a617534",
+        "command": "SET",
+        "name": "CmdStatus",
+        "topic": "robot:01:sensor_data",
+        "params": "[]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 1710,
+        "y": 760,
+        "wires": [
+            [
+                "dbg-status"
+            ]
+        ]
+    },
+    {
+        "id": "2781c3528ff618cb",
+        "type": "redis-command",
+        "z": "tab-borunte",
+        "server": "30ce91f33a617534",
+        "command": "SET",
+        "name": "CmdResponse",
+        "topic": "robot:01:cmd_result",
+        "params": "[]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 1720,
+        "y": 680,
+        "wires": [
+            [
+                "a9a0d72ec2eda54a"
+            ]
+        ]
+    },
+    {
+        "id": "1d726db24feccb57",
+        "type": "json",
+        "z": "tab-borunte",
+        "name": "",
+        "property": "payload",
+        "action": "str",
+        "pretty": false,
+        "x": 1710,
+        "y": 580,
+        "wires": [
+            [
+                "2781c3528ff618cb"
+            ]
+        ]
+    },
+    {
+        "id": "8a1d5965d94f26e1",
+        "type": "redis-command",
+        "z": "tab-borunte",
+        "server": "30ce91f33a617534",
+        "command": "SET",
+        "name": "TcpConnected",
+        "topic": "robot:01:connected",
+        "params": "[\"EX\", \"3\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 1800,
+        "y": 860,
+        "wires": [
+            [
+                "aa02da5942f202b8"
+            ]
+        ]
+    },
+    {
+        "id": "afb528f567462364",
+        "type": "function",
+        "z": "tab-borunte",
+        "name": "function 2",
+        "func": "msg.payload = \"1\"\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1620,
+        "y": 860,
+        "wires": [
+            [
+                "8a1d5965d94f26e1"
+            ]
+        ]
+    },
+    {
+        "id": "08d30b66659013b2",
+        "type": "redis-command",
+        "z": "tab-borunte",
+        "server": "30ce91f33a617534",
+        "command": "SET",
+        "name": "ProcessState",
+        "topic": "process:state",
+        "params": "[]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 1830,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "04165ea91c10b9aa",
+        "type": "function",
+        "z": "tab-borunte",
+        "name": "ProcessStatusLogic",
+        "func": "// ====== FSM con timer interno ======\nconst STATE_KEY = \"process:state\";\n\nlet fsm = global.get(\"fsm\") || { state: \"Vacio\", awaiting_clean: false, clean_time: 0 };\nconst rob = global.get(\"robot_flags\") || { state_ini: false, y10: 0, y33: 0 };\n\nconst p = msg.payload || {};\nconst cmdReply = Array.isArray(p.cmdReply) ? p.cmdReply : [];\nconst cmd = cmdReply[0] || null;\nconst result = cmdReply[1] === \"ok\";\n\nconst setState = (s) => { fsm.state = s; global.set(\"fsm\", fsm); };\n\n// --- limpiar timer previo si existe (evita duplicados) ---\nlet tId = context.get('cleanTimer');\nfunction clearCleanTimer() {\n    if (tId) { clearTimeout(tId); context.set('cleanTimer', null); }\n}\n\n// --- Transiciones por comando ---\nif (cmd) {\n    switch (cmd) {\n        case \"startButton\":\n            clearCleanTimer();\n            fsm.awaiting_clean = false;\n            fsm.clean_time = 0;\n            setState(\"Running\");\n            break;\n\n        case \"actionPause\":\n            clearCleanTimer();\n            fsm.awaiting_clean = false;\n            fsm.clean_time = 0;\n            if (result === true) setState(\"Paused\");\n            else if (result === false && rob.state_ini) setState(\"Running\");\n            else if (result === false && !rob.state_ini) setState(\"Vacio\");\n            break;\n\n        case \"stopButton\":\n            setState(\"Stopped\");\n            fsm.awaiting_clean = true;\n            fsm.clean_time = Date.now() + 4000; // 4 s\n            clearCleanTimer();\n            // Agenda el vaciado para dentro de 4 s\n            tId = setTimeout(() => {\n                fsm.awaiting_clean = false;\n                fsm.clean_time = 0;\n                setState(\"Vacio\");\n                // Publica a Redis even if no more msgs arrive\n                node.send({ topic: STATE_KEY, payload: fsm.state });\n            }, 4000);\n            context.set('cleanTimer', tId);\n            break;\n\n        case \"resume_proceso_01\":\n            clearCleanTimer();\n            fsm.awaiting_clean = false;\n            fsm.clean_time = 0;\n            setState(\"Running\");\n            break;\n    }\n}\n\n// Terminación por salidas: y10 & y33 → Terminated\nif (rob.y10 === 1 && rob.y33 === 1) {\n    clearCleanTimer();\n    fsm.awaiting_clean = false;\n    fsm.clean_time = 0;\n    setState(\"Terminated\");\n}\n\nif (rob.alarm != 0) {\n    clearCleanTimer();\n    fsm.awaiting_clean = false;\n    fsm.clean_time = 0;\n    setState(\"Stopped\");\n}\n\nif (fsm.state === \"Stopped\" && rob.alarm === 0) {\n    setState(\"Vacio\");\n}\n\nglobal.set(\"fsm\", fsm);\n\n// Publica el estado actual a Redis (para SET)\nmsg.topic = STATE_KEY;\nmsg.payload = fsm.state;\nmsg.cmd = cmd;\nmsg.result = result;\nmsg.alarm = rob.alarm;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1600,
+        "y": 520,
+        "wires": [
+            [
+                "08d30b66659013b2",
+                "248cbff5a676694f"
+            ]
+        ]
+    },
+    {
+        "id": "b7642e868be1c594",
+        "type": "inject",
+        "z": "tab-borunte",
+        "name": "",
+        "props": [],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1430,
+        "y": 440,
+        "wires": [
+            [
+                "04165ea91c10b9aa"
+            ]
+        ]
+    },
+    {
+        "id": "248cbff5a676694f",
+        "type": "debug",
+        "z": "tab-borunte",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1840,
+        "y": 480,
+        "wires": []
+    }
+]

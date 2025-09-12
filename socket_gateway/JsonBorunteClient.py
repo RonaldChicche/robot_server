@@ -116,8 +116,8 @@ class JSONBorunteClient:
         cmd_array = ["modifyGSPD", velocity]
         return self.send_command(cmd_array, "1")
 
-    def write_data_single(self, addres: int, value: int, permanent: int=0):
-        cmd_array = ["rewriteData", addres, value, permanent]
+    def write_data_single(self, address: int, value: int, permanent: int=0):
+        cmd_array = ["rewriteData", address, value, permanent]
         return self.send_command(cmd_array, "1")
     
     def write_data_block(self, start_address: int, data: list[int], permanent: int=0):

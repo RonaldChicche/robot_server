@@ -144,13 +144,14 @@ def main():
                 raw_result = rd.get(REDIS_KEY_RESULT)
                 if raw_result is None:
                     raw_result = {"bars": 0}
-                else: 
-                    data_result = json.loads(raw_result)
+                
+                data_result = json.loads(raw_result)
 
                 if raw:
                     try:
                         data = json.loads(raw)
                         if data.get("robot_id") in ("01","1"):
+
                             st = parse_status(data, data_result)
                             gw.write_status_diff(ROBOT_KEY, st, confirm=True)
                     except Exception as e:

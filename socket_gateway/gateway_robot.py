@@ -124,7 +124,7 @@ def main():
                     if cmd_name in ["cancel_button"]:
                         robot.modify_output_y(30, False)
                         robot.modify_output_y(32, False)
-                        #robot.modify_output_y(33, True)
+                        robot.modify_output_y(33, True)
                         robot.modify_output_y(35, False)
                         robot.modify_output_y(36, False)
                         robot.modify_output_y(45, False)

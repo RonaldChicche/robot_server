@@ -1,0 +1,287 @@
+[
+    {
+        "id": "2d56831b1c38f0c2",
+        "type": "group",
+        "z": "83cfebba98549a93",
+        "name": "Client 1",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "fee1b4698d6b9b2a",
+            "2b1a754f14d53962",
+            "605126da5fdde624",
+            "a5d99dd2112847f7",
+            "b8c16cdd61de9cf0"
+        ],
+        "x": 54,
+        "y": 39,
+        "w": 772,
+        "h": 162
+    },
+    {
+        "id": "fee1b4698d6b9b2a",
+        "type": "inject",
+        "z": "83cfebba98549a93",
+        "g": "2d56831b1c38f0c2",
+        "name": "close",
+        "props": [
+            {
+                "p": "action",
+                "v": "close",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 160,
+        "wires": [
+            [
+                "a5d99dd2112847f7"
+            ]
+        ]
+    },
+    {
+        "id": "2b1a754f14d53962",
+        "type": "debug",
+        "z": "83cfebba98549a93",
+        "g": "2d56831b1c38f0c2",
+        "name": "Hello world?",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "payload",
+        "statusType": "auto",
+        "x": 710,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "605126da5fdde624",
+        "type": "inject",
+        "z": "83cfebba98549a93",
+        "g": "2d56831b1c38f0c2",
+        "name": "Send hello",
+        "props": [
+            {
+                "p": "action",
+                "v": "write",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "hello",
+        "payloadType": "str",
+        "x": 160,
+        "y": 120,
+        "wires": [
+            [
+                "a5d99dd2112847f7"
+            ]
+        ]
+    },
+    {
+        "id": "a5d99dd2112847f7",
+        "type": "tcp-client",
+        "z": "83cfebba98549a93",
+        "g": "2d56831b1c38f0c2",
+        "action": "action",
+        "actionType": "msg",
+        "host": "host",
+        "hostType": "msg",
+        "port": "port",
+        "portType": "msg",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "\\n",
+        "write": "payload",
+        "writeType": "msg",
+        "maxRetries": "5",
+        "retryDelay": "3000",
+        "indefiniteRetries": false,
+        "topic": "",
+        "name": "TCP-client example",
+        "debug": "debug",
+        "x": 430,
+        "y": 140,
+        "wires": [
+            [
+                "2b1a754f14d53962"
+            ]
+        ]
+    },
+    {
+        "id": "b8c16cdd61de9cf0",
+        "type": "inject",
+        "z": "83cfebba98549a93",
+        "g": "2d56831b1c38f0c2",
+        "name": "connect",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "localhost",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "8899",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 160,
+        "y": 80,
+        "wires": [
+            [
+                "a5d99dd2112847f7"
+            ]
+        ]
+    },
+    {
+        "id": "b7569b3d663b43ad",
+        "type": "group",
+        "z": "83cfebba98549a93",
+        "name": "Hello Server",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "9bc4b1bc97b59d81",
+            "13b1f53238a2b19c",
+            "d72fbd85972579c1",
+            "af6d782eb814f487"
+        ],
+        "x": 54,
+        "y": 219,
+        "w": 532,
+        "h": 142
+    },
+    {
+        "id": "9bc4b1bc97b59d81",
+        "type": "tcp-server",
+        "z": "83cfebba98549a93",
+        "g": "b7569b3d663b43ad",
+        "action": "action",
+        "actionType": "msg",
+        "port": "port",
+        "portType": "msg",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "\\n",
+        "write": "payload",
+        "writeType": "msg",
+        "keepAliveTimeout": "6000",
+        "socketTimeout": "60000",
+        "topic": "",
+        "name": "Hello Server",
+        "debug": "debug",
+        "x": 350,
+        "y": 280,
+        "wires": [
+            [
+                "d72fbd85972579c1"
+            ]
+        ]
+    },
+    {
+        "id": "13b1f53238a2b19c",
+        "type": "inject",
+        "z": "83cfebba98549a93",
+        "g": "b7569b3d663b43ad",
+        "name": "open",
+        "props": [
+            {
+                "p": "action",
+                "v": "open",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "8899",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 260,
+        "wires": [
+            [
+                "9bc4b1bc97b59d81"
+            ]
+        ]
+    },
+    {
+        "id": "d72fbd85972579c1",
+        "type": "function",
+        "z": "83cfebba98549a93",
+        "g": "b7569b3d663b43ad",
+        "name": "Hello?",
+        "func": "node.status(msg.payload);\nif (msg.payload.startsWith(\"hello\")) {\n    msg.payload=\"world!\";\n    msg.action=\"write\";\n    node.status(\"hello world!\");\n    node.warn(\"hello world!\");\n    return msg; \n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 280,
+        "wires": [
+            [
+                "9bc4b1bc97b59d81"
+            ]
+        ]
+    },
+    {
+        "id": "af6d782eb814f487",
+        "type": "inject",
+        "z": "83cfebba98549a93",
+        "g": "b7569b3d663b43ad",
+        "name": "close",
+        "props": [
+            {
+                "p": "action",
+                "v": "close",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 320,
+        "wires": [
+            [
+                "9bc4b1bc97b59d81"
+            ]
+        ]
+    }
+]

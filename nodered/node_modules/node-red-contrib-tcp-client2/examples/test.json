@@ -1,0 +1,786 @@
+[
+    {
+        "id": "4c236fb0d09358c5",
+        "type": "group",
+        "z": "9465e113e42fe298",
+        "name": "Hello Server",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "e364babd2f70cd39",
+            "229afb535c275a82",
+            "c54f2730cb7bda06",
+            "ce718916edcea384",
+            "96f9850437c33b49"
+        ],
+        "x": 14,
+        "y": 519,
+        "w": 532,
+        "h": 182
+    },
+    {
+        "id": "e364babd2f70cd39",
+        "type": "tcp-server",
+        "z": "9465e113e42fe298",
+        "g": "4c236fb0d09358c5",
+        "action": "action",
+        "actionType": "msg",
+        "port": "port",
+        "portType": "msg",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "\\n",
+        "write": "payload",
+        "writeType": "msg",
+        "keepAliveTimeout": "6000",
+        "socketTimeout": "60000",
+        "topic": "",
+        "name": "Hello Server",
+        "debug": "debug",
+        "x": 310,
+        "y": 580,
+        "wires": [
+            [
+                "c54f2730cb7bda06"
+            ]
+        ]
+    },
+    {
+        "id": "229afb535c275a82",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "4c236fb0d09358c5",
+        "name": "open 8899",
+        "props": [
+            {
+                "p": "action",
+                "v": "open",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "8899",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 120,
+        "y": 560,
+        "wires": [
+            [
+                "e364babd2f70cd39"
+            ]
+        ]
+    },
+    {
+        "id": "c54f2730cb7bda06",
+        "type": "function",
+        "z": "9465e113e42fe298",
+        "g": "4c236fb0d09358c5",
+        "name": "Hello?",
+        "func": "node.status(msg.payload);\nif (msg.payload.startsWith(\"hello\")) {\n    msg.payload=\"world!\";\n    msg.action=\"write\";\n    node.status(\"hello world!\");\n    node.warn(\"hello world!\");\n    return msg; \n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 580,
+        "wires": [
+            [
+                "e364babd2f70cd39"
+            ]
+        ]
+    },
+    {
+        "id": "ce718916edcea384",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "4c236fb0d09358c5",
+        "name": "close",
+        "props": [
+            {
+                "p": "action",
+                "v": "close",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 110,
+        "y": 660,
+        "wires": [
+            [
+                "e364babd2f70cd39"
+            ]
+        ]
+    },
+    {
+        "id": "96f9850437c33b49",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "4c236fb0d09358c5",
+        "name": "open 8999",
+        "props": [
+            {
+                "p": "action",
+                "v": "open",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "8999",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 120,
+        "y": 600,
+        "wires": [
+            [
+                "e364babd2f70cd39"
+            ]
+        ]
+    },
+    {
+        "id": "a41e9cafcbf2d7c1",
+        "type": "group",
+        "z": "9465e113e42fe298",
+        "name": "Client 1",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "b1713ea4ac56132b",
+            "694564a033bcee5a",
+            "fed86f572c937081",
+            "3b778eecbd799392",
+            "0ff434cbb58bd31b",
+            "5af44de807ac8052",
+            "239368f557f8729a",
+            "066a5b83e92ec971",
+            "d0f20cc874b1a653",
+            "8f9ebd3f9166fd44"
+        ],
+        "x": 14,
+        "y": 59,
+        "w": 852,
+        "h": 422
+    },
+    {
+        "id": "b1713ea4ac56132b",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "a41e9cafcbf2d7c1",
+        "name": "connect 8889",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "localhost",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "8889",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 270,
+        "y": 180,
+        "wires": [
+            [
+                "d0f20cc874b1a653"
+            ]
+        ]
+    },
+    {
+        "id": "694564a033bcee5a",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "a41e9cafcbf2d7c1",
+        "name": "close",
+        "props": [
+            {
+                "p": "action",
+                "v": "close",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 190,
+        "y": 440,
+        "wires": [
+            [
+                "d0f20cc874b1a653"
+            ]
+        ]
+    },
+    {
+        "id": "fed86f572c937081",
+        "type": "debug",
+        "z": "9465e113e42fe298",
+        "g": "a41e9cafcbf2d7c1",
+        "name": "client 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "payload",
+        "statusType": "auto",
+        "x": 760,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "3b778eecbd799392",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "a41e9cafcbf2d7c1",
+        "name": "Send hello",
+        "props": [
+            {
+                "p": "action",
+                "v": "write",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "hello",
+        "payloadType": "str",
+        "x": 160,
+        "y": 380,
+        "wires": [
+            [
+                "d0f20cc874b1a653"
+            ]
+        ]
+    },
+    {
+        "id": "0ff434cbb58bd31b",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "a41e9cafcbf2d7c1",
+        "name": "simulate connection to unknown host",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "unknown.bad.addr",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "123",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 230,
+        "y": 260,
+        "wires": [
+            [
+                "d0f20cc874b1a653"
+            ]
+        ]
+    },
+    {
+        "id": "5af44de807ac8052",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "a41e9cafcbf2d7c1",
+        "name": "simulate connection to unknown port",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "localhost",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "1234",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 210,
+        "y": 320,
+        "wires": [
+            [
+                "d0f20cc874b1a653"
+            ]
+        ]
+    },
+    {
+        "id": "239368f557f8729a",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "a41e9cafcbf2d7c1",
+        "name": "connect 2021",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "localhost",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "2021",
+                "vt": "str"
+            },
+            {
+                "p": "hosts",
+                "v": "asdf",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 330,
+        "y": 120,
+        "wires": [
+            [
+                "d0f20cc874b1a653"
+            ]
+        ]
+    },
+    {
+        "id": "066a5b83e92ec971",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "a41e9cafcbf2d7c1",
+        "name": "connect 2020",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "localhost",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "2020",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 510,
+        "y": 100,
+        "wires": [
+            [
+                "d0f20cc874b1a653"
+            ]
+        ]
+    },
+    {
+        "id": "d0f20cc874b1a653",
+        "type": "tcp-client",
+        "z": "9465e113e42fe298",
+        "g": "a41e9cafcbf2d7c1",
+        "action": "action",
+        "actionType": "msg",
+        "host": "host",
+        "hostType": "msg",
+        "port": "port",
+        "portType": "msg",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "\\n",
+        "write": "payload",
+        "writeType": "msg",
+        "maxRetries": "",
+        "retryDelay": "3000",
+        "indefiniteRetries": true,
+        "topic": "",
+        "name": "TCP-client 1",
+        "debug": "debug",
+        "x": 570,
+        "y": 300,
+        "wires": [
+            [
+                "fed86f572c937081"
+            ]
+        ]
+    },
+    {
+        "id": "8f9ebd3f9166fd44",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "a41e9cafcbf2d7c1",
+        "name": "connect 8899",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "localhost",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "8899",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 230,
+        "y": 220,
+        "wires": [
+            [
+                "d0f20cc874b1a653"
+            ]
+        ]
+    },
+    {
+        "id": "bb00589f4113d503",
+        "type": "group",
+        "z": "9465e113e42fe298",
+        "name": "Client 2",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "fce970273119d194",
+            "c462050743255217",
+            "88eaa69e3169ec80",
+            "19d72602ca4fb87e",
+            "bbe61b3695dea482",
+            "1b79b255c367c8bf",
+            "37c9510a40b599a0",
+            "c1f0e7907feedb95"
+        ],
+        "x": 14,
+        "y": 719,
+        "w": 792,
+        "h": 342
+    },
+    {
+        "id": "fce970273119d194",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "bb00589f4113d503",
+        "name": "connect 8889",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "localhost",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "8889",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 210,
+        "y": 840,
+        "wires": [
+            [
+                "37c9510a40b599a0"
+            ]
+        ]
+    },
+    {
+        "id": "c462050743255217",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "bb00589f4113d503",
+        "name": "close",
+        "props": [
+            {
+                "p": "action",
+                "v": "close",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 130,
+        "y": 1020,
+        "wires": [
+            [
+                "37c9510a40b599a0"
+            ]
+        ]
+    },
+    {
+        "id": "88eaa69e3169ec80",
+        "type": "debug",
+        "z": "9465e113e42fe298",
+        "g": "bb00589f4113d503",
+        "name": "client 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "payload",
+        "statusType": "auto",
+        "x": 700,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "19d72602ca4fb87e",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "bb00589f4113d503",
+        "name": "Send hello",
+        "props": [
+            {
+                "p": "action",
+                "v": "write",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "hello",
+        "payloadType": "str",
+        "x": 120,
+        "y": 940,
+        "wires": [
+            [
+                "37c9510a40b599a0"
+            ]
+        ]
+    },
+    {
+        "id": "bbe61b3695dea482",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "bb00589f4113d503",
+        "name": "connect 2021",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "localhost",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "2021",
+                "vt": "str"
+            },
+            {
+                "p": "hosts",
+                "v": "asdf",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 270,
+        "y": 780,
+        "wires": [
+            [
+                "37c9510a40b599a0"
+            ]
+        ]
+    },
+    {
+        "id": "1b79b255c367c8bf",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "bb00589f4113d503",
+        "name": "connect 2020",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "localhost",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "2020",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 450,
+        "y": 760,
+        "wires": [
+            [
+                "37c9510a40b599a0"
+            ]
+        ]
+    },
+    {
+        "id": "37c9510a40b599a0",
+        "type": "tcp-client",
+        "z": "9465e113e42fe298",
+        "g": "bb00589f4113d503",
+        "action": "action",
+        "actionType": "msg",
+        "host": "host",
+        "hostType": "msg",
+        "port": "port",
+        "portType": "msg",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "\\n",
+        "write": "payload",
+        "writeType": "msg",
+        "maxRetries": "5",
+        "retryDelay": "3000",
+        "indefiniteRetries": false,
+        "topic": "",
+        "name": "TCP-client 2",
+        "debug": "debug",
+        "x": 510,
+        "y": 960,
+        "wires": [
+            [
+                "88eaa69e3169ec80"
+            ]
+        ]
+    },
+    {
+        "id": "c1f0e7907feedb95",
+        "type": "inject",
+        "z": "9465e113e42fe298",
+        "g": "bb00589f4113d503",
+        "name": "connect 8899",
+        "props": [
+            {
+                "p": "action",
+                "v": "connect",
+                "vt": "str"
+            },
+            {
+                "p": "host",
+                "v": "localhost",
+                "vt": "str"
+            },
+            {
+                "p": "port",
+                "v": "8899",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 880,
+        "wires": [
+            [
+                "37c9510a40b599a0"
+            ]
+        ]
+    }
+]

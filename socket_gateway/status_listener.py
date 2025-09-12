@@ -155,6 +155,7 @@ def main():
                     last_status_time[robot_id] = current_time
 
                     raw_data = redis_client.get(sensor_key)
+
                     if raw_data:
                         raw_status = json.loads(raw_data)
 
@@ -215,6 +216,7 @@ def main():
 
                         # Enviar status normal sin timing adicional
                         kafka_producer.send(KAFKA_TOPIC_STATUS, value=raw_status)
+                        #logger.info(f"raw_data key-> {sensor_key}: {raw_status}")
 
                     else:
                         logger.warning(f"⚠️ No se encontró status para robot {robot_id}")

@@ -194,6 +194,11 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     else:
         ancho = float(parametros["ancho_barra"])
         ct_x = int(parametros["cantidad_x"])
+
+    if ct_x == 3 and int(parametros["no_carro"]) == 2:
+        pick_y = pick_y + 300
+        put_y = put_y + 300
+    
     # generacion de trama data(dict)
     data = {
         "pick": [pick_x, pick_y, pick_z, pick_u, pick_v, pick_w],

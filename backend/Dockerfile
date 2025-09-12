@@ -1,7 +1,13 @@
 FROM node:22-slim
+
 WORKDIR /app
+
 COPY package*.json ./
-RUN npm install --include=dev
-#COPY . .
-#EXPOSE 5000
-#CMD ["node", "src/index.js"]
+ENV NODE_ENV=production
+RUN npm ci --omit=dev || npm install --omit=dev
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["npm", "start"]
