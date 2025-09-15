@@ -1,0 +1,176 @@
+d5343cd | Ronald Chicche | 2025-08-28 | modbus slave y bridge con kafka habilitado
+ docker-compose.yml                 | 96 ++++++++++++++++++++++----------------
+ modbus_gateway/Dockerfile          |  4 +-
+ modbus_gateway/ModbusClient.py     |  6 +--
+ modbus_gateway/requirements.txt    |  4 +-
+ modbus_gateway/runner.py           | 44 +++++++----------
+ modbus_slave/Dockerfile            |  8 ++--
+ modbus_slave/requirements.txt      |  2 +-
+ prueba_01.py                       |  4 +-
+ prueba_02.py                       | 56 ++++++++++++++++++++++
+ prueba_03.py                       | 38 +++++++++++++++
+ socket_gateway/command_listener.py |  2 +
+ 11 files changed, 184 insertions(+), 80 deletions(-)
+
+f845660 | Ronald Chicche | 2025-08-27 | Merge branch 'main' of https://github.com/RonaldChicche/robot_server
+d8ae43b | Ronald Chicche | 2025-08-27 | desarrollo de nueva interfaz de modbus para comunicacion con plc
+ docker-compose.yml               |  82 ++++++
+ env.txt                          |  83 +++++++
+ install.txt                      |  50 ++++
+ modbus_gateway/Dockerfile        |  24 ++
+ modbus_gateway/ModbusClient.py   | 520 ++++++++++++++++++++++++---------------
+ modbus_gateway/config.yaml       | 192 ++++++---------
+ modbus_gateway/master.py         |  48 ----
+ modbus_gateway/modbus.ipynb      |  25 --
+ modbus_gateway/modbus_gateway.py |   0
+ modbus_gateway/modbus_slave.py   |  59 ++---
+ modbus_gateway/reader.py         |  61 ++---
+ modbus_gateway/requirements.txt  |   4 +
+ modbus_gateway/runner.py         | 207 +++++++++++-----
+ modbus_slave/Dockerfile          |  22 ++
+ modbus_slave/modbus_slave.py     |  90 +++++++
+ modbus_slave/requirements.txt    |   1 +
+ prueba_01.py                     |   2 +-
+ 17 files changed, 963 insertions(+), 507 deletions(-)
+
+72570e4 | RonaldChicche | 2025-08-26 | arreglo de bit fin y limpieza de registros en reconeccion
+ detalle.txt                     |  2 ++
+ docker-compose.yml              |  2 +-
+ socket_gateway/gateway_robot.py | 17 ++++++++++++++++-
+ 3 files changed, 19 insertions(+), 2 deletions(-)
+
+2555f16 | RonaldChicche | 2025-08-26 | restaruraciond e config opc
+ opc_gateway/config.yaml | 281 +++++++++++++++++++++++-------------------------
+ 1 file changed, 134 insertions(+), 147 deletions(-)
+
+8ff6a84 | Ronald Chicche | 2025-08-26 | agregandp init de tni para control de procesos zombies
+ docker-compose.yml            |   3 +-
+ frontend/robot-app/Dockerfile |  17 +++++--
+ opc_gateway/Dockerfile        |   5 ++-
+ opc_gateway/entrypoint.sh     |  26 +++++++----
+ prueba_01.py                  | 102 +++++++++++-------------------------------
+ socket_gateway/Dockerfile     |   7 ++-
+ socket_gateway/entrypoint.sh  |  31 +++++--------
+ 7 files changed, 81 insertions(+), 110 deletions(-)
+
+432860e | Ronald Chicche | 2025-08-26 | Merge branch 'main' of https://github.com/RonaldChicche/robot_server
+1753c94 | Ronald Chicche | 2025-08-26 | desarrollo de servidor modbus
+ docker-compose.yml             |   1 +
+ modbus_gateway/ModbusClient.py | 395 ++++++++++++++++++++++-------------------
+ modbus_gateway/config.yaml     | 178 ++++++++++---------
+ modbus_gateway/modbus_slave.py |  88 ++++-----
+ modbus_gateway/reader.py       |  50 ++++++
+ modbus_gateway/runner.py       | 103 +++++++++++
+ opc_gateway/config.yaml        | 281 +++++++++++++++--------------
+ 7 files changed, 659 insertions(+), 437 deletions(-)
+
+aab0aaa | RonaldChicche | 2025-08-25 | cali
+ modbus_gateway/master.py              |  2 +-
+ socket_gateway/process_coordinator.py | 21 +++++++++++----------
+ 2 files changed, 12 insertions(+), 11 deletions(-)
+
+19a7f07 | Ronald Chicche | 2025-08-25 | first modbus plc interface slave
+ modbus_gateway/ModbusClient.py   | 225 +++++++++++++++++++++++++++++++++++++++
+ modbus_gateway/config.yaml       | 176 ++++++++++++++++++++++++++++++
+ modbus_gateway/master.py         |  48 +++++++++
+ modbus_gateway/modbus.ipynb      |  25 +++++
+ modbus_gateway/modbus_gateway.py |   0
+ modbus_gateway/modbus_slave.py   |  51 +++++++++
+ 6 files changed, 525 insertions(+)
+
+cd751ee | RonaldChicche | 2025-08-25 | nuevo algoritmo para barras delagadas por aprobar, variables estado para e; gripper
+ opc_gateway/config.yaml               | 67 ++++++++++++++++++-----------------
+ opc_gateway/kafka_to_opc.py           |  9 ++---
+ socket_gateway/JsonBorunteClient.py   |  2 +-
+ socket_gateway/gateway_robot.py       |  2 +-
+ socket_gateway/process_coordinator.py | 51 +++++++++++++++++---------
+ 5 files changed, 76 insertions(+), 55 deletions(-)
+
+5eae5f7 | RonaldChicche | 2025-08-21 | reporte de tiempos, estado de actuador, regularizacion de estados
+ detalle.txt                                  |  2 +-
+ frontend/robot-app/src/pages/ProcessView.jsx |  1 +
+ opc_gateway/config.yaml                      | 29 ++++++++++++++----------
+ opc_gateway/kafka_to_opc.py                  | 11 +++++++++
+ socket_gateway/JsonBorunteClient.py          | 34 ++++++++++++++++++++++++++++
+ socket_gateway/common/redis_keys.yaml        |  1 +
+ socket_gateway/gateway_robot.py              | 27 +++++++++++++++++-----
+ socket_gateway/process_coordinator.py        | 16 ++++++-------
+ socket_gateway/status_listener.py            |  4 ++++
+ 9 files changed, 98 insertions(+), 27 deletions(-)
+
+8c8a5ff | RonaldChicche | 2025-08-19 | agregacion de timerrs por barra, elevacion selectiva por caarro, divicion de tramo de pick and place a distinnta velocidad
+ opc_gateway/config.yaml               |   2 +
+ opc_gateway/kafka_to_opc.py           |   2 +
+ socket_gateway/JsonBorunteClient.py   |  19 ++--
+ socket_gateway/gateway_robot.py       |  22 +++--
+ socket_gateway/process_coordinator.py |  28 ++++--
+ socket_gateway/status_listener.py     | 167 ++++++++++++++++++++++++----------
+ 6 files changed, 167 insertions(+), 73 deletions(-)
+
+3abe0e1 | RonaldChicche | 2025-08-12 | nuevas funciones agregadas a opc
+ opc_gateway/config.yaml     | 8 +++++++-
+ opc_gateway/kafka_to_opc.py | 1 +
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+0c7da0f | RonaldChicche | 2025-08-09 | buffer de mensaje para evitar recalculos
+ socket_gateway/command_listener.py    | 11 +++++++-
+ socket_gateway/gateway_robot.py       | 14 +++++-----
+ socket_gateway/process_coordinator.py | 49 +++++++++++++++++++----------------
+ 3 files changed, 44 insertions(+), 30 deletions(-)
+
+aa8a7b2 | RonaldChicche | 2025-08-06 | action estop para cada proceso , start asociado a proceso 01, nueva calibracion
+ frontend/robot-app/src/pages/ProcessView.jsx |  1 +
+ socket_gateway/JsonBorunteClient.py          | 55 ++++++++++++++++++++++++----
+ socket_gateway/gateway_robot.py              |  8 ++--
+ socket_gateway/process_coordinator.py        | 19 ++++++----
+ 4 files changed, 64 insertions(+), 19 deletions(-)
+
+6a3112c | RonaldChicche | 2025-08-05 | editor y eliminacion de recetas
+ detalle.txt                                  | 252 +++++----------------------
+ frontend/robot-app/src/pages/RecetasView.jsx |   2 +-
+ 2 files changed, 41 insertions(+), 213 deletions(-)
+
+dff880c | RonaldChicche | 2025-08-05 | valores w y recetas en frontend y base de datos
+ backend/src/controllers/alarmasController.js  |  14 ++++
+ backend/src/controllers/recetasController.js  |  84 +++++++++++++++++++
+ backend/src/index.js                          |   4 +
+ backend/src/routes/alarmasRoutes.js           |   7 ++
+ backend/src/routes/recetasRoutes.js           |  11 +++
+ docker-compose.yml                            |   1 +
+ frontend/robot-app/src/App.jsx                |   3 +
+ frontend/robot-app/src/components/Sidebar.jsx |   3 +-
+ frontend/robot-app/src/config.js              |   1 +
+ frontend/robot-app/src/lib/socket.js          |   3 +-
+ frontend/robot-app/src/pages/FormView.jsx     |   7 +-
+ frontend/robot-app/src/pages/ProcessView.jsx  |  72 +++++++++++++---
+ frontend/robot-app/src/pages/RecetasView.jsx  | 114 +++++++++++++++++++++++++
+ postgress/querys.sql                          | 116 +++++++++++++++++++++++++-
+ socket_gateway/process_coordinator.py         |  16 ++--
+ 15 files changed, 432 insertions(+), 24 deletions(-)
+
+be582c8 | RonaldChicche | 2025-08-05 | cambio de algoritmo para paletizar barras mas pequenas que el gripper
+ detalle.txt                                  |  5 ++++
+ docker-compose.yml                           |  4 +--
+ frontend/robot-app/src/pages/ProcessView.jsx | 14 +++++-----
+ opc_gateway/config.yaml                      |  4 +--
+ postgress/querys.sql                         |  6 ++++-
+ socket_gateway/JsonBorunteClient.py          | 10 ++++++-
+ socket_gateway/process_coordinator.py        | 40 +++++++++++++++++-----------
+ 7 files changed, 55 insertions(+), 28 deletions(-)
+
+c8ce71a | RonaldChicche | 2025-08-01 | Status y nuevos bits
+ docker-compose.yml                           |  3 ++-
+ frontend/robot-app/src/pages/ProcessView.jsx |  1 +
+ opc_gateway/config.yaml                      | 17 +++++++++++------
+ opc_gateway/kafka_to_opc.py                  |  6 ++++++
+ socket_gateway/process_coordinator.py        | 19 ++++++++++++-------
+ 5 files changed, 32 insertions(+), 14 deletions(-)
+
+9154d54 | RonaldChicche | 2025-08-01 | compensacion y relativo y velocidad
+ detalle.txt                           | 213 ++++++++++++++++++++++++++++++++++
+ opc_gateway/OpcClientPLC.py           |   4 +-
+ opc_gateway/config.yaml               |  36 ++++--
+ socket_gateway/JsonBorunteClient.py   |  33 +++++-
+ socket_gateway/gateway_robot.py       |   3 +
+ socket_gateway/process_coordinator.py |  34 ++++--
+ 6 files changed, 297 insertions(+), 26 deletions(-)

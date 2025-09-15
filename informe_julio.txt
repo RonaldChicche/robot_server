@@ -1,0 +1,320 @@
+e77a7f4 | RonaldChicche | 2025-07-30 | calibracion y load Config de kafaka
+ backend/src/services/kafkaService.js  | 9 ++++++++-
+ socket_gateway/process_coordinator.py | 4 ++--
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+27ece1a | RonaldChicche | 2025-07-29 | calibraciones
+ frontend/robot-app/src/lib/socket.js         |  2 +-
+ frontend/robot-app/src/pages/FormView.jsx    |  6 +++---
+ frontend/robot-app/src/pages/ProcessView.jsx | 10 +++++-----
+ opc_gateway/OpcClientPLC.py                  |  9 +++++++++
+ opc_gateway/config.yaml                      |  1 +
+ opc_gateway/kafka_to_opc.py                  |  3 ++-
+ socket_gateway/gateway_robot.py              |  1 +
+ socket_gateway/process_coordinator.py        | 20 +++++++++++---------
+ 8 files changed, 33 insertions(+), 19 deletions(-)
+
+c854f9f | Ronald Chicche | 2025-07-25 | correccion e inclusion de /lib
+ .gitignore                           | 1 -
+ frontend/robot-app/src/lib/socket.js | 9 +++++++++
+ frontend/robot-app/src/lib/utils.js  | 6 ++++++
+ 3 files changed, 15 insertions(+), 1 deletion(-)
+
+f2c3118 | Ronald Chicche | 2025-07-25 | escritura de posiciones de  memoria en opc ... adaptacion en frontend
+ docker-compose.yml                           |  2 +
+ frontend/robot-app/src/pages/ProcessView.jsx | 58 +++++++++++++++++++++++-----
+ opc_gateway/config.yaml                      | 28 +++++++++-----
+ opc_gateway/kafka_to_opc.py                  | 19 +++++++++
+ socket_gateway/JsonBorunteClient.py          | 29 ++++++++++++--
+ socket_gateway/common/redis_keys.yaml        |  3 +-
+ socket_gateway/gateway_robot.py              |  4 +-
+ socket_gateway/process_coordinator.py        |  6 ++-
+ socket_gateway/status_listener.py            | 14 ++++++-
+ 9 files changed, 136 insertions(+), 27 deletions(-)
+
+a4f6a78 | Ronald Chicche | 2025-07-24 | Nueva calibracion
+ backend/src/index.js                         |  1 +
+ backend/src/services/kafkaPayloadBuilder.js  |  2 +-
+ frontend/robot-app/src/pages/ProcessView.jsx |  1 -
+ socket_gateway/gateway_robot.py              |  8 ++++-
+ socket_gateway/process_coordinator.py        | 46 +++++++++++++++++++---------
+ 5 files changed, 41 insertions(+), 17 deletions(-)
+
+7f7bb99 | Ronald Chicche | 2025-07-23 | adaptacion de lectura de estados desde redis para OPC y reporte
+ backend/src/index.js                            |   4 +-
+ frontend/robot-app/src/pages/ControllerView.jsx |  29 ++--
+ frontend/robot-app/src/pages/ProcessView.jsx    |  19 ++-
+ opc_gateway/OpcClientPLC.py                     | 198 +++++++++++++-----------
+ opc_gateway/config.yaml                         |  24 +--
+ opc_gateway/kafka_to_opc.py                     | 116 +++++++-------
+ opc_gateway/opc_to_kafka.py                     |  43 +++--
+ opc_gateway/requirements.txt                    |   3 +-
+ socket_gateway/JsonBorunteClient.py             |  31 ++++
+ socket_gateway/common/redis_keys.yaml           |   3 +
+ socket_gateway/gateway_robot.py                 |  23 ++-
+ socket_gateway/process_coordinator.py           |  67 +++++++-
+ socket_gateway/status_listener.py               |  31 +++-
+ 13 files changed, 375 insertions(+), 216 deletions(-)
+
+7a046cf | Ronald Chicche | 2025-07-22 | arreglo de kafaka to opc y socket de web
+ backend/package-lock.json                    | 234 ++++++++++++++++++++++++++-
+ backend/package.json                         |   3 +-
+ backend/src/index.js                         |  20 ++-
+ backend/src/services/statusConsumer.js       |   2 +-
+ frontend/robot-app/package-lock.json         | 138 +++++++++++++++-
+ frontend/robot-app/package.json              |   1 +
+ frontend/robot-app/src/pages/FormView.jsx    |   2 +-
+ frontend/robot-app/src/pages/ProcessView.jsx | 125 ++++++++++----
+ opc_gateway/kafka_to_opc.py                  |  76 ++++++---
+ opc_gateway/opc.ipynb                        | 149 +++++++++++------
+ socket_gateway/common/redis_keys.yaml        |   1 +
+ socket_gateway/gateway_robot.py              |   2 +-
+ socket_gateway/process_coordinator.py        |   2 +-
+ socket_gateway/status_listener.py            |  29 +++-
+ 14 files changed, 660 insertions(+), 124 deletions(-)
+
+4cff9ff | Ronald Chicche | 2025-07-21 | cambios de opc y mejora de  interfas paa proceso
+ backend/src/controllers/kafkaController.js         | 118 +++++++++--
+ backend/src/index.js                               |  45 +++--
+ backend/src/routes/kafkaRoutes.js                  |  21 +-
+ backend/src/services/kafkaPayloadBuilder.js        |  31 +++
+ backend/src/services/statusConsumer.js             |  26 +++
+ backend/src/websockets/socketServer.js             |  17 ++
+ docker-compose.yml                                 |  42 +++-
+ frontend/robot-app/package-lock.json               |  31 +++
+ frontend/robot-app/package.json                    |   1 +
+ frontend/robot-app/src/App.jsx                     |   3 +
+ frontend/robot-app/src/components/Sidebar.jsx      |  48 +++--
+ .../robot-app/src/components/ui/collapsible.jsx    |  21 ++
+ frontend/robot-app/src/pages/ControllerView.jsx    | 176 +++++++++--------
+ frontend/robot-app/src/pages/ProcessView.jsx       | 215 +++++++++++++++++++++
+ opc_gateway/OpcClientPLC.py                        |   4 +
+ opc_gateway/config.yaml                            |  86 +++++----
+ opc_gateway/kafka_to_opc.py                        | 140 ++++++++++----
+ opc_gateway/opc_to_kafka.py                        |   3 +-
+ opc_gateway/requirements.txt                       |   1 +
+ socket_gateway/command_listener.py                 |   1 +
+ socket_gateway/process_coordinator.py              |  11 +-
+ 21 files changed, 833 insertions(+), 208 deletions(-)
+
+7b747d7 | Ronald Chicche | 2025-07-19 | refinamiento de coordinador
+ opc_gateway/OpcClientPLC.py           |   2 +-
+ opc_gateway/config.yaml               |   4 +
+ socket_gateway/process_coordinator.py |  46 +++++-----
+ test.py                               | 159 ++++++++++++++++++++++++++++++++++
+ 4 files changed, 188 insertions(+), 23 deletions(-)
+
+ab29de6 | Ronald Chicche | 2025-07-18 | process coordinator
+ backend/src/controllers/methodsController.js      |  87 ++++--
+ backend/src/routes/methodsRoutes.js               |  26 +-
+ docker-compose.yml                                |  20 ++
+ frontend/robot-app/package-lock.json              |  89 ++++++
+ frontend/robot-app/package.json                   |   2 +
+ frontend/robot-app/src/App.jsx                    |   3 +
+ frontend/robot-app/src/components/Sidebar.jsx     |   3 +-
+ frontend/robot-app/src/components/ui/checkbox.jsx |  28 ++
+ frontend/robot-app/src/components/ui/slider.jsx   |  54 ++++
+ frontend/robot-app/src/pages/ControllerView.jsx   | 191 +++++++++++++
+ postgress/querys.sql                              |  15 +
+ socket_gateway/common/redis_keys.yaml             |   2 +
+ socket_gateway/entrypoint.sh                      |   2 +-
+ socket_gateway/process_coodinator.py              | 206 --------------
+ socket_gateway/process_coordinator.py             | 327 ++++++++++++++++++++++
+ 15 files changed, 817 insertions(+), 238 deletions(-)
+
+d2737ed | Ronald Chicche | 2025-07-18 | Actualizacion de descripciones
+ README.md                    | 129 +++++++++++++++----------------------------
+ docs/images/robot_server.png | Bin 211157 -> 346907 bytes
+ test.py                      |  34 ------------
+ 3 files changed, 46 insertions(+), 117 deletions(-)
+
+d6e9f8f | Ronald Chicche | 2025-07-17 | querys de data, arreglo de trama en frontend, adaptacion de OPC
+ ahh.txt                                      | 101 --------------------------
+ backend/src/controllers/methodsController.js |   8 +--
+ docker-compose.yml                           |  38 +++++-----
+ frontend/robot-app/src/pages/FormView.jsx    |  43 ++++++++---
+ opc_gateway/OpcClientPLC.py                  |  28 ++++----
+ opc_gateway/config.yaml                      |   8 ++-
+ opc_gateway/opc_to_kafka.py                  |   2 +-
+ postgress/querys.sql                         | 104 +++++++++++++++++++++++++++
+ socket_gateway/JsonBorunteClient.py          |  47 ++++--------
+ socket_gateway/command_listener.py           |  12 ++--
+ socket_gateway/common/redis_keys.yaml        |  21 ++----
+ socket_gateway/gateway_robot.py              |  16 ++---
+ socket_gateway/process_coodinator.py         |   2 +-
+ socket_gateway/status_listener.py            |  43 ++++++++---
+ 14 files changed, 250 insertions(+), 223 deletions(-)
+
+7615c6e | Ronald Chicche | 2025-07-17 | backend y frontend v1, adapatacion en OPC y gateway para aceptar bridge object
+ ahh.txt                                            |   63 +
+ backend/.nodemon.json                              |    5 +
+ backend/Dockerfile                                 |    7 +
+ backend/package-lock.json                          | 1502 +++++++
+ backend/package.json                               |   20 +
+ backend/src/config/db.js                           |   18 +
+ backend/src/controllers/kafkaController.js         |   37 +
+ backend/src/controllers/methodsController.js       |   98 +
+ backend/src/index.js                               |   35 +
+ backend/src/routes/kafkaRoutes.js                  |    8 +
+ backend/src/routes/methodsRoutes.js                |   20 +
+ backend/src/services/kafkaService.js               |   20 +
+ backend/src/services/redisService.js               |   12 +
+ docker-compose.yml                                 |  163 +-
+ web/routes/general_routes.py => frontend/h.txt     |    0
+ frontend/robot-app/.gitignore                      |   24 +
+ frontend/robot-app/Dockerfile                      |    8 +
+ frontend/robot-app/README.md                       |   12 +
+ frontend/robot-app/components.json                 |   21 +
+ frontend/robot-app/eslint.config.js                |   29 +
+ frontend/robot-app/index.html                      |   13 +
+ frontend/robot-app/jsconfig.json                   |   11 +
+ frontend/robot-app/package-lock.json               | 4077 ++++++++++++++++++++
+ frontend/robot-app/package.json                    |   42 +
+ frontend/robot-app/public/vite.svg                 |    1 +
+ frontend/robot-app/src/App.css                     |   42 +
+ frontend/robot-app/src/App.jsx                     |   33 +
+ frontend/robot-app/src/assets/react.svg            |    1 +
+ frontend/robot-app/src/components/Sidebar.jsx      |   31 +
+ frontend/robot-app/src/components/ui/button.jsx    |   55 +
+ frontend/robot-app/src/components/ui/card.jsx      |  101 +
+ frontend/robot-app/src/components/ui/input.jsx     |   24 +
+ frontend/robot-app/src/components/ui/label.jsx     |   21 +
+ frontend/robot-app/src/components/ui/select.jsx    |  164 +
+ frontend/robot-app/src/components/ui/separator.jsx |   25 +
+ frontend/robot-app/src/components/ui/switch.jsx    |   27 +
+ frontend/robot-app/src/index.css                   |  124 +
+ frontend/robot-app/src/main.jsx                    |   10 +
+ frontend/robot-app/src/pages/AboutView.jsx         |    7 +
+ frontend/robot-app/src/pages/FormView.jsx          |  157 +
+ frontend/robot-app/src/pages/TableView.jsx         |   26 +
+ frontend/robot-app/vite.config.js                  |   18 +
+ modbus_bridge/comandos.ipynb                       |   82 +-
+ opc_gateway/OpcClientPLC.py                        |   84 +-
+ opc_gateway/config.yaml                            |   21 +-
+ socket_gateway/JsonBorunteClient.py                |   19 +-
+ socket_gateway/command_listener.py                 |    5 +-
+ socket_gateway/gateway_robot.py                    |   18 +-
+ socket_gateway/process_coodinator.py               |   13 +-
+ web/Dockerfile                                     |   11 -
+ web/app.py                                         |   26 -
+ web/config/redis_keys/core.json                    |   11 -
+ web/config/redis_keys/maintenance.json             |   11 -
+ web/config/redis_keys/modbus.json                  |   11 -
+ web/config/redis_keys/robot.json                   |   34 -
+ web/helper/influx_helper.py                        |  107 -
+ web/helper/redis_helper.py                         |   29 -
+ web/helper/redis_keys.py                           |   25 -
+ web/requirements.txt                               |   33 -
+ web/routes/__init__.py                             |    8 -
+ web/routes/influx_routes.py                        |   35 -
+ web/routes/modbus_routes.py                        |    0
+ web/routes/opc_routes.py                           |    0
+ web/routes/redis_routes.py                         |  108 -
+ web/services/config.py                             |   17 -
+ web/services/extensions.py                         |    0
+ 66 files changed, 7199 insertions(+), 621 deletions(-)
+
+dd9f9fa | Ronald Chicche | 2025-07-14 | Correccion de .env y parametros de escritura EN BORUNTE
+ docker-compose.yml                  | 93 +++++++++++++++++++------------------
+ opc_gateway/Dockerfile              |  5 +-
+ opc_gateway/kafka_to_opc.py         |  2 +-
+ socket_gateway/JsonBorunteClient.py |  4 +-
+ 4 files changed, 52 insertions(+), 52 deletions(-)
+
+f5bd674 | RonaldChicche | 2025-07-11 | Selector de funcion como parte de la logica de un proceso, ya NO es un parametro
+ prueba_01.py                         | 24 +++++++++++++++++++++---
+ socket_gateway/JsonBorunteClient.py  | 19 ++++++++-----------
+ socket_gateway/process_coodinator.py |  4 +++-
+ 3 files changed, 32 insertions(+), 15 deletions(-)
+
+968213a | RonaldChicche | 2025-07-11 | Agregacion de selector de proceso
+ socket_gateway/JsonBorunteClient.py  | 8 ++++++++
+ socket_gateway/gateway_robot.py      | 4 +++-
+ socket_gateway/process_coodinator.py | 2 ++
+ 3 files changed, 13 insertions(+), 1 deletion(-)
+
+3f40a6a | RonaldChicche | 2025-07-11 | adaptacion para cantidad x , z
+ docker-compose.yml                   |  2 +-
+ opc_gateway/OpcClientPLC.py          |  3 ++-
+ opc_gateway/config.yaml              |  8 ++++++--
+ prueba_01.py                         | 11 ++++++++---
+ socket_gateway/JsonBorunteClient.py  | 23 +++++++++++++++++------
+ socket_gateway/process_coodinator.py |  4 +---
+ 6 files changed, 35 insertions(+), 16 deletions(-)
+
+8b8086c | Ronald Chicche | 2025-07-10 | logica de compensacion x , Z
+ socket_gateway/process_coodinator.py | 124 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 123 insertions(+), 1 deletion(-)
+
+2fa9f8b | Ronald Chicche | 2025-07-09 | Actualizacion de diagrama y documentacion
+ README.md                    |  51 +++++++++++++++++++++++++++++++++++++------
+ docs/images/robot_server.png | Bin 70497 -> 211157 bytes
+ opc_gateway/Dockerfile       |   2 +-
+ 3 files changed, 45 insertions(+), 8 deletions(-)
+
+a987454 | Ronald Chicche | 2025-07-09 | Socket gateway desarrollo ... pendiente coordinador
+ docker-compose.yml                                 | 114 ++++++++++++++++++-
+ opc_gateway/OpcClientPLC.py                        |   2 +-
+ opc_gateway/kafka_to_opc.py                        |  30 ++---
+ opc_gateway/opc_to_kafka.py                        |  53 +++++----
+ prueba_01.py                                       |  66 +++++++++++
+ socket_bridge/entrypoint.sh                        |   9 --
+ socket_bridge/json_commands.yaml                   |   0
+ socket_bridge/kafka_to_socket.py                   |  93 ----------------
+ socket_bridge/socket_to_kafka.py                   |   0
+ socket_bridge/test.py                              |  32 ------
+ socket_gateway/Dockerfile                          |  14 +++
+ .../JsonBorunteClient.py                           | 123 +++++++++++++++++----
+ socket_gateway/command_listener.py                 |  88 +++++++++++++++
+ socket_gateway/common/redis_keys.yaml              |  69 ++++++++++++
+ socket_gateway/common/utils.py                     |  29 +++++
+ socket_gateway/entrypoint.sh                       |  21 ++++
+ socket_gateway/gateway_robot.py                    | 119 ++++++++++++++++++++
+ socket_gateway/process_coodinator.py               |  79 +++++++++++++
+ socket_gateway/requirements.txt                    |   4 +
+ socket_gateway/status_listener.py                  |  83 ++++++++++++++
+ test.py                                            |  12 +-
+ 21 files changed, 836 insertions(+), 204 deletions(-)
+
+a2718a6 | Ronald Chicche | 2025-07-05 | Merge branch 'main' of https://github.com/RonaldChicche/robot_server
+d8e03de | Ronald Chicche | 2025-07-05 | socket test
+ ahh.txt                          | 38 ++++++++++++++++++++++++++++++++++++++
+ docker-compose.yml               |  2 ++
+ modbus_bridge/send_command.py    |  2 +-
+ socket_bridge/kafka_to_socket.py | 18 ------------------
+ socket_bridge/test.py            |  2 +-
+ 5 files changed, 42 insertions(+), 20 deletions(-)
+
+de8df25 | RonaldChicche | 2025-07-04 | Correccion de OPC LF por arreglar y env de KAFKA
+ .gitattributes            | 3 +++
+ docker-compose.yml        | 6 +++---
+ opc_gateway/Dockerfile    | 8 ++++++--
+ opc_gateway/entrypoint.sh | 7 ++++---
+ 4 files changed, 16 insertions(+), 8 deletions(-)
+
+4c76170 | Ronald Chicche | 2025-07-02 | Reestructuracion de envio de trama desde OPC
+ .gitignore                                      |   9 +-
+ docker-compose.yml                              | 105 ++--
+ docs/test/movimiento.py                         | 111 ++++
+ modbus_bridge/ModbusBorunteClient.py            |  18 +-
+ modbus_bridge/comandos.ipynb                    | 711 ++++++++++++++++++++++++
+ modbus_bridge/config/diccionario_registros.json |  10 +-
+ modbus_bridge/formatos.csv                      |  43 ++
+ modbus_bridge/kafka_to_modbus.py                |  59 +-
+ modbus_bridge/main.py                           |  40 +-
+ modbus_bridge/main2.py                          |  39 ++
+ modbus_bridge/modbus_to_kafka.py                |  18 +-
+ opc_gateway/Dockerfile                          |   2 +-
+ opc_gateway/OPC IO.xlsx                         | Bin 9776 -> 0 bytes
+ opc_gateway/OpcClientPLC.py                     |  89 ++-
+ opc_gateway/config.yaml                         |  38 +-
+ opc_gateway/opc_to_kafka.py                     |  69 +--
+ redis/registro.yml                              |  11 +
+ socket_bridge/JsonBorunteClient.py              | 190 +++++++
+ socket_bridge/entrypoint.sh                     |   9 +
+ socket_bridge/json_commands.yaml                |   0
+ socket_bridge/kafka_to_socket.py                | 111 ++++
+ socket_bridge/socket_to_kafka.py                |   0
+ socket_bridge/test.py                           |  32 ++
+ test.py                                         |  26 +
+ 24 files changed, 1510 insertions(+), 230 deletions(-)
