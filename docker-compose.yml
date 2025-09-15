@@ -196,26 +196,6 @@ services:
       redis:
         condition: service_healthy
 
-  # socket_gateway_01:
-  #   build: ./socket_gateway
-  #   container_name: socket_gateway_01
-  #   init: true
-  #   network_mode: "host"
-  #   restart: unless-stopped
-  #   environment:
-  #     - MODE=gateway_robot
-  #     - ROBOT_ID=${BORUNTE_01_ID}
-  #     - BORUNTE_IP=${BORUNTE_01_IP}
-  #     - BORUNTE_PORT=${BORUNTE_01_SOCKET_PORT}
-  #     - REDIS_HOST=${REDIS_HOST}
-  #     - REDIS_PORT=${REDIS_PORT}
-  #   volumes:
-  #     - ./socket_gateway:/app
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
 
   nodered:
     image: nodered/node-red:4.1.0-22
