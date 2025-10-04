@@ -18,13 +18,13 @@
             }
         },
         "debug": {
-            "filter": "filterSelected",
+            "filter": "filterAll",
             "filteredNodes": [
                 "7a283d667ddf04a4",
                 "dbg-raw",
                 "7dac2b45ce355171"
             ]
         },
-        "menu-menu-item-sidebar": true
+        "menu-menu-item-sidebar": false
     }
 }
