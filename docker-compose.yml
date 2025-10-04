@@ -196,6 +196,7 @@ services:
       redis:
         condition: service_healthy
 
+  
   #socket_gateway_01:
   #  build: ./socket_gateway
   #  container_name: socket_gateway_01
@@ -216,6 +217,7 @@ services:
   #      condition: service_healthy
   #    redis:
   #      condition: service_healthy
+
 
   nodered:
     image: nodered/node-red:4.1.0-22

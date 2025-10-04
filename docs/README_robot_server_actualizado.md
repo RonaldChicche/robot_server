@@ -54,11 +54,17 @@ Kafka permite la comunicación desacoplada entre módulos del sistema.
   "order_id": "ORD_1001",
   "target_id": "robot_01",
   "type": "method",
-  "name": "modify_output",
-  "params": ["y13", "1"],
+  "name": "set_output",
+  "params": ["y13", 1],
   "timestamp": "2025-07-18T14:00:00Z"
 }
 ```
+
+---
+
+## 📈 InfluxDB – Historización y Métricas
+
+Todos los datos periódicos o eventos de estado se pueden registrar en **InfluxDB** para posterior análisis histórico o visualización en tiempo real (por ejemplo, mediante Grafana).
 
 ---
 
