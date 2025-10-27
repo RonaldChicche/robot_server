@@ -66,8 +66,8 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     compenza_desfase_y = 0
 
     # esquina de barra solo para este caso
-    tope_x0 = 1640.668 - 3 - 41
-    tope_y0 = -1864.266
+    tope_x0 = 1640.668 - 3 - 15
+    tope_y0 = -1864.266 + 1000
     tope_z0 = 352.951 - 2
 
     # calibracion pick
@@ -151,9 +151,9 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
 
     elif parametros["no_carro"] == 2:
         # relativos 
-        dz_pick = 600
-        dz_p = 550 + 100 - 150
-        dz_n = -dz_p + 100
+        dz_pick = 660
+        dz_p = 550 + 150 - 150
+        dz_n = -dz_p + 150
         x_1 = x_1_2 
         z_1 = tope_z1_2 + float(parametros.get("altura_caja")) + 550 # prueba y error
         
