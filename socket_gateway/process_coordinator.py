@@ -66,8 +66,8 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     compenza_desfase_y = 0
 
     # esquina de barra solo para este caso
-    tope_x0 = 1640.668 - 3 - 15
-    tope_y0 = -1864.266 + 1000
+    tope_x0 = 1640.668
+    tope_y0 = -1864.266
     tope_z0 = 352.951 - 2
 
     # calibracion pick
@@ -94,7 +94,7 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     if pick_x > tope_x0 and float(parametros["ancho_barra"]) > 78:
         pick_x = tope_x0
         compenza_desfase = ancho_gripper - float(parametros["ancho_barra"])
-        bit_compensacion = True
+    ##    bit_compensacion = True
 
     pick_y = y_0 + float(parametros["long_barra"]) / 2
     if bit_compensacion: # or bit_delgados
@@ -109,9 +109,9 @@ def handle_process(redis_client, keys, process_trama, compe_1={}, compe_2={}):
     # esquina de caja
     tope_x1_1 = 1976.422 + 4.5 + 4 + 10.1 - 17 + 2
     # 2817.6
-    tope_x1_2 = 2651.369 + 139.1 + 7 - 62.56 - 7 + 16 + 9 -21 - 18
+    tope_x1_2 = 2651.369 + 139.1 + 7 - 62.56 - 7 + 16 + 9 -21 - 18 + 25
     # tope_y1 = y_0 
-    tope_y1 = -372.671 + largo_gripper/2  #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Nuevo calculo
+    tope_y1 = -372.671 + 180 + largo_gripper/2  #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Nuevo calculo
     tope_z1_1 = 127   ## nivel de la mesa
     tope_z1_2 = 127
     ## X_1_1 : (Ubicacion de Tope de guia en mesa 1 con gripper - Largo de gripper/2)
