@@ -1,5 +1,5 @@
 #!/bin/bash
-FECHA_LIMITE="2025-11-05"
+FECHA_LIMITE="2025-11-15"
 PROY="/home/bertek/robot_server"   
 
 if [[ "$(date +%Y-%m-%d)" > "$FECHA_LIMITE" ]]; then
